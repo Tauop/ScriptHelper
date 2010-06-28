@@ -1,0 +1,16 @@
+== Welcome to ScriptHelper
+
+ScriptHelper is a POSIC shell library of common functions, to facilitate code reuse.
+
+First, I've wrote ScriptHelper to be able to send bash script to other users and
+always know what's wrong when they failed. This was the purpose of the CMD command,
+which role is to exec a command, log stdout & stderr, and check the return status.
+
+Then, I've added some functions, I wrote several times.
+
+== Description of contents
+
+*.lib.sh : library files
+tests/* : test files
+
+Each file have description of their functions, usage, options, etc..

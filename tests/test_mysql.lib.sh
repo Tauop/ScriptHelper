@@ -49,10 +49,12 @@ mysql_password=
 ASK mysql_username 'local MySQL username:'
 ASK --no-print --allow-empty mysql_password 'local MySQL password:'
 
+# MYSQL_SET_CONF -------------------------------------------------------------
 DOTHIS "MYSQL_SET_CONF"
   MYSQL_SET_CONF --user "'${mysql_username}'" --pass "'${mysql_password}'"
 OK
 
+# MYSQL_QUERY ----------------------------------------------------------------
 DOTHIS "MYSQL_QUERY"
   ( MYSQL_QUERY 'SELECT 1' ) >"${TEST_FILE}"
   check_TEST_FILE "1"
@@ -90,6 +92,26 @@ MYSQL_QUERY "${create_database2}"
 MYSQL_QUERY --db "${test_db}" "${create_table}"
 MYSQL_QUERY --db "${test_db}" "${insert}"
 
+
+# MYSQL_GET_BASES ------------------------------------------------------------
+DOTHIS "MYSQL_GET_BASES"
+  has_test=$( MYSQL_GET_BASES | grep "^${test_db}$" | wc -l)
+  [ "${has_test}" != "1" ] && ERROR "Test failed"
+OK
+
+# MYSQL_GET_TABLES -----------------------------------------------------------
+DOTHIS MYSQL_GET_TABLES
+  has_test=$( MYSQL_GET_TABLES --db "${test_db}" | grep "pma_history" | wc -l)
+  [ "${has_test}" != "1" ] && ERROR "Test failed"
+OK
+
+# MYSQL_GET_FIELDS -----------------------------------------------------------
+DOTHIS MYSQL_GET_FIELDS
+  has_test=$( MYSQL_GET_FIELDS --db "${test_db}" "pma_history" | grep "id2" | wc -l)
+  [ "${has_test}" != "1" ] && ERROR "Test failed"
+OK
+
+# MYSQL_DUMP & MYSQL_RESTAURE ------------------------------------------------
 DOTHIS "MYSQL_DUMP"
   MYSQL_DUMP "${TEST_FILE}" "${test_db}"
   mysqldump -u${mysql_username} -p${mysql_password} --no-create-db --opt --max_allowed_packet=67108864 --routines "${test_db}" >"${TEST_FILE2}"
@@ -103,6 +125,9 @@ DOTHIS "MYSQL_RESTORE"
   # delete database name in the dump file, so that we can compare them
   sed -i -e "s/${test_db2}//g" "${TEST_FILE2}" >/dev/null 2>/dev/null
   sed -i -e "s/${test_db}//g"  "${TEST_FILE}"  >/dev/null 2>/dev/null
+  # delete dates
+  sed -i -e "s/\(.*Dump completed on \).*$/\1/g" "${TEST_FILE2}" >/dev/null 2>/dev/null
+  sed -i -e "s/\(.*Dump completed on \).*$/\1/g"  "${TEST_FILE}"  >/dev/null 2>/dev/null
   compare_TEST_FILES
 OK
 
@@ -110,4 +135,5 @@ MYSQL_QUERY "DROP DATABASE ${test_db}"
 MYSQL_QUERY "DROP DATABASE ${test_db2}"
 rm -f "${TEST_FILE}" "${TEST_FILE2}"
 
-echo "All Tests OK"
+echo
+echo "*** All Tests OK ***"

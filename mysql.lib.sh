@@ -77,20 +77,21 @@
 #        MYSQL_DUMP is used.
 #     3/ when <database> is not specified, we don't use -D options
 #
+# MYSQL_GET_BASES()
+#   desc: get databases list of the mysql instance
+#   usage: MYSQL_GET_BASES() [ <options> ]
+#   arguments: <options> = common MySQL methods options
+#
 # MYSQL_GET_TABLES()
 #   desc: get the table list of the current (or selected) database
 #   usage: MYSQL_GET_TABLES [ <options> ]
 #   arguments: <options> = common MySQL methods options
-#   notes:
-#     1/ each tables names are separated with a ' ' (space) caracter
 #
 # MYSQL_GET_FIELDS()
 #   desc: get the field list of a table
 #   usage: MYSQL_GET_FIELDS [<options>] <table_name>
 #   arguments: <options> = common MySQL methods options
 #              <table_name> = name of a table
-#   notes:
-#     1/ each field names are separated with a ' ' (space) caracter
 #
 # ----------------------------------------------------------------------------
 # private methods
@@ -341,9 +342,9 @@ MYSQL_RESTORE() {
   __MYSQL_OPTIONS_CHANGED__='false'
 }
 
-MYSQL_GET_TABLES() {
-  MYSQL_QUERY $@ --bash "SHOW TABLES"
-}
+MYSQL_GET_BASES()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
+MYSQL_GET_TABLES() { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
+
 
 MYSQL_GET_FIELDS() {
   local table_name=

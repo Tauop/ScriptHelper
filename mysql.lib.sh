@@ -35,6 +35,10 @@
 #   --db : database to use
 #   --host : MySQL host to connect to
 #   --port : MySQL target host port to use
+#   --human : draw ascii table
+#   --bash : opposite of --human
+#   --with-log : call EXEC with --with-log
+#   --with-check : call EXEC with --with-check
 #
 # MYSQL_SET_CONF()
 #   desc: Save global MySQL configuration, which allow to not repeat mysql command
@@ -72,6 +76,21 @@
 #     2/ When <dumpfile> is equal to "-", the last dumpfile created with
 #        MYSQL_DUMP is used.
 #     3/ when <database> is not specified, we don't use -D options
+#
+# MYSQL_GET_TABLES()
+#   desc: get the table list of the current (or selected) database
+#   usage: MYSQL_GET_TABLES [ <options> ]
+#   arguments: <options> = common MySQL methods options
+#   notes:
+#     1/ each tables names are separated with a ' ' (space) caracter
+#
+# MYSQL_GET_FIELDS()
+#   desc: get the field list of a table
+#   usage: MYSQL_GET_FIELDS [<options>] <table_name>
+#   arguments: <options> = common MySQL methods options
+#              <table_name> = name of a table
+#   notes:
+#     1/ each field names are separated with a ' ' (space) caracter
 #
 # ----------------------------------------------------------------------------
 # private methods
@@ -161,7 +180,8 @@ private_PARSE_MYSQL_OPTIONS() {
       "--port"  ) shift; __MYSQL_PORT__=$1;     shift; inc=2 ;;
 
       # misc options
-      "--human" ) shift; __MYSQL_HUMAN__="true"; inc=1 ;;
+      "--human" ) shift; __MYSQL_HUMAN__="true" ; inc=1 ;;
+      "--bash"  ) shift; __MYSQL_HUMAN__="false"; inc=1 ;;
 
       # EXEC options
       "--with-log"   ) shift; exec_with_log='true';   inc=1 ;;
@@ -319,6 +339,24 @@ MYSQL_RESTORE() {
 
   [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTAURE_MYSQL_CONF
   __MYSQL_OPTIONS_CHANGED__='false'
+}
+
+MYSQL_GET_TABLES() {
+  MYSQL_QUERY $@ --bash "SHOW TABLES"
+}
+
+MYSQL_GET_FIELDS() {
+  local table_name=
+
+  [ $# -eq 0 ] && ERROR "MYSQL_GET_FIELDS: wrong number of argument"
+
+  # get the last argument
+  arguments=$( IFS=' ' echo "$*" )
+  table_name="${arguments##* }"
+  arguments=${arguments%$table_name}
+  [ -z "${table_name}" ] && ERROR "MYSQL_GET_FIELDS: missing or incorrect table name"
+
+  eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
 }
 
 __LIB_MYSQL__='Loaded'

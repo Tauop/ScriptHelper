@@ -80,8 +80,8 @@
 #         Then it call ROLLBACK() and exit(1).
 #
 # ROLLBACK()
-#   desc: by default, it's done nothing. This purpose is to be
-#         overide by the parent script
+#   desc: by default, it's done nothing. Its purpose is to be
+#         override by the parent script
 #
 # SOURCE()
 #   desc: 'source' a bash file, by checking if the file exists

@@ -29,7 +29,7 @@
 #                       MYSQL_RESTORE
 # Methods ====================================================================
 #
-# All mysql methods supports options which can be :
+# All mysql functions supports options which can be :
 #   --user : MySQL username to use
 #   --pass : MySQL password
 #   --db : database to use
@@ -42,7 +42,7 @@
 #
 # MYSQL_SET_CONF()
 #   desc: Save global MySQL configuration, which allow to not repeat mysql command
-#         options every time we call a MySQL method.
+#         options every time we call a MySQL function.
 #   usage: MYSQL_SET_CONF [ <options> ]
 #          MYSQL_SET_CONF <username> [ <password> [ <database> [ <host> [ <port> ] ] ] ]
 #   note : username is mandatory, through options or arguments
@@ -50,13 +50,13 @@
 # MYSQL_QUERY()
 #   desc: execute a query on the MySQL instance/host.
 #   usage: MYSQL_QUERY [ <options> ] "<query>"
-#   arguments: <options> = common MySQL methods options
+#   arguments: <options> = common MySQL functions options
 #              "<query>" = a quoted MySQL query
 #
 # MYSQL_DUMP()
 #   desc: call mysqldump on a MySQL instance/host.
 #   usage: MYSQL_DUMP [ <options> ] [ <dumpfile> [ <database> ] ]
-#   arguments: <options> = common MySQL methods options
+#   arguments: <options> = common MySQL functions options
 #              <dumpfile> = path to the file in which database will be saved
 #              <database> = database to backup/dump.
 #   notes:
@@ -67,7 +67,7 @@
 # MYSQL_RESTAURE()
 #   desc: call mysql with a dumpfile, to restaure one or severals databases
 #   usage: MYSQL_RESTAURE [ <options> ] [ <dumpfile> [ <database> ] ]
-#   arguments: <options> = common MySQL methods options
+#   arguments: <options> = common MySQL functions options
 #              <dumpfile> = path to the file to load for database restaure
 #              <database> = database to backup/dump.
 #   notes :
@@ -80,22 +80,28 @@
 # MYSQL_GET_BASES()
 #   desc: get databases list of the mysql instance
 #   usage: MYSQL_GET_BASES() [ <options> ]
-#   arguments: <options> = common MySQL methods options
+#   arguments: <options> = common MySQL functions options
 #
 # MYSQL_GET_TABLES()
 #   desc: get the table list of the current (or selected) database
 #   usage: MYSQL_GET_TABLES [ <options> ]
-#   arguments: <options> = common MySQL methods options
+#   arguments: <options> = common MySQL functions options
 #
 # MYSQL_GET_FIELDS()
 #   desc: get the field list of a table
-#   usage: MYSQL_GET_FIELDS [<options>] <table_name>
-#   arguments: <options> = common MySQL methods options
+#   usage: MYSQL_GET_FIELDS [ <options> ] <table_name>
+#   arguments: <options> = common MySQL functions options
 #              <table_name> = name of a table
 #
+# MYSQL_GET_FIELD_TYPE
+#   desc: Get the SQL type of a table field
+#   usage: MYSQL_GET_FIELD_TYPE [ <options> ] <table_name> <field_name>
+#   arguments: <options> = common MySQL functions options
+#              <table_name> = name of a table
+#              <field_name> = name of a field
 # ----------------------------------------------------------------------------
-# private methods
-# ===============
+# private functions
+# =================
 # private_PARSE_MYSQL_OPTIONS()
 #   desc: parse arguments passed in argument
 #   usage: private_PARSE_MYSQL_OPTIONS $@
@@ -154,7 +160,7 @@ __MYSQL_NB_CONSUMMED_ARG__=0
 __MYSQL_DUMP_FILE__="/tmp/mysqldump_${RANDOM}.sql"
 __EXEC_OPTIONS__='' # options to pass to EXEC (see functions.lib.sh)
 
-# backup variables. si private_* methods
+# backup variables. si private_* functions
 __MYSQL_BACKUP_USERNAME__=''
 __MYSQL_BACKUP_PASSWORD__=''
 __MYSQL_BACKUP_DATABASE__=''
@@ -259,7 +265,7 @@ MYSQL_SET_CONF() {
     break
   done
 
-  # build __MYSQL_OPTIONS__, which will be used in other methods
+  # build __MYSQL_OPTIONS__, which will be used in other functions
   private_BUILD_MYSQL_OPTIONS
   __MYSQL_OPTIONS_CHANGED__='false'
 

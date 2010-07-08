@@ -14,3 +14,46 @@ Then, I've added some functions, I wrote several times.
 tests/* : test files
 
 Each file have description of their functions, usage, options, etc..
+
+== List of Functions
+
+ask.lib.sh
+ HIT_TO_CONTINUE()
+ ASK()
+   Ask a question to the user, get the user response and store it in
+   the variable which name is stored in <variable>.
+   Control can be made on user answer, and ASK() repeat question if
+   the user answer is not valid.
+   Display message and user answer are logged, if possible.
+
+conf.lib.sh
+ CONF_SET_FILE() - Save a file path where you will read/write data
+ CONF_SAVE()     - Save a variable into the configuration file
+ CONF_GET()      - read a variable from the configuration file
+ CONF_LOAD()     - load the configuration with SOURCE()
+
+functions.lib.sh
+ SET_LOG_FILE() - create a standard output file and error output file
+ CHECK_ROOT()   - check that the user is 'root' user
+ EXEC() - execute a command.
+          Can redirect output to output log file and redirect error output to error log file
+          can call KO() on error
+    alias: EXEC_WITH_CHECK(), EXEC_WITH_LOG(), EXEC_WITH_CHECK_AND_LOG(), CMD()
+ MESSAGE() - This function is used to display messages on standard output and/or 
+             write messages into the output log file
+    alias: MSG(), LOG(), DOTHIS(), OK(), KO(), NOTICE()
+ ERROR() - prefix message with "ERROR:" and call MESSAGE().
+           then, it call ROLLBACK() and exit(1)
+ ROLLBACK() - by default, it's done nothing. its purpose is to be override by the parent script
+ SOURCE() - 'source' a bash file, by checking if the file exists
+
+mysql.lib.sh
+ MYSQL_SET_CONF() - Save global MySQL configuration, which allow to not repeat mysql command
+                    options every time we call a MySQL function.
+ MYSQL_QUERY() - execute a query on the MySQL instance/host
+ MYSQL_DUMP() - call mysqldump on a MySQL instance/host
+ MYSQL_RESTAURE() - call mysql with a dumpfile, to restaure one or severals databases
+ MYSQL_GET_BASES() - get databases list of the mysql instance
+ MYSQL_GET_TABLES() - get the table list of the current (or select) database
+ MYSQL_GET_FIELDS() - get the field list of a table
+ MYSQL_GET_FIELD_TYPE() - get the SQL type of a table field

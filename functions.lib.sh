@@ -67,6 +67,7 @@
 #    --no-log : Don't write message into output log file
 #
 #  aliases:
+#    MSG()    = MESSAGE
 #    LOG()    = MESSAGE --no-print
 #    DOTHIS() = MESSAGE --no-break -- '- <message> ... '
 #    OK()     = MESSAGE --no-date -- "OK"
@@ -129,7 +130,7 @@ MESSAGE() {
     esac
   done
 
-  msg=$1
+  msg="$*"
   if [ "${do_print}" = "true" ]; then
     # don't put the date on standard output (STDOUT)
     echo ${echo_opt} "${msg}"
@@ -141,6 +142,7 @@ MESSAGE() {
   fi
 }
 
+MSG()    { MESSAGE $*;            }
 NOTICE() { MESSAGE "NOTICE: $*";  }
 LOG()    { MESSAGE --no-print $@; }
 

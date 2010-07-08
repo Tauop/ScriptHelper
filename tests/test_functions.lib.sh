@@ -101,7 +101,7 @@ mDOTHIS "MESSAGE() without logs files"
   MESSAGE --useless-option "with useless option" > "${TEST_FILE}"
   check_TEST_FILE "with useless option"
 
-  MESSAGE "tosca's installation ?" > "${TEST_FILE}"
+  MSG "tosca's installation ?" > "${TEST_FILE}"
   check_TEST_FILE "tosca's installation ?"
 
 mOK

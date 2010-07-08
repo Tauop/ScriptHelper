@@ -352,12 +352,44 @@ MYSQL_GET_FIELDS() {
   [ $# -eq 0 ] && ERROR "MYSQL_GET_FIELDS: wrong number of argument"
 
   # get the last argument
-  arguments=$( IFS=' ' echo "$*" )
-  table_name="${arguments##* }"
-  arguments=${arguments%$table_name}
+  if [ $# -gt 1 ]; then
+    arguments=$( IFS=' ' echo "$*" )
+    table_name="${arguments##* }"
+    arguments=${arguments% $table_name}
+  else
+    table_name="$1"
+    arguments=
+  fi
+
   [ -z "${table_name}" ] && ERROR "MYSQL_GET_FIELDS: missing or incorrect table name"
 
   eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
+}
+
+MYSQL_GET_FIELD_TYPE() {
+  local table_name= field_name=
+
+  [ $# -eq 0 ] && ERROR "MYSQL_GET_FIELDS: wrong number of argument"
+
+  # get the last argument
+  arguments=$( IFS=' ' echo "$*" )
+
+  if [ $# -gt 2 ]; then
+    field_name="${arguments##* }"
+    arguments=${arguments% ${field_name}}
+
+    table_name="${arguments##* }"
+    arguments=${arguments% ${table_name}}
+ else
+    table_name="$1"
+    field_name="$2"
+    arguments=
+  fi
+
+  [ -z "${table_name}" ] && ERROR "MYSQL_GET_FIELD_TYPE: missing or incorrect table name"
+  [ -z "${field_name}" ] && ERROR "MYSQL_GET_FIELD_TYPE: missing or incorrect field name"
+
+  eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t' ' ' | grep "^${field_name} " | tr -s ' ' | cut  -d' ' -f2
 }
 
 __LIB_MYSQL__='Loaded'

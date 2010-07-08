@@ -75,6 +75,12 @@ OK
 test_db="TEST${RANDOM}"
 test_db2="${test_db}2"
 
+ROLLBACK() {
+  MYSQL_QUERY "DROP DATABASE \`${test_db}\`"
+  MYSQL_QUERY "DROP DATABASE \`${test_db2}\`"
+  rm -f "${TEST_FILE}" "${TEST_FILE2}"
+}
+
 create_database="CREATE DATABASE ${test_db}"
 create_database2="CREATE DATABASE ${test_db2}"
 create_table='CREATE TABLE IF NOT EXISTS `pma_history` (
@@ -100,15 +106,21 @@ DOTHIS "MYSQL_GET_BASES"
 OK
 
 # MYSQL_GET_TABLES -----------------------------------------------------------
-DOTHIS MYSQL_GET_TABLES
+DOTHIS "MYSQL_GET_TABLES"
   has_test=$( MYSQL_GET_TABLES --db "${test_db}" | grep "pma_history" | wc -l)
   [ "${has_test}" != "1" ] && ERROR "Test failed"
 OK
 
 # MYSQL_GET_FIELDS -----------------------------------------------------------
-DOTHIS MYSQL_GET_FIELDS
+DOTHIS "MYSQL_GET_FIELDS"
   has_test=$( MYSQL_GET_FIELDS --db "${test_db}" "pma_history" | grep "id2" | wc -l)
   [ "${has_test}" != "1" ] && ERROR "Test failed"
+OK
+
+# MYSQL_GET_FIELDS -----------------------------------------------------------
+DOTHIS "MYSQL_GET_FIELD_TYPE"
+  field_type=$( MYSQL_GET_FIELD_TYPE --db "${test_db}" "pma_history" "id")
+  [ "${field_type}" != "bigint(20)" ] && ERROR "Test failed"
 OK
 
 # MYSQL_DUMP & MYSQL_RESTAURE ------------------------------------------------

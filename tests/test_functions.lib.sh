@@ -33,26 +33,29 @@ TEST_FILE2="${TEST_FILE}2"
 
 touch "${TEST_FILE}"
 if [ ! -w "${TEST_FILE}" ]; then
-  echo "[ERROR] can't write to \"${TEST_FILE}\""
+  echo "[ERROR] can't write to \"${TEST_FILE}\'"
   exit 2
 fi
 
 touch "${TEST_FILE2}"
 if [ ! -w "${TEST_FILE2}" ]; then
-  echo "[ERROR] can't write to \"${TEST_FILE2}\""
+  echo "[ERROR] can't write to \"${TEST_FILE2}\'"
   exit 2
 fi
 
 # Utility functions ----------------------------------------------------------
 
 TEST_FAILED() {
+  echo
   echo '[ERROR] Test failed'
+  echo "param = $*"
   exit 1
 }
 
 check_TEST_FILE() {
-  content=`cat ${TEST_FILE}`
-  [ "${content}" != "$*" ] && TEST_FAILED
+  content=`cat ${TEST_FILE} | hexdump`
+  must_have=`echo -n "$*" | hexdump`
+  [ "${content}" != "${must_have}" ] && TEST_FAILED "$*"
 }
 
 check_LOG_FILE() {
@@ -60,7 +63,7 @@ check_LOG_FILE() {
   if [ -n "${__OUTPUT_LOG_FILE__}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__OUTPUT_LOG_FILE__}" | cut -d ']' -f2- | sed -e 's/^ //'`
-    [ "${content}" != "$*" ] && TEST_FAILED
+    [ "${content}" != "$*" ] && TEST_FAILED "$*"
   fi
 }
 
@@ -69,7 +72,7 @@ check_ERROR_FILE() {
   if [ -n "${__ERROR_LOG_FILE__}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__ERROR_LOG_FILE__}" | cut -d ']' -f2- | sed -e 's/^ //'`
-    [ "${content}" != "$*" ] && TEST_FAILED
+    [ "${content}" != "$*" ] && TEST_FAILED "$*"
   fi
 }
 
@@ -87,22 +90,22 @@ mOK() { OK; reset_LOG_FILES; }
 mDOTHIS "MESSAGE() without logs files"
 
   MESSAGE "hello" > "${TEST_FILE}"
-  check_TEST_FILE "hello"
+  check_TEST_FILE $'hello\n'
 
   MESSAGE --no-break "hello world" > "${TEST_FILE}"
-  check_TEST_FILE "hello world"
+  check_TEST_FILE 'hello world'
   # check that there is no breakline in TEST_FILE
-  content=`cat -e "${TEST_FILE}"`
-  [ "${content}" != "hello world" ] && TEST_FAILED
+#  content=`cat -e "${TEST_FILE}"`
+#  [ "${content}" != "hello world" ] && TEST_FAILED
 
   MESSAGE --no-print "hello world" > "${TEST_FILE}"
-  check_TEST_FILE ""
+  check_TEST_FILE ''
 
   MESSAGE --useless-option "with useless option" > "${TEST_FILE}"
-  check_TEST_FILE "with useless option"
+  check_TEST_FILE $'with useless option\n'
 
   MSG "tosca's installation ?" > "${TEST_FILE}"
-  check_TEST_FILE "tosca's installation ?"
+  check_TEST_FILE $'tosca\'s installation ?\n'
 
 mOK
 
@@ -119,17 +122,22 @@ mOK
 mDOTHIS "MESSAGE() with logs files"
 
   MESSAGE "hello world" > "${TEST_FILE}"
-  check_TEST_FILE "hello world"
+  check_TEST_FILE $'hello world\n'
   check_LOG_FILE "hello world"
   reset_LOG_FILES
 
   MESSAGE --no-log "hello world" > "${TEST_FILE}"
-  check_TEST_FILE "hello world"
-  check_LOG_FILE ""
+  check_TEST_FILE $'hello world\n'
+  check_LOG_FILE ''
+  reset_LOG_FILES
+
+  MESSAGE --no-print "hello no print" > "${TEST_FILE}"
+  check_TEST_FILE ''
+  check_LOG_FILE 'hello no print'
   reset_LOG_FILES
 
   MESSAGE --no-date "hello world" > "${TEST_FILE}"
-  check_TEST_FILE "hello world"
+  check_TEST_FILE $'hello world\n'
   check_LOG_FILE "hello world"
   # check there is no date
   content=`cat "${__OUTPUT_LOG_FILE__}"`
@@ -137,8 +145,44 @@ mDOTHIS "MESSAGE() with logs files"
   reset_LOG_FILES
 
   MESSAGE "tosca's installation ?" > "${TEST_FILE}"
-  check_TEST_FILE "tosca's installation ?"
+  check_TEST_FILE $'tosca\'s installation ?\n'
   check_LOG_FILE "tosca's installation ?"
+  reset_LOG_FILES
+
+mOK
+
+mDOTHIS "MESSAGE() alias functions"
+
+  echo -n '' > "${TEST_FILE}"
+  LOG "foin foin"
+  check_TEST_FILE ''
+  check_LOG_FILE "foin foin"
+  reset_LOG_FILES
+
+  MSG "tosca's installation ?" > "${TEST_FILE}"
+  check_TEST_FILE $'tosca\'s installation ?\n'
+  check_LOG_FILE "tosca's installation ?"
+  reset_LOG_FILES
+
+  MSG --no-print "does it print ?" > "${TEST_FILE}"
+  check_TEST_FILE ''
+  check_LOG_FILE "does it print ?"
+  reset_LOG_FILES
+
+  MESSAGE --no-log "hello world" > "${TEST_FILE}"
+  check_TEST_FILE $'hello world\n'
+  check_LOG_FILE ''
+  reset_LOG_FILES
+
+  BR > "${TEST_FILE}"
+  BR >> "${TEST_FILE}"
+  check_TEST_FILE $'\n\n'
+  check_LOG_FILE ''
+  reset_LOG_FILES
+
+  NOTICE "test" > "${TEST_FILE}"
+  check_TEST_FILE $'NOTICE: test\n'
+  check_LOG_FILE 'NOTICE: test'
   reset_LOG_FILES
 
 mOK
@@ -155,14 +199,14 @@ EOF
 
   ret=`SOURCE "${TEST_FILE}${RANDOM}"`
   # $ret must contain error messages
-  [ "${ret}" = "" ] && TEST_FAILED
+  [ "${ret}" = '' ] && TEST_FAILED
   reset_LOG_FILES
 
   # remove all privilege on TEST_FILE. source must failed
   chmod -rwx "${TEST_FILE}" >/dev/null 2>/dev/null
   ret=`SOURCE "${TEST_FILE}"`
   # $ret must contain error messages
-  [ "${ret}" = "" ] && TEST_FAILED
+  [ "${ret}" = '' ] && TEST_FAILED
   # restore mode on TEST_FILE and delete it ;)
   chmod +rwx "${TEST_FILE}" >/dev/null 2>/dev/null;
   rm -f "${TEST_FILE}" >/dev/null 2>/dev/null
@@ -176,31 +220,31 @@ mDOTHIS "EXEC() and CMD()"
   EXEC ls > "${TEST_FILE}"
   ls > "${TEST_FILE2}"
   res=`diff "${TEST_FILE}" "${TEST_FILE2}"`
-  [ "${res}" != "" ] && TEST_FAILED
+  [ "${res}" != '' ] && TEST_FAILED
 
   EXEC --with-log ls -la ~
   ls -la ~ > "${TEST_FILE}"
   res=`diff "${TEST_FILE}" "${__OUTPUT_LOG_FILE__}"`
-  [ "${res}" != "" ] && TEST_FAILED
+  [ "${res}" != '' ] && TEST_FAILED
   reset_LOG_FILES
 
   EXEC_WITH_LOG ls -A ~
   ls -A ~ > "${TEST_FILE}"
   res=`diff "${TEST_FILE}" "${__OUTPUT_LOG_FILE__}"`
-  [ "${res}" != "" ] && TEST_FAILED
+  [ "${res}" != '' ] && TEST_FAILED
   reset_LOG_FILES
 
   ret=`EXEC false`
   # no error, because no --with-check
-  [ "$ret" != "" ] && TEST_FAILED
+  [ "$ret" != '' ] && TEST_FAILED
   reset_LOG_FILES
 
   ret=`EXEC --with-check false`
-  [ "$ret" = "" ] && TEST_FAILED
+  [ "$ret" = '' ] && TEST_FAILED
   reset_LOG_FILES
 
   ret=`EXEC_WITH_CHECK false`
-  [ "$ret" = "" ] && TEST_FAILED
+  [ "$ret" = '' ] && TEST_FAILED
   reset_LOG_FILES
 
   EXEC --with-log echo "hello world" ">&2"
@@ -221,7 +265,7 @@ mOK
 mDOTHIS "CHECK_ROOT()"
 
   ret=`CHECK_ROOT`
-  [ "${ret}" = "" ] && TEST_FAILED
+  [ "${ret}" = '' ] && TEST_FAILED
   reset_LOG_FILES
 
 mOK
@@ -234,7 +278,7 @@ mDOTHIS "ROLLBACK()"
   ROLLBACK() { rm -f "${TEST_FILE}" "${TEST_FILE2}"; }
 
   ret=`CMD false`
-  [ "${ret}" = "" ] && TEST_FAILED
+  [ "${ret}" = '' ] && TEST_FAILED
   [ -f "${TEST_FILE}" -o -f "${TEST_FILE}" ] && TEST_FAILED
 
 mOK

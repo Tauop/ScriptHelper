@@ -67,16 +67,19 @@
 #    --no-log : Don't write message into output log file
 #
 #  aliases:
-#    MSG()    = MESSAGE
-#    LOG()    = MESSAGE --no-print
-#    DOTHIS() = MESSAGE --no-break -- '- <message> ... '
-#    OK()     = MESSAGE --no-date -- "OK"
-#    KO()     = MESSAGE --no-date -- "KO" + ERROR "<message>"
-#    NOTICE   = MESSAGE "NOTICE: <message>"
+#    MSG()     = MESSAGE
+#    LOG()     = MESSAGE --no-print
+#    NOTICE()  = MESSAGE "NOTICE: <message>"
+#    ERROR()   = MESSAGE "ERROR: <message>"
+#    BR()      = MESSAGE --no-log ""
+#    DOTHIS()  = MESSAGE --no-break -- '- <message> ... '
+#    OK()      = MESSAGE --no-date -- "OK" + close DOTHIS if one
+#    KO()      = MESSAGE --no-date -- "KO" + close DOTHIS if one + FATAL "<message>"
+#    WARNING() = MESSAGE --no-log "WARN: <message>"  + close DOTHIS if one
 #
-# ERROR()
+# FATAL()
 #   $1: error message
-#   desc: prefix message with "ERROR:" and call MESSAGE().
+#   desc: prefix message with "FATAL:" and call MESSAGE().
 #         Then it call ROLLBACK() and exit(1).
 #
 # ROLLBACK()
@@ -142,9 +145,26 @@ MESSAGE() {
   fi
 }
 
-MSG()    { MESSAGE $*;            }
-NOTICE() { MESSAGE "NOTICE: $*";  }
-LOG()    { MESSAGE --no-print $@; }
+MSG()    { MESSAGE $*;                        }
+NOTICE() { MESSAGE "NOTICE: $*";              }
+LOG()    { MESSAGE --no-print $@;             }
+BR()     { MESSAGE --no-log --no-break $'\n'; }
+
+ERROR() {
+  if [ "${__IN_DOTHIS__}" = "true" ]; then
+    MESSAGE --no-date -- "Err";
+    __IN_DOTHIS__="false"
+  fi
+  MESSAGE --no-log "ERROR: $*"
+}
+
+WARNING() {
+  if [ "${__IN_DOTHIS__}" = "true" ]; then
+    MESSAGE --no-date -- "Warn";
+    __IN_DOTHIS__="false"
+  fi
+  MESSAGE --no-log "WARNING: $*"
+}
 
 DOTHIS() {
   MESSAGE --no-break -- "- $* ... "
@@ -161,17 +181,18 @@ KO() {
     MESSAGE --no-date -- "KO";
     __IN_DOTHIS__="false"
   fi
-  ERROR "$*"
+  FATAL "$*"
 }
 
 # do nothing. Can be override
 ROLLBACK() { echo >/dev/null; }
 
-ERROR() {
-  MESSAGE "ERROR: $*"
+FATAL() {
+  MESSAGE "fATAL: $*"
   ROLLBACK
   exit 1
 }
+
 
 EXEC() {
   local command= do_check="false" do_log="false" outputs= old_shell_opt=

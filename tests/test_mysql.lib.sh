@@ -123,7 +123,7 @@ DOTHIS "MYSQL_GET_FIELD_TYPE"
   [ "${field_type}" != "bigint(20)" ] && ERROR "Test failed"
 OK
 
-# MYSQL_DUMP & MYSQL_RESTAURE ------------------------------------------------
+# MYSQL_DUMP & MYSQL_RESTORE ------------------------------------------------
 DOTHIS "MYSQL_DUMP"
   MYSQL_DUMP "${TEST_FILE}" "${test_db}"
   mysqldump -u${mysql_username} -p${mysql_password} --no-create-db --opt --max_allowed_packet=67108864 --routines "${test_db}" >"${TEST_FILE2}"

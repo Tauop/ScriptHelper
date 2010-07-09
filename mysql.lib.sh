@@ -64,14 +64,14 @@
 #     2/ when <databae> is not specified, all database of the MySQL instance/host
 #        are backup'ed/dumped
 #
-# MYSQL_RESTAURE()
+# MYSQL_RESTORE()
 #   desc: call mysql with a dumpfile, to restaure one or severals databases
-#   usage: MYSQL_RESTAURE [ <options> ] [ <dumpfile> [ <database> ] ]
+#   usage: MYSQL_RESTORE [ <options> ] [ <dumpfile> [ <database> ] ]
 #   arguments: <options> = common MySQL functions options
 #              <dumpfile> = path to the file to load for database restaure
 #              <database> = database to backup/dump.
 #   notes :
-#     1/ When MYSQL_RESTAURE is called without argument, the last dumpfile
+#     1/ When MYSQL_RESTORE is called without argument, the last dumpfile
 #        created with MYSQL_DUMP is used to restaure all databases.
 #     2/ When <dumpfile> is equal to "-", the last dumpfile created with
 #        MYSQL_DUMP is used.
@@ -126,7 +126,7 @@
 # private_BACKUP_MYSQL_CONF()
 #   desc: backup global mysql configuration
 #
-# private_RESTAURE_MYSQL_CONF()
+# private_RESTORE_MYSQL_CONF()
 #   desc: restaure global mysql configuration
 #
 # ----------------------------------------------------------------------------
@@ -230,7 +230,7 @@ private_BACKUP_MYSQL_CONF() {
   __MYSQL_BACKUP_OPTIONS__="${__MYSQL_OPTIONS__}"
 }
 
-private_RESTAURE_MYSQL_CONF() {
+private_RESTORE_MYSQL_CONF() {
   __MYSQL_USERNAME__="${__MYSQL_BACKUP_USERNAME__}"
   __MYSQL_PASSWORD__="${__MYSQL_BACKUP_PASSWORD__}"
   __MYSQL_DATABASE__="${__MYSQL_BACKUP_DATABASE__}"
@@ -292,7 +292,7 @@ MYSQL_QUERY() {
   return_value=$?
 
   # restaure global configuration is it was changed
-  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTAURE_MYSQL_CONF
+  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTORE_MYSQL_CONF
   __MYSQL_OPTIONS_CHANGED__='false'
   return ${return_value}
 }
@@ -322,7 +322,7 @@ MYSQL_DUMP() {
 
   EXEC_WITH_CHECK mysqldump ${__MYSQL_OPTIONS__} ${mysqldump_options} ">${__MYSQL_DUMP_FILE__}" "${error_redir}"
 
-  private_RESTAURE_MYSQL_CONF
+  private_RESTORE_MYSQL_CONF
   __MYSQL_OPTIONS_CHANGED__='false'
 }
 
@@ -344,7 +344,7 @@ MYSQL_RESTORE() {
 
   EXEC mysql ${__MYSQL_OPTIONS__} "<'${dumpfile}'"
 
-  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTAURE_MYSQL_CONF
+  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTORE_MYSQL_CONF
   __MYSQL_OPTIONS_CHANGED__='false'
 }
 

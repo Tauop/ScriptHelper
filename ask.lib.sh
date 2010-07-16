@@ -44,6 +44,7 @@
 #        --number : The user answer must be a number
 #        --yesno : The asked question is a yes/no question.
 #                  Control the user answer.
+#        --pass : implies --no-print + don't log clear text password
 #      <variable> = The name of the variable in which we have to store
 #                   the user response.
 #      <text> = The question to ask to the user.
@@ -82,25 +83,27 @@ HIT_TO_CONTINUE() {
 
 ASK() {
   local question= variable= default= error=
-  local answer= read_opt='' check='' allow_empty= message_opt=' --no-break '
+  local answer= read_opt='' check='' allow_empty= message_opt=' --no-break ' do_pass='false' no_print='false'
 
   # parse argument
   while [ true ]; do
     case "$1" in
-      "--no-print"      ) shift; read_opt="${read_opt} -s" ;;
-      "--number"        ) shift; check='number'            ;;
-      "--yesno"         ) shift; check='yesno'             ;;
-      "--allow-empty"   ) shift; allow_empty='true'        ;;
-      "--with-break"    ) shift; message_opt=''            ;;
+      "--no-print"      ) shift; no_print="yes"     ;;
+      "--number"        ) shift; check='number'     ;;
+      "--yesno"         ) shift; check='yesno'      ;;
+      "--allow-empty"   ) shift; allow_empty='true' ;;
+      "--with-break"    ) shift; message_opt=''     ;;
+      "--pass"          ) shift; do_pass='true'     ;;
       --*               ) shift ;; # ignore
       *                 ) break ;;
     esac
   done
+  [ "${no_print}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s"
 
   # parse trailing arguments
   # note: the while is just a workaround, as bash has no GOTO statement
-  while [ true ]; do
-    [ $# -gt 0 ] && variable="$1" || ERROR "ASK: Missing argument (question)"
+  while true ; do
+    [ $# -gt 0 ] && variable="$1" || FATAL "ASK: Missing argument (question)"
     [ $# -gt 1 ] && question="$2" || break
     [ $# -gt 2 ] && default="$3"  || break
     [ $# -gt 3 ] && error="$4"    || break
@@ -110,7 +113,7 @@ ASK() {
   # reset global variable
   eval "${variable}=''"
 
-  MESSAGE ${message_opt} "${question}  "
+  MESSAGE --no-log ${message_opt} "${question}  "
 
   while read ${read_opt} answer; do
     # deal with default, when user only press ENTER
@@ -144,32 +147,35 @@ ASK() {
       esac
     fi
 
-    LOG "User answer = ${answer}"
-
     # NOTE: with --no-print, no \n is printed out to the STDOUT.
     #       This test has to be changed if there is more read options
     #       deal with this script.
-    [ -n "${read_opt}" ] && MESSAGE ""
+    [ -n "${read_opt}" ] && MESSAGE --no-log ""
 
     # display error
     if [ -n "${error}" ]; then
-      MESSAGE "ERROR: ${error}"
+      ERROR "${error}"
     else
-      MESSAGE "ERROR: invalid answer"
+      ERROR "invalid answer"
     fi
 
     # display the question again
-    MESSAGE ${message_opt} "${question}  "
+    MESSAGE --no-log ${message_opt} "${question}  "
 
   done # enf of while read
+
+  if [ "${do_pass}" = 'true' ]; then
+    LOG "${question}  => ${answer//?/#}"
+  else
+    LOG "${question}  => ${answer}"
+  fi
 
   # NOTE: with --no-print, no \n is printed out to the STDOUT.
   #       This test has to be changed if there is more read options
   #       deal with this script.
-  [ -n "${read_opt}" ] && MESSAGE ""
+  [ -n "${read_opt}" ] && MESSAGE --no-log ""
 
   eval "${variable}=\"${answer}\"";
-  LOG "User answer = ${variable}"
 }
 
 __LIB_ASK__='Loaded'

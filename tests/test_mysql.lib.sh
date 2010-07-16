@@ -35,19 +35,19 @@ TEST_FILE2="${TEST_FILE}2"
 
 check_TEST_FILE() {
   content=`cat ${TEST_FILE}`
-  [ "${content}" != "$1" ] && ERROR "Test failed"
+  [ "${content}" != "$1" ] && FATAL "Test failed"
 }
 
 compare_TEST_FILES() {
   diff "${TEST_FILE}" "${TEST_FILE2}"
-  [ $? -ne 0 ] && ERROR "Test failed"
+  [ $? -ne 0 ] && FATAL "Test failed"
 }
 
 mysql_username=
 mysql_password=
 
 ASK mysql_username 'local MySQL username:'
-ASK --no-print --allow-empty mysql_password 'local MySQL password:'
+ASK --pass --allow-empty mysql_password 'local MySQL password:'
 
 # MYSQL_SET_CONF -------------------------------------------------------------
 DOTHIS "MYSQL_SET_CONF"
@@ -102,25 +102,25 @@ MYSQL_QUERY --db "${test_db}" "${insert}"
 # MYSQL_GET_BASES ------------------------------------------------------------
 DOTHIS "MYSQL_GET_BASES"
   has_test=$( MYSQL_GET_BASES | grep "^${test_db}$" | wc -l)
-  [ "${has_test}" != "1" ] && ERROR "Test failed"
+  [ "${has_test}" != "1" ] && FATAL "Test failed"
 OK
 
 # MYSQL_GET_TABLES -----------------------------------------------------------
 DOTHIS "MYSQL_GET_TABLES"
   has_test=$( MYSQL_GET_TABLES --db "${test_db}" | grep "pma_history" | wc -l)
-  [ "${has_test}" != "1" ] && ERROR "Test failed"
+  [ "${has_test}" != "1" ] && FATAL "Test failed"
 OK
 
 # MYSQL_GET_FIELDS -----------------------------------------------------------
 DOTHIS "MYSQL_GET_FIELDS"
   has_test=$( MYSQL_GET_FIELDS --db "${test_db}" "pma_history" | grep "id2" | wc -l)
-  [ "${has_test}" != "1" ] && ERROR "Test failed"
+  [ "${has_test}" != "1" ] && FATAL "Test failed"
 OK
 
 # MYSQL_GET_FIELDS -----------------------------------------------------------
 DOTHIS "MYSQL_GET_FIELD_TYPE"
   field_type=$( MYSQL_GET_FIELD_TYPE --db "${test_db}" "pma_history" "id")
-  [ "${field_type}" != "bigint(20)" ] && ERROR "Test failed"
+  [ "${field_type}" != "bigint(20)" ] && FATAL "Test failed"
 OK
 
 # MYSQL_DUMP & MYSQL_RESTORE ------------------------------------------------

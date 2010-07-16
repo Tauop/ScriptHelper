@@ -68,7 +68,7 @@ __CONF_FILE__=
 CONF_SET_FILE() {
   local dir= file=
 
-  [ $# -ne 1 ] && ERROR "SET_CONF_FILE: bad arguments"
+  [ $# -ne 1 ] && FATAL "SET_CONF_FILE: bad arguments"
   __CONF_FILE__="$1"
 
   file="${__CONF_FILE__##*/}"
@@ -87,8 +87,8 @@ CONF_SET_FILE() {
 CONF_SAVE() {
   local var= value= s='[[:space:]]'
 
-  [ $# -eq 0 ] && ERROR "CONF_SAVE: Bad number of arguments"
-  [ ! -w "${__CONF_FILE__}" ] && ERROR "Can't write into configuration file ${__CONF_FILE__}"
+  [ $# -eq 0 ] && FATAL "CONF_SAVE: Bad number of arguments"
+  [ ! -w "${__CONF_FILE__}" ] && FATAL "Can't write into configuration file ${__CONF_FILE__}"
 
   var="$1";
   [ $# -eq 2 ] && value="$2"
@@ -108,7 +108,7 @@ CONF_SAVE() {
 CONF_GET() {
   local result= resultvar= confvar= s='[[:space:]]'
 
-  [ $# -ne 0 ] && ERROR "CONF_GET: bad number of arguments"
+  [ $# -ne 0 ] && FATAL "CONF_GET: bad number of arguments"
 
   confvar="$1"
   resultvar="${2:-$1}"

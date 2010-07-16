@@ -88,7 +88,7 @@ ASK() {
   # parse argument
   while [ true ]; do
     case "$1" in
-      "--no-print"      ) shift; no_print="yes"     ;;
+      "--no-print"      ) shift; no_print='true'    ;;
       "--number"        ) shift; check='number'     ;;
       "--yesno"         ) shift; check='yesno'      ;;
       "--allow-empty"   ) shift; allow_empty='true' ;;

@@ -284,8 +284,8 @@ MYSQL_QUERY() {
   # if there is options, build the new mysql options
   [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_BUILD_MYSQL_OPTIONS
 
-  [ $# -gt 0 ] && query="$*" || ERROR "MYSQL_QUERY: error in arguments ($@)"
-  [ -z "${query}" ] && ERROR "MYSQL_QUERY: query is empty"
+  [ $# -gt 0 ] && query="$*" || FATAL "MYSQL_QUERY: error in arguments ($@)"
+  [ -z "${query}" ] && FATAL "MYSQL_QUERY: query is empty"
 
   [ "${__MYSQL_HUMAN__}" = 'false' ] && mysql_exec_opt='-Bse'
   EXEC ${__EXEC_OPTIONS__} mysql ${__MYSQL_OPTIONS__} ${mysql_exec_opt} "'${query}'"
@@ -317,7 +317,7 @@ MYSQL_DUMP() {
     mysqldump_options="${mysqldump_options} '${2}'"
   fi
 
-  [ -z "${__MYSQL_DUMP_FILE__}" ] && ERROR "MYSQL_DUMP called with empty 'dumpfile' path"
+  [ -z "${__MYSQL_DUMP_FILE__}" ] && FATAL "MYSQL_DUMP called with empty 'dumpfile' path"
   EXEC_WITH_LOG echo -n '' ">'${__MYSQL_DUMP_FILE__}'"
 
   EXEC_WITH_CHECK mysqldump ${__MYSQL_OPTIONS__} ${mysqldump_options} ">${__MYSQL_DUMP_FILE__}" "${error_redir}"
@@ -355,7 +355,7 @@ MYSQL_GET_TABLES() { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
 MYSQL_GET_FIELDS() {
   local table_name=
 
-  [ $# -eq 0 ] && ERROR "MYSQL_GET_FIELDS: wrong number of argument"
+  [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
 
   # get the last argument
   if [ $# -gt 1 ]; then
@@ -367,7 +367,7 @@ MYSQL_GET_FIELDS() {
     arguments=
   fi
 
-  [ -z "${table_name}" ] && ERROR "MYSQL_GET_FIELDS: missing or incorrect table name"
+  [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELDS: missing or incorrect table name"
 
   eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
 }
@@ -375,7 +375,7 @@ MYSQL_GET_FIELDS() {
 MYSQL_GET_FIELD_TYPE() {
   local table_name= field_name=
 
-  [ $# -eq 0 ] && ERROR "MYSQL_GET_FIELDS: wrong number of argument"
+  [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
 
   # get the last argument
   arguments=$( IFS=' ' echo "$*" )
@@ -392,8 +392,8 @@ MYSQL_GET_FIELD_TYPE() {
     arguments=
   fi
 
-  [ -z "${table_name}" ] && ERROR "MYSQL_GET_FIELD_TYPE: missing or incorrect table name"
-  [ -z "${field_name}" ] && ERROR "MYSQL_GET_FIELD_TYPE: missing or incorrect field name"
+  [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect table name"
+  [ -z "${field_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect field name"
 
   eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t' ' ' | grep "^${field_name} " | tr -s ' ' | cut  -d' ' -f2
 }

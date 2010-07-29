@@ -58,93 +58,116 @@
 # ----------------------------------------------------------------------------
 
 # don't load several times this file
-[ "${__LIB_ASK__}" = 'Loaded' ] && return
+if [ "${__LIB_ASK__}" != 'Loaded' ]; then
+  __LIB_ASK__='Loaded'
 
-
-# Load common lib
-if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
-  if [ -r ./functions.lib.sh ]; then
-    source ./functions.lib.sh
-  else
-    echo "ERROR: Unable to load ./functions.lib.sh library"
-    exit 2
-  fi
-fi
-
-# ----------------------------------------------------------------------------
-
-HIT_TO_CONTINUE() {
-  MESSAGE ""
-  MESSAGE "Press ENTER to continue, or CTRL+C to exit"
-  MESSAGE ""
-  read
-  LOG "User press ENTER"
-}
-
-ASK() {
-  local question= variable= default= error=
-  local answer= read_opt='' check='' allow_empty= message_opt=' --no-break ' do_pass='false' no_print='false'
-
-  # parse argument
-  while [ true ]; do
-    case "$1" in
-      "--no-print"      ) shift; no_print='true'    ;;
-      "--number"        ) shift; check='number'     ;;
-      "--yesno"         ) shift; check='yesno'      ;;
-      "--allow-empty"   ) shift; allow_empty='true' ;;
-      "--with-break"    ) shift; message_opt=''     ;;
-      "--pass"          ) shift; do_pass='true'     ;;
-      --*               ) shift ;; # ignore
-      *                 ) break ;;
-    esac
-  done
-  [ "${no_print}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s"
-
-  # parse trailing arguments
-  # note: the while is just a workaround, as bash has no GOTO statement
-  while true ; do
-    [ $# -gt 0 ] && variable="$1" || FATAL "ASK: Missing argument (question)"
-    [ $# -gt 1 ] && question="$2" || break
-    [ $# -gt 2 ] && default="$3"  || break
-    [ $# -gt 3 ] && error="$4"    || break
-    break
-  done
-
-  # reset global variable
-  eval "${variable}=''"
-
-  MESSAGE --no-log ${message_opt} "${question}  "
-
-  while read ${read_opt} answer; do
-    # deal with default, when user only press ENTER
-    if [ -z "${answer}" ]; then
-      if [ -n "${default}" ]; then
-        answer="${default}"
-        break;
-      fi
-      [ "${allow_empty}" = 'true' ] && break;
+  # Load common lib
+  if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
+    if [ -r ./functions.lib.sh ]; then
+      source ./functions.lib.sh
     else
-      # delete useless space
-      answer=`echo "${answer}" | sed -e 's/^ *//;s/ *$//;'`
+      echo "ERROR: Unable to load ./functions.lib.sh library"
+      exit 2
+    fi
+  fi
 
-      # check user response
-      case "${check}" in
-        "yesno" )
-              if [ "${answer^^}" = 'Y'   \
-                -o "${answer^^}" = 'YES' \
-                -o "${answer^^}" = 'N'   \
-                -o "${answer^^}" = 'NO' ]; then
-                answer=${answer^^}           # uppercase
-                answer=${answer:0:1} # keep the first char
-                break;
-              fi
-          ;; # enf of "yesno"
-        "number" )
-              echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
-              [ $? -eq 0 ] && break;
-            ;; # end of "number"
-        * ) break  ;;
+  # ----------------------------------------------------------------------------
+
+  HIT_TO_CONTINUE() {
+    MESSAGE ""
+    MESSAGE "Press ENTER to continue, or CTRL+C to exit"
+    MESSAGE ""
+    read
+    LOG "User press ENTER"
+  }
+
+  ASK() {
+    local question= variable= default= error=
+    local answer= read_opt='' check='' allow_empty= message_opt=' --no-break ' do_pass='false' no_print='false'
+
+    # parse argument
+    while [ true ]; do
+      case "$1" in
+        "--no-print"      ) shift; no_print='true'    ;;
+        "--number"        ) shift; check='number'     ;;
+        "--yesno"         ) shift; check='yesno'      ;;
+        "--allow-empty"   ) shift; allow_empty='true' ;;
+        "--with-break"    ) shift; message_opt=''     ;;
+        "--pass"          ) shift; do_pass='true'     ;;
+        --*               ) shift ;; # ignore
+        *                 ) break ;;
       esac
+    done
+    [ "${no_print}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s"
+
+    # parse trailing arguments
+    # note: the while is just a workaround, as bash has no GOTO statement
+    while true ; do
+      [ $# -gt 0 ] && variable="$1" || FATAL "ASK: Missing argument (question)"
+      [ $# -gt 1 ] && question="$2" || break
+      [ $# -gt 2 ] && default="$3"  || break
+      [ $# -gt 3 ] && error="$4"    || break
+      break
+    done
+
+    # reset global variable
+    eval "${variable}=''"
+
+    MESSAGE --no-log ${message_opt} "${question}  "
+
+    while read ${read_opt} answer; do
+      # deal with default, when user only press ENTER
+      if [ -z "${answer}" ]; then
+        if [ -n "${default}" ]; then
+          answer="${default}"
+          break;
+        fi
+        [ "${allow_empty}" = 'true' ] && break;
+      else
+        # delete useless space
+        answer=`echo "${answer}" | sed -e 's/^ *//;s/ *$//;'`
+
+        # check user response
+        case "${check}" in
+          "yesno" )
+                if [ "${answer^^}" = 'Y'   \
+                  -o "${answer^^}" = 'YES' \
+                  -o "${answer^^}" = 'N'   \
+                  -o "${answer^^}" = 'NO' ]; then
+                  answer=${answer^^}           # uppercase
+                  answer=${answer:0:1} # keep the first char
+                  break;
+                fi
+            ;; # enf of "yesno"
+          "number" )
+                echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+                [ $? -eq 0 ] && break;
+              ;; # end of "number"
+          * ) break  ;;
+        esac
+      fi
+
+      # NOTE: with --no-print, no \n is printed out to the STDOUT.
+      #       This test has to be changed if there is more read options
+      #       deal with this script.
+      [ -n "${read_opt}" ] && MESSAGE --no-log ""
+
+      # display error
+      if [ -n "${error}" ]; then
+        ERROR "${error}"
+      else
+        ERROR "invalid answer"
+      fi
+
+      # display the question again
+      MESSAGE --no-log ${message_opt} "${question}  "
+
+    done # enf of while read
+
+    if [ "${do_pass}" = 'true' ]; then
+      LOG "${question}  => ${answer//?/#}"
+    else
+      LOG "${question}  => ${answer}"
     fi
 
     # NOTE: with --no-print, no \n is printed out to the STDOUT.
@@ -152,30 +175,7 @@ ASK() {
     #       deal with this script.
     [ -n "${read_opt}" ] && MESSAGE --no-log ""
 
-    # display error
-    if [ -n "${error}" ]; then
-      ERROR "${error}"
-    else
-      ERROR "invalid answer"
-    fi
+    eval "${variable}=\"${answer}\"";
+  }
 
-    # display the question again
-    MESSAGE --no-log ${message_opt} "${question}  "
-
-  done # enf of while read
-
-  if [ "${do_pass}" = 'true' ]; then
-    LOG "${question}  => ${answer//?/#}"
-  else
-    LOG "${question}  => ${answer}"
-  fi
-
-  # NOTE: with --no-print, no \n is printed out to the STDOUT.
-  #       This test has to be changed if there is more read options
-  #       deal with this script.
-  [ -n "${read_opt}" ] && MESSAGE --no-log ""
-
-  eval "${variable}=\"${answer}\"";
-}
-
-__LIB_ASK__='Loaded'
+fi # enf of: if [ "${__LIB_ASK__}" = 'Loaded' ]; then

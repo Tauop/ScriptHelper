@@ -132,270 +132,271 @@
 # ----------------------------------------------------------------------------
 
 # Don't source this file several times
-[ "${__LIB_MYSQL__}" = 'Loaded' ] && return
+if [ "${__LIB_MYSQL__}" != 'Loaded' ]; then
+  __LIB_MYSQL__='Loaded'
 
-# Load common lib
-if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
-  if [ -r ./functions.lib.sh ]; then
-    source ./functions.lib.sh
-  else
-    echo "ERROR: Unable to load ./functions.lib.sh library"
-    exit 2
-  fi
-fi
-
-# Internal variables
-# ---------------------------------------------------
-# Do not write to those variables.
-__MYSQL_USERNAME__=''
-__MYSQL_PASSWORD__=''
-__MYSQL_DATABASE__=''
-__MYSQL_HOST__='localhost'
-__MYSQL_PORT__='3306'
-__MYSQL_HUMAN__='false'
-__MYSQL_OPTIONS__=''
-
-__MYSQL_OPTIONS_CHANGED__='false'
-__MYSQL_NB_CONSUMMED_ARG__=0
-__MYSQL_DUMP_FILE__="/tmp/mysqldump_${RANDOM}.sql"
-__EXEC_OPTIONS__='' # options to pass to EXEC (see functions.lib.sh)
-
-# backup variables. si private_* functions
-__MYSQL_BACKUP_USERNAME__=''
-__MYSQL_BACKUP_PASSWORD__=''
-__MYSQL_BACKUP_DATABASE__=''
-__MYSQL_BACKUP_HOST__=''
-__MYSQL_BACKUP_PORT__=''
-__MYSQL_HUMAN__=''
-__MYSQL_BACKUP_OPTIONS__=''
-
-# PRIVATE METHODS ------------------------------------------------------------
-
-private_PARSE_MYSQL_OPTIONS() {
-  local inc=0 exec_with_log='false' exec_with_check='false'
-
-  __MYSQL_OPTIONS_CHANGED__='false'
-  __MYSQL_NB_CONSUMMED_ARG__=0
-
-  while [ true ]; do
-    case $1 in
-      # common connexion options
-      "--user"  ) shift; __MYSQL_USERNAME__=$1; shift; inc=2 ;;
-      "--pass"  ) shift; __MYSQL_PASSWORD__=$1; shift; inc=2 ;;
-      "--db"    ) shift; __MYSQL_DATABASE__=$1; shift; inc=2 ;;
-      "--host"  ) shift; __MYSQL_HOST__=$1;     shift; inc=2 ;;
-      "--port"  ) shift; __MYSQL_PORT__=$1;     shift; inc=2 ;;
-
-      # misc options
-      "--human" ) shift; __MYSQL_HUMAN__="true" ; inc=1 ;;
-      "--bash"  ) shift; __MYSQL_HUMAN__="false"; inc=1 ;;
-
-      # EXEC options
-      "--with-log"   ) shift; exec_with_log='true';   inc=1 ;;
-      "--with-check" ) shift; exec_with_check='true'; inc=1 ;;
-
-      # ignore but increment number of argument consummed
-      --*       ) shift; inc=1 ;;
-      *         ) break ;;
-    esac
-    if [ "${inc}" != '0' ]; then
-      __MYSQL_OPTIONS_CHANGED__='true';
-      # TODO: is it cross-shell ? use `expr` if needed
-      __MYSQL_NB_CONSUMMED_ARG__=$(( __MYSQL_NB_CONSUMMED_ARG__ + inc ))
+  # Load common lib
+  if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
+    if [ -r ./functions.lib.sh ]; then
+      source ./functions.lib.sh
+    else
+      echo "ERROR: Unable to load ./functions.lib.sh library"
+      exit 2
     fi
-    inc=0
-  done
+  fi
 
-  __EXEC_OPTIONS__=''
-  [ "${exec_with_log}"   = 'true' ] && __EXEC_OPTIONS__="${__EXEC_OPTIONS__} --with-log "
-  [ "${exec_with_check}" = 'true' ] && __EXEC_OPTIONS__="${__EXEC_OPTIONS__} --with-check "
-}
-
-private_BUILD_MYSQL_OPTIONS() {
-  __MYSQL_OPTIONS__=''
-  [ -n "${__MYSQL_USERNAME__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -u'${__MYSQL_USERNAME__}'"
-  [ -n "${__MYSQL_PASSWORD__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -p'${__MYSQL_PASSWORD__}'"
-  [ -n "${__MYSQL_DATABASE__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -D '${__MYSQL_DATABASE__}'"
-  [ -n "${__MYSQL_HOST__}"     ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -h '${__MYSQL_HOST__}'"
-  [ -n "${__MYSQL_PORT__}"     ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -P '${__MYSQL_PORT__}'"
-}
-
-private_BACKUP_MYSQL_CONF() {
-  __MYSQL_BACKUP_USERNAME__="${__MYSQL_USERNAME__}"
-  __MYSQL_BACKUP_PASSWORD__="${__MYSQL_PASSWORD__}"
-  __MYSQL_BACKUP_DATABASE__="${__MYSQL_DATABASE__}"
-  __MYSQL_BACKUP_HOST__="${__MYSQL_HOST__}"
-  __MYSQL_BACKUP_PORT__="${__MYSQL_PORT__}"
-  __MYSQL_BACKUP_HUMAN__="${__MYSQL_HOST__}"
-  __MYSQL_BACKUP_OPTIONS__="${__MYSQL_OPTIONS__}"
-}
-
-private_RESTORE_MYSQL_CONF() {
-  __MYSQL_USERNAME__="${__MYSQL_BACKUP_USERNAME__}"
-  __MYSQL_PASSWORD__="${__MYSQL_BACKUP_PASSWORD__}"
-  __MYSQL_DATABASE__="${__MYSQL_BACKUP_DATABASE__}"
-  __MYSQL_HOST__="${__MYSQL_BACKUP_HOST__}"
-  __MYSQL_PORT__="${__MYSQL_BACKUP_PORT__}"
-  __MYSQL_HUMAN__="${__MYSQL_BACKUP_HUMAN__}"
-  __MYSQL_OPTIONS__="${__MYSQL_BACKUP_OPTIONS__}"
-}
-
-# PUBLIC METHODS -------------------------------------------------------------
-
-MYSQL_SET_CONF() {
-  # reset all config variables
+  # Internal variables
+  # ---------------------------------------------------
+  # Do not write to those variables.
   __MYSQL_USERNAME__=''
   __MYSQL_PASSWORD__=''
   __MYSQL_DATABASE__=''
   __MYSQL_HOST__='localhost'
   __MYSQL_PORT__='3306'
   __MYSQL_HUMAN__='false'
+  __MYSQL_OPTIONS__=''
 
-  private_PARSE_MYSQL_OPTIONS $@
-  shift ${__MYSQL_NB_CONSUMMED_ARG__}
-
-  # parse trailing arguments
-  # note: the while is just a workaround, as bash has no GOTO statement
-  while [ true ]; do
-    [ $# -gt 0 ] && __MYSQL_USERNAME__="$1" || break
-    [ $# -gt 1 ] && __MYSQL_PASSWORD__="$2" || break
-    [ $# -gt 2 ] && __MYSQL_DATABASE__="$3" || break
-    [ $# -gt 3 ] && __MYSQL_HOST__="$4"     || break
-    [ $# -gt 4 ] && __MYSQL_PORT__="$5"     || break
-    break
-  done
-
-  # build __MYSQL_OPTIONS__, which will be used in other functions
-  private_BUILD_MYSQL_OPTIONS
   __MYSQL_OPTIONS_CHANGED__='false'
+  __MYSQL_NB_CONSUMMED_ARG__=0
+  __MYSQL_DUMP_FILE__="/tmp/mysqldump_${RANDOM}.sql"
+  __EXEC_OPTIONS__='' # options to pass to EXEC (see functions.lib.sh)
 
-  LOG "MySQL options change to : ${__MYSQL_OPTIONS__}"
-}
+  # backup variables. si private_* functions
+  __MYSQL_BACKUP_USERNAME__=''
+  __MYSQL_BACKUP_PASSWORD__=''
+  __MYSQL_BACKUP_DATABASE__=''
+  __MYSQL_BACKUP_HOST__=''
+  __MYSQL_BACKUP_PORT__=''
+  __MYSQL_HUMAN__=''
+  __MYSQL_BACKUP_OPTIONS__=''
+
+  # PRIVATE METHODS ------------------------------------------------------------
+
+  private_PARSE_MYSQL_OPTIONS() {
+    local inc=0 exec_with_log='false' exec_with_check='false'
+
+    __MYSQL_OPTIONS_CHANGED__='false'
+    __MYSQL_NB_CONSUMMED_ARG__=0
+
+    while [ true ]; do
+      case $1 in
+        # common connexion options
+        "--user"  ) shift; __MYSQL_USERNAME__=$1; shift; inc=2 ;;
+        "--pass"  ) shift; __MYSQL_PASSWORD__=$1; shift; inc=2 ;;
+        "--db"    ) shift; __MYSQL_DATABASE__=$1; shift; inc=2 ;;
+        "--host"  ) shift; __MYSQL_HOST__=$1;     shift; inc=2 ;;
+        "--port"  ) shift; __MYSQL_PORT__=$1;     shift; inc=2 ;;
+
+        # misc options
+        "--human" ) shift; __MYSQL_HUMAN__="true" ; inc=1 ;;
+        "--bash"  ) shift; __MYSQL_HUMAN__="false"; inc=1 ;;
+
+        # EXEC options
+        "--with-log"   ) shift; exec_with_log='true';   inc=1 ;;
+        "--with-check" ) shift; exec_with_check='true'; inc=1 ;;
+
+        # ignore but increment number of argument consummed
+        --*       ) shift; inc=1 ;;
+        *         ) break ;;
+      esac
+      if [ "${inc}" != '0' ]; then
+        __MYSQL_OPTIONS_CHANGED__='true';
+        # TODO: is it cross-shell ? use `expr` if needed
+        __MYSQL_NB_CONSUMMED_ARG__=$(( __MYSQL_NB_CONSUMMED_ARG__ + inc ))
+      fi
+      inc=0
+    done
+
+    __EXEC_OPTIONS__=''
+    [ "${exec_with_log}"   = 'true' ] && __EXEC_OPTIONS__="${__EXEC_OPTIONS__} --with-log "
+    [ "${exec_with_check}" = 'true' ] && __EXEC_OPTIONS__="${__EXEC_OPTIONS__} --with-check "
+  }
+
+  private_BUILD_MYSQL_OPTIONS() {
+    __MYSQL_OPTIONS__=''
+    [ -n "${__MYSQL_USERNAME__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -u'${__MYSQL_USERNAME__}'"
+    [ -n "${__MYSQL_PASSWORD__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -p'${__MYSQL_PASSWORD__}'"
+    [ -n "${__MYSQL_DATABASE__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -D '${__MYSQL_DATABASE__}'"
+    [ -n "${__MYSQL_HOST__}"     ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -h '${__MYSQL_HOST__}'"
+    [ -n "${__MYSQL_PORT__}"     ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -P '${__MYSQL_PORT__}'"
+  }
+
+  private_BACKUP_MYSQL_CONF() {
+    __MYSQL_BACKUP_USERNAME__="${__MYSQL_USERNAME__}"
+    __MYSQL_BACKUP_PASSWORD__="${__MYSQL_PASSWORD__}"
+    __MYSQL_BACKUP_DATABASE__="${__MYSQL_DATABASE__}"
+    __MYSQL_BACKUP_HOST__="${__MYSQL_HOST__}"
+    __MYSQL_BACKUP_PORT__="${__MYSQL_PORT__}"
+    __MYSQL_BACKUP_HUMAN__="${__MYSQL_HOST__}"
+    __MYSQL_BACKUP_OPTIONS__="${__MYSQL_OPTIONS__}"
+  }
+
+  private_RESTORE_MYSQL_CONF() {
+    __MYSQL_USERNAME__="${__MYSQL_BACKUP_USERNAME__}"
+    __MYSQL_PASSWORD__="${__MYSQL_BACKUP_PASSWORD__}"
+    __MYSQL_DATABASE__="${__MYSQL_BACKUP_DATABASE__}"
+    __MYSQL_HOST__="${__MYSQL_BACKUP_HOST__}"
+    __MYSQL_PORT__="${__MYSQL_BACKUP_PORT__}"
+    __MYSQL_HUMAN__="${__MYSQL_BACKUP_HUMAN__}"
+    __MYSQL_OPTIONS__="${__MYSQL_BACKUP_OPTIONS__}"
+  }
+
+  # PUBLIC METHODS -------------------------------------------------------------
+
+  MYSQL_SET_CONF() {
+    # reset all config variables
+    __MYSQL_USERNAME__=''
+    __MYSQL_PASSWORD__=''
+    __MYSQL_DATABASE__=''
+    __MYSQL_HOST__='localhost'
+    __MYSQL_PORT__='3306'
+    __MYSQL_HUMAN__='false'
+
+    private_PARSE_MYSQL_OPTIONS $@
+    shift ${__MYSQL_NB_CONSUMMED_ARG__}
+
+    # parse trailing arguments
+    # note: the while is just a workaround, as bash has no GOTO statement
+    while [ true ]; do
+      [ $# -gt 0 ] && __MYSQL_USERNAME__="$1" || break
+      [ $# -gt 1 ] && __MYSQL_PASSWORD__="$2" || break
+      [ $# -gt 2 ] && __MYSQL_DATABASE__="$3" || break
+      [ $# -gt 3 ] && __MYSQL_HOST__="$4"     || break
+      [ $# -gt 4 ] && __MYSQL_PORT__="$5"     || break
+      break
+    done
+
+    # build __MYSQL_OPTIONS__, which will be used in other functions
+    private_BUILD_MYSQL_OPTIONS
+    __MYSQL_OPTIONS_CHANGED__='false'
+
+    LOG "MySQL options change to : ${__MYSQL_OPTIONS__}"
+  }
 
 
-MYSQL_QUERY() {
-  local return_value= query= mysql_exec_opt='-e'
+  MYSQL_QUERY() {
+    local return_value= query= mysql_exec_opt='-e'
 
-  private_BACKUP_MYSQL_CONF
+    private_BACKUP_MYSQL_CONF
 
-  private_PARSE_MYSQL_OPTIONS $@
-  shift ${__MYSQL_NB_CONSUMMED_ARG__}
+    private_PARSE_MYSQL_OPTIONS $@
+    shift ${__MYSQL_NB_CONSUMMED_ARG__}
 
-  # if there is options, build the new mysql options
-  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_BUILD_MYSQL_OPTIONS
+    # if there is options, build the new mysql options
+    [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_BUILD_MYSQL_OPTIONS
 
-  [ $# -gt 0 ] && query="$*" || FATAL "MYSQL_QUERY: error in arguments ($@)"
-  [ -z "${query}" ] && FATAL "MYSQL_QUERY: query is empty"
+    [ $# -gt 0 ] && query="$*" || FATAL "MYSQL_QUERY: error in arguments ($@)"
+    [ -z "${query}" ] && FATAL "MYSQL_QUERY: query is empty"
 
-  [ "${__MYSQL_HUMAN__}" = 'false' ] && mysql_exec_opt='-Bse'
-  EXEC ${__EXEC_OPTIONS__} mysql ${__MYSQL_OPTIONS__} ${mysql_exec_opt} "'${query}'"
-  return_value=$?
+    [ "${__MYSQL_HUMAN__}" = 'false' ] && mysql_exec_opt='-Bse'
+    EXEC ${__EXEC_OPTIONS__} mysql ${__MYSQL_OPTIONS__} ${mysql_exec_opt} "'${query}'"
+    return_value=$?
 
-  # restaure global configuration is it was changed
-  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTORE_MYSQL_CONF
-  __MYSQL_OPTIONS_CHANGED__='false'
-  return ${return_value}
-}
+    # restaure global configuration is it was changed
+    [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTORE_MYSQL_CONF
+    __MYSQL_OPTIONS_CHANGED__='false'
+    return ${return_value}
+  }
 
-MYSQL_DUMP() {
-  local mysqldump_options= error_redir=
+  MYSQL_DUMP() {
+    local mysqldump_options= error_redir=
 
-  mysqldump_options="--no-create-db --opt --max_allowed_packet=67108864 --routines"
-  [ -n "${__ERROR_LOG_FILE__}" ] && error_redir=">>'${__ERROR_LOG_FILE__}'"
+    mysqldump_options="--no-create-db --opt --max_allowed_packet=67108864 --routines"
+    [ -n "${__ERROR_LOG_FILE__}" ] && error_redir=">>'${__ERROR_LOG_FILE__}'"
 
-  private_BACKUP_MYSQL_CONF
-  private_PARSE_MYSQL_OPTIONS $@
-  shift ${__MYSQL_NB_CONSUMMED_ARG__}
-  __MYSQL_DATABASE__='' # reset database
-  private_BUILD_MYSQL_OPTIONS
+    private_BACKUP_MYSQL_CONF
+    private_PARSE_MYSQL_OPTIONS $@
+    shift ${__MYSQL_NB_CONSUMMED_ARG__}
+    __MYSQL_DATABASE__='' # reset database
+    private_BUILD_MYSQL_OPTIONS
 
-  if [ $# -eq 1 ]; then
-    [ "$1" != '-' ] && __MYSQL_DUMP_FILE__="$1"
-    mysqldump_options="${mysqldump_options} --all-databases"
-  elif [ $# -eq 2 ]; then
-    [ "$1" != '-' ] && __MYSQL_DUMP_FILE__="$1"
-    mysqldump_options="${mysqldump_options} '${2}'"
-  fi
+    if [ $# -eq 1 ]; then
+      [ "$1" != '-' ] && __MYSQL_DUMP_FILE__="$1"
+      mysqldump_options="${mysqldump_options} --all-databases"
+    elif [ $# -eq 2 ]; then
+      [ "$1" != '-' ] && __MYSQL_DUMP_FILE__="$1"
+      mysqldump_options="${mysqldump_options} '${2}'"
+    fi
 
-  [ -z "${__MYSQL_DUMP_FILE__}" ] && FATAL "MYSQL_DUMP called with empty 'dumpfile' path"
-  EXEC_WITH_LOG echo -n '' ">'${__MYSQL_DUMP_FILE__}'"
+    [ -z "${__MYSQL_DUMP_FILE__}" ] && FATAL "MYSQL_DUMP called with empty 'dumpfile' path"
+    EXEC_WITH_LOG echo -n '' ">'${__MYSQL_DUMP_FILE__}'"
 
-  EXEC_WITH_CHECK mysqldump ${__MYSQL_OPTIONS__} ${mysqldump_options} ">${__MYSQL_DUMP_FILE__}" "${error_redir}"
+    EXEC_WITH_CHECK mysqldump ${__MYSQL_OPTIONS__} ${mysqldump_options} ">${__MYSQL_DUMP_FILE__}" "${error_redir}"
 
-  private_RESTORE_MYSQL_CONF
-  __MYSQL_OPTIONS_CHANGED__='false'
-}
+    private_RESTORE_MYSQL_CONF
+    __MYSQL_OPTIONS_CHANGED__='false'
+  }
 
-MYSQL_RESTORE() {
-  local dumpfile=
+  MYSQL_RESTORE() {
+    local dumpfile=
 
-  private_BACKUP_MYSQL_CONF
-  private_PARSE_MYSQL_OPTIONS $@
-  shift ${__MYSQL_NB_CONSUMMED_ARG__}
+    private_BACKUP_MYSQL_CONF
+    private_PARSE_MYSQL_OPTIONS $@
+    shift ${__MYSQL_NB_CONSUMMED_ARG__}
 
-  [ $# -eq 0 -o "$1"  = '-' ] && dumpfile="${__MYSQL_DUMP_FILE__}"
-  [ $# -gt 0 -a "$1" != '-' ] && dumpfile="$1"
-  if [ $# -gt 1 ]; then
-    __MYSQL_DATABASE__="$2"
-    __MYSQL_OPTIONS_CHANGED__='true'
-  fi
+    [ $# -eq 0 -o "$1"  = '-' ] && dumpfile="${__MYSQL_DUMP_FILE__}"
+    [ $# -gt 0 -a "$1" != '-' ] && dumpfile="$1"
+    if [ $# -gt 1 ]; then
+      __MYSQL_DATABASE__="$2"
+      __MYSQL_OPTIONS_CHANGED__='true'
+    fi
 
-  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_BUILD_MYSQL_OPTIONS
+    [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_BUILD_MYSQL_OPTIONS
 
-  EXEC mysql ${__MYSQL_OPTIONS__} "<'${dumpfile}'"
+    EXEC mysql ${__MYSQL_OPTIONS__} "<'${dumpfile}'"
 
-  [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTORE_MYSQL_CONF
-  __MYSQL_OPTIONS_CHANGED__='false'
-}
+    [ "${__MYSQL_OPTIONS_CHANGED__}" = 'true' ] && private_RESTORE_MYSQL_CONF
+    __MYSQL_OPTIONS_CHANGED__='false'
+  }
 
-MYSQL_GET_BASES()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
-MYSQL_GET_TABLES() { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
+  MYSQL_GET_BASES()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
+  MYSQL_GET_TABLES() { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
 
 
-MYSQL_GET_FIELDS() {
-  local table_name=
+  MYSQL_GET_FIELDS() {
+    local table_name=
 
-  [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
+    [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
 
-  # get the last argument
-  if [ $# -gt 1 ]; then
+    # get the last argument
+    if [ $# -gt 1 ]; then
+      arguments=$( IFS=' ' echo "$*" )
+      table_name="${arguments##* }"
+      arguments=${arguments% $table_name}
+    else
+      table_name="$1"
+      arguments=
+    fi
+
+    [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELDS: missing or incorrect table name"
+
+    eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
+  }
+
+  MYSQL_GET_FIELD_TYPE() {
+    local table_name= field_name=
+
+    [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
+
+    # get the last argument
     arguments=$( IFS=' ' echo "$*" )
-    table_name="${arguments##* }"
-    arguments=${arguments% $table_name}
-  else
-    table_name="$1"
-    arguments=
-  fi
 
-  [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELDS: missing or incorrect table name"
+    if [ $# -gt 2 ]; then
+      field_name="${arguments##* }"
+      arguments=${arguments% ${field_name}}
 
-  eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
-}
+      table_name="${arguments##* }"
+      arguments=${arguments% ${table_name}}
+   else
+      table_name="$1"
+      field_name="$2"
+      arguments=
+    fi
 
-MYSQL_GET_FIELD_TYPE() {
-  local table_name= field_name=
+    [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect table name"
+    [ -z "${field_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect field name"
 
-  [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
+    eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t' ' ' | grep "^${field_name} " | tr -s ' ' | cut  -d' ' -f2
+  }
 
-  # get the last argument
-  arguments=$( IFS=' ' echo "$*" )
-
-  if [ $# -gt 2 ]; then
-    field_name="${arguments##* }"
-    arguments=${arguments% ${field_name}}
-
-    table_name="${arguments##* }"
-    arguments=${arguments% ${table_name}}
- else
-    table_name="$1"
-    field_name="$2"
-    arguments=
-  fi
-
-  [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect table name"
-  [ -z "${field_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect field name"
-
-  eval "MYSQL_QUERY ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t' ' ' | grep "^${field_name} " | tr -s ' ' | cut  -d' ' -f2
-}
-
-__LIB_MYSQL__='Loaded'
+fi # end of: if [ "${__LIB_MYSQL__}" = 'Loaded' ]; then

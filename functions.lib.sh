@@ -94,194 +94,195 @@
 # ----------------------------------------------------------------------------
 
 # don't source several times this file
-[ "${__LIB_FUNCTIONS__}" = 'Loaded' ] && return
+if [ "${__LIB_FUNCTIONS__}" != 'Loaded' ]; then
+  __LIB_FUNCTIONS__="Loaded"
 
-# IMPORTANT: Don't set those variables directly in the parent script
-__OUTPUT_LOG_FILE__=''
-__ERROR_LOG_FILE__=''
-__SYSTEM_NAME__=''
-__SYSTEM_RELEASE_NAME__=''
+  # IMPORTANT: Don't set those variables directly in the parent script
+  __OUTPUT_LOG_FILE__=''
+  __ERROR_LOG_FILE__=''
+  __SYSTEM_NAME__=''
+  __SYSTEM_RELEASE_NAME__=''
 
-# used to known if we are in a DOTHIS - OK/KO block
-# note: do not modify this variable
-__IN_DOTHIS__="false"
-
-which lsb_release >/dev/null 2>/dev/null
-if [ $? -eq 0 ]; then
-  __SYSTEM_NAME__=$( lsb_release -s -i )
-  __SYSTEM_RELEASE_NAME__=$( lsb_release -s -c )
-else
-  __SYSTEM_NAME__="unknown"
-  __SYSTEM_RELEASE_NAME__="unknown"
-fi
-
-# Utility functions -------------------------------------
-
-MESSAGE() {
-  local do_print="true" do_log="true" msg= date=$(date +"[%D %T]") echo_opt=
-
-  # parse arguments
-  while [ true ]; do
-    case $1 in
-      "--no-break" ) shift; echo_opt='-n' ;;
-      "--no-date"  ) shift; date=''            ;;
-      "--no-print" ) shift; do_print="false"   ;;
-      "--no-log"   ) shift; do_log="false"     ;;
-      "--"         ) shift; break;             ;;
-      --*          ) shift;                    ;; # ignore
-      *            ) break;                    ;;
-    esac
-  done
-
-  msg="$*"
-  if [ "${do_print}" = "true" ]; then
-    # don't put the date on standard output (STDOUT)
-    echo ${echo_opt} "${msg}"
-  fi
-
-  if [ "${do_log}" = "true" -a -f "${__OUTPUT_LOG_FILE__}" ]; then
-    [ -n "${date}" ] && msg="${date} ${msg}"
-    echo ${echo_opt} "${msg}" >> "${__OUTPUT_LOG_FILE__}"
-  fi
-}
-
-MSG()    { MESSAGE $*;                        }
-NOTICE() { MESSAGE "NOTICE: $*";              }
-LOG()    { MESSAGE --no-print $@;             }
-BR()     { MESSAGE --no-log --no-break $'\n'; }
-
-ERROR() {
-  if [ "${__IN_DOTHIS__}" = "true" ]; then
-    MESSAGE --no-date -- "Err";
-    __IN_DOTHIS__="false"
-  fi
-  MESSAGE --no-log "ERROR: $*"
-}
-
-WARNING() {
-  if [ "${__IN_DOTHIS__}" = "true" ]; then
-    MESSAGE --no-date -- "Warn";
-    __IN_DOTHIS__="false"
-  fi
-  MESSAGE --no-log "WARNING: $*"
-}
-
-DOTHIS() {
-  MESSAGE --no-break -- "- $* ... "
-  __IN_DOTHIS__="true"
-}
-
-OK() {
-  [ "${__IN_DOTHIS__}" = "true" ] && MESSAGE --no-date -- "OK"
+  # used to known if we are in a DOTHIS - OK/KO block
+  # note: do not modify this variable
   __IN_DOTHIS__="false"
-}
 
-KO() {
-  if [ "${__IN_DOTHIS__}" = "true" ]; then
-    MESSAGE --no-date -- "KO";
+  which lsb_release >/dev/null 2>/dev/null
+  if [ $? -eq 0 ]; then
+    __SYSTEM_NAME__=$( lsb_release -s -i )
+    __SYSTEM_RELEASE_NAME__=$( lsb_release -s -c )
+  else
+    __SYSTEM_NAME__="unknown"
+    __SYSTEM_RELEASE_NAME__="unknown"
+  fi
+
+  # Utility functions -------------------------------------
+
+  MESSAGE() {
+    local do_print="true" do_log="true" msg= date=$(date +"[%D %T]") echo_opt=
+
+    # parse arguments
+    while [ true ]; do
+      case $1 in
+        "--no-break" ) shift; echo_opt='-n' ;;
+        "--no-date"  ) shift; date=''            ;;
+        "--no-print" ) shift; do_print="false"   ;;
+        "--no-log"   ) shift; do_log="false"     ;;
+        "--"         ) shift; break;             ;;
+        --*          ) shift;                    ;; # ignore
+        *            ) break;                    ;;
+      esac
+    done
+
+    msg="$*"
+    if [ "${do_print}" = "true" ]; then
+      # don't put the date on standard output (STDOUT)
+      echo ${echo_opt} "${msg}"
+    fi
+
+    if [ "${do_log}" = "true" -a -f "${__OUTPUT_LOG_FILE__}" ]; then
+      [ -n "${date}" ] && msg="${date} ${msg}"
+      echo ${echo_opt} "${msg}" >> "${__OUTPUT_LOG_FILE__}"
+    fi
+  }
+
+  MSG()    { MESSAGE $*;                        }
+  NOTICE() { MESSAGE "NOTICE: $*";              }
+  LOG()    { MESSAGE --no-print $@;             }
+  BR()     { MESSAGE --no-log --no-break $'\n'; }
+
+  ERROR() {
+    if [ "${__IN_DOTHIS__}" = "true" ]; then
+      MESSAGE --no-date -- "Err";
+      __IN_DOTHIS__="false"
+    fi
+    MESSAGE --no-log "ERROR: $*"
+  }
+
+  WARNING() {
+    if [ "${__IN_DOTHIS__}" = "true" ]; then
+      MESSAGE --no-date -- "Warn";
+      __IN_DOTHIS__="false"
+    fi
+    MESSAGE --no-log "WARNING: $*"
+  }
+
+  DOTHIS() {
+    MESSAGE --no-break -- "- $* ... "
+    __IN_DOTHIS__="true"
+  }
+
+  OK() {
+    [ "${__IN_DOTHIS__}" = "true" ] && MESSAGE --no-date -- "OK"
     __IN_DOTHIS__="false"
-  fi
-  FATAL "$*"
-}
+  }
 
-# do nothing. Can be override
-ROLLBACK() { echo >/dev/null; }
+  KO() {
+    if [ "${__IN_DOTHIS__}" = "true" ]; then
+      MESSAGE --no-date -- "KO";
+      __IN_DOTHIS__="false"
+    fi
+    FATAL "$*"
+  }
 
-FATAL() {
-  MESSAGE "fATAL: $*"
-  ROLLBACK
-  exit 1
-}
+  # do nothing. Can be override
+  ROLLBACK() { echo >/dev/null; }
 
-
-EXEC() {
-  local command= do_check="false" do_log="false" outputs= old_shell_opt=
-
-  # parse arguments
-  while true ; do
-    case "$1" in
-      "--with-log"   ) shift; do_log="true"   ;;
-      "--with-check" ) shift; do_check="true" ;;
-      --*            ) shift                  ;; # ignore this option
-      "--"           ) shift; break           ;;
-      *              ) break                  ;;
-    esac
-  done
-
-  # build the command
-  command=$*
-  if [ "${do_log}" = "true" ]; then
-    [ -n "${__OUTPUT_LOG_FILE__}" ] && outputs="${outputs} >>\"${__OUTPUT_LOG_FILE__}\" "
-    [ -n "${__ERROR_LOG_FILE__}"  ] && outputs="${outputs} 2>>\"${__ERROR_LOG_FILE__}\" "
-  fi
-
-  # disable shell debug, to not fucked up the log files content
-  old_shell_opt=$-; set +x
-
-  # exec the command
-  if [ "${do_check}" = "true" ]; then
-    eval "(${command}) ${outputs} || KO '$*'"
-  else
-    # execute the command
-    eval "(${command}) ${outputs}"
-  fi
-
-  # restaure shell options
-  set -${old_shell_opt}
-}
-
-# aliases
-EXEC_WITH_CHECK()         { EXEC --with-check -- "$*";            }
-EXEC_WITH_LOG()           { EXEC --with-log -- "$*";              }
-EXEC_WITH_CHECK_AND_LOG() { EXEC --with-check --with-log -- "$*"; }
-CMD()                     { EXEC_WITH_CHECK_AND_LOG $@;           }
-
-# Check for root privileges
-CHECK_ROOT() {
-  user_id=`id -u`
-  [ "${user_id}" != "0" ] \
-    && KO "You must execute $0 with root privileges"
-}
-
-SET_LOG_FILE() {
-  [ -z "$1" ] \
-    && KO "SET_OUTPUT_LOG_FILE is called without argument !"
-  __OUTPUT_LOG_FILE__="$1.output"
-  __ERROR_LOG_FILE__="$1.error"
+  FATAL() {
+    MESSAGE "fATAL: $*"
+    ROLLBACK
+    exit 1
+  }
 
 
-  if [ -f "${__OUTPUT_LOG_FILE__}" ]; then
-    rm -f "${__OUTPUT_LOG_FILE__}" \
-      || KO "Unable to delete existing output log file '${__OUTPUT_LOG_FILE__}'."
-  fi
+  EXEC() {
+    local command= do_check="false" do_log="false" outputs= old_shell_opt=
 
-  touch "${__OUTPUT_LOG_FILE__}" \
-    || KO "Unable to create output log file '${__OUTPUT_LOG_FILE__}'"
+    # parse arguments
+    while true ; do
+      case "$1" in
+        "--with-log"   ) shift; do_log="true"   ;;
+        "--with-check" ) shift; do_check="true" ;;
+        --*            ) shift                  ;; # ignore this option
+        "--"           ) shift; break           ;;
+        *              ) break                  ;;
+      esac
+    done
 
-  if [ -f "${__ERROR_LOG_FILE__}" ]; then
-    rm -f "${__ERROR_LOG_FILE__}" \
-      || KO "Unable to delete existing error log file '${__ERROR_LOG_FILE__}'."
-  fi
+    # build the command
+    command=$*
+    if [ "${do_log}" = "true" ]; then
+      [ -n "${__OUTPUT_LOG_FILE__}" ] && outputs="${outputs} >>\"${__OUTPUT_LOG_FILE__}\" "
+      [ -n "${__ERROR_LOG_FILE__}"  ] && outputs="${outputs} 2>>\"${__ERROR_LOG_FILE__}\" "
+    fi
 
-  touch "${__ERROR_LOG_FILE__}" \
-    || KO "Unable to create error log file '${__ERROR_LOG_FILE__}'"
+    # disable shell debug, to not fucked up the log files content
+    old_shell_opt=$-; set +x
 
-}
+    # exec the command
+    if [ "${do_check}" = "true" ]; then
+      eval "(${command}) ${outputs} || KO '$*'"
+    else
+      # execute the command
+      eval "(${command}) ${outputs}"
+    fi
 
-private_DISPLAY_LOG_FILES() {
-  if [ -n "${__OUTPUT_LOG_FILE__}" -a -n "${__ERROR_LOG_FILE__}" ]; then
-    NOTICE "Here are where you can find log files"
-    MESSAGE "   output: ${__OUTPUT_LOG_FILE__}"
-    MESSAGE "   error: ${__ERROR_LOG_FILE__}"
-  fi
-}
+    # restaure shell options
+    set -${old_shell_opt}
+  }
 
-SOURCE() {
-  if [ -r "$1" ]; then
-    source "$1" || KO "Can't source $1"
-  else
-    KO "$1 hasn't been find"
-  fi
-}
+  # aliases
+  EXEC_WITH_CHECK()         { EXEC --with-check -- "$*";            }
+  EXEC_WITH_LOG()           { EXEC --with-log -- "$*";              }
+  EXEC_WITH_CHECK_AND_LOG() { EXEC --with-check --with-log -- "$*"; }
+  CMD()                     { EXEC_WITH_CHECK_AND_LOG $@;           }
 
-__LIB_FUNCTIONS__="Loaded"
+  # Check for root privileges
+  CHECK_ROOT() {
+    user_id=`id -u`
+    [ "${user_id}" != "0" ] \
+      && KO "You must execute $0 with root privileges"
+  }
+
+  SET_LOG_FILE() {
+    [ -z "$1" ] \
+      && KO "SET_OUTPUT_LOG_FILE is called without argument !"
+    __OUTPUT_LOG_FILE__="$1.output"
+    __ERROR_LOG_FILE__="$1.error"
+
+
+    if [ -f "${__OUTPUT_LOG_FILE__}" ]; then
+      rm -f "${__OUTPUT_LOG_FILE__}" \
+        || KO "Unable to delete existing output log file '${__OUTPUT_LOG_FILE__}'."
+    fi
+
+    touch "${__OUTPUT_LOG_FILE__}" \
+      || KO "Unable to create output log file '${__OUTPUT_LOG_FILE__}'"
+
+    if [ -f "${__ERROR_LOG_FILE__}" ]; then
+      rm -f "${__ERROR_LOG_FILE__}" \
+        || KO "Unable to delete existing error log file '${__ERROR_LOG_FILE__}'."
+    fi
+
+    touch "${__ERROR_LOG_FILE__}" \
+      || KO "Unable to create error log file '${__ERROR_LOG_FILE__}'"
+
+  }
+
+  private_DISPLAY_LOG_FILES() {
+    if [ -n "${__OUTPUT_LOG_FILE__}" -a -n "${__ERROR_LOG_FILE__}" ]; then
+      NOTICE "Here are where you can find log files"
+      MESSAGE "   output: ${__OUTPUT_LOG_FILE__}"
+      MESSAGE "   error: ${__ERROR_LOG_FILE__}"
+    fi
+  }
+
+  SOURCE() {
+    if [ -r "$1" ]; then
+      source "$1" || KO "Can't source $1"
+    else
+      KO "$1 hasn't been find"
+    fi
+  }
+
+fi # end of: if [ "${__LIB_FUNCTIONS__}" = 'Loaded' ]; then

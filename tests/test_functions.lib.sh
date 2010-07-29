@@ -283,4 +283,5 @@ mDOTHIS "ROLLBACK()"
 
 mOK
 
-exit 0
+echo
+echo "*** All Tests OK ***"

@@ -30,9 +30,13 @@ SOURCE ../ask.lib.sh
 TEST_FILE="/tmp/test.${RANDOM}"
 SET_LOG_FILE "${TEST_FILE}"
 
+TEST_ANSWER_FILE="/tmp/test_answer.${RANDOM}"
+ASK_SET_ANSWER_LOG_FILE "${TEST_ANSWER_FILE}"
+
 # Utility functions ----------------------------------------------------------
 
 TEST_FAILED() {
+  rm -f "${TEST_FILE}" "${TEST_ANSWER_FILE}"
   echo '[ERROR] Test failed'
   exit 1
 }
@@ -59,86 +63,109 @@ reset_FILES() {
   [ -f "${__ERROR_LOG_FILE__}"  ] && echo -n '' > "${__ERROR_LOG_FILE__}"
 }
 
+
 # Make tests -----------------------------------------------------------------
-MESSAGE --no-log "Test: HIT_TO_CONTINUE()"
-HIT_TO_CONTINUE
-check_LOG_FILE "
-Press ENTER to continue, or CTRL+C to exit
 
-User press ENTER"
+msg_opt=
+loop_count=0
 
+while [ "$loop_count" != "2" ]; do
 
-result=
-MESSAGE --no-log "Test: ASK anything"
-ASK result "Type anything:"
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
-
-check_LOG_FILE "Type anything: => ${result}"
+  MESSAGE ${msg_opt} --no-log "** * Test: HIT_TO_CONTINUE() * **"
+  HIT_TO_CONTINUE
+  check_LOG_FILE "User press ENTER to continue"
 
 
-result=
-MESSAGE --no-log "Test: ASK yes/no"
-ASK --yesno result "yes or no ?"
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK anything * **"
+  ASK     ${msg_opt} result "Type anything:"
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
 
-check_LOG_FILE "yes or no ? => ${result}"
-
-
-result=
-MESSAGE --no-log "Test: ASK yes/no with Yes in default"
-ASK --yesno result "yes/no [Y] ?" 'Y'
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
-
-check_LOG_FILE "yes/no [Y] ? => ${result}"
+  check_LOG_FILE "Type anything: => ${result}"
 
 
-result=
-MESSAGE --no-log "Test: ASK number"
-MESSAGE --no-log "Test: enter a bad response to see the error message \"Your answer is not a number\""
-ASK --number result "Number:" '' 'Your answer is not a number'
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK yes/no * **"
+  ASK     ${msg_opt} --yesno result "yes or no ?"
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
 
-check_LOG_FILE "Number: => ${result}"
-
-
-result=
-MESSAGE --no-log "Test: ASK number with 9 in default"
-ASK --number result "Number [9]:" '9'
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
-
-check_LOG_FILE "Number [9]: => ${result}"
+  check_LOG_FILE "yes or no ? => ${result}"
+  [ "${result}" != "Y" -a "${result}" != "N" ] && TEST_FAILED
 
 
-result=
-MESSAGE --no-log "Test: ASK --no-print"
-ASK --pass result "Password:"
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
-check_LOG_FILE "Password: => ${result//?/#}"
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK yes/no with Yes in default * **"
+  ASK     ${msg_opt} --yesno result "yes/no [Y] ?" 'Y'
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
+
+  check_LOG_FILE "yes/no [Y] ? => ${result}"
+  [ "${result}" != "Y" -a "${result}" != "N" ] && TEST_FAILED
 
 
-result=
-MESSAGE --no-log "Test: ASK --allow-empty"
-MESSAGE --no-log "Just hit ENTER for this test, and check that the response is an empty string"
-ASK --allow-empty result "Want to say something ?"
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK number * **"
+  MESSAGE ${msg_opt} --no-log "  Enter a bad response to see the error message \"Your answer is not a number\""
+  ASK     ${msg_opt} --number result "Number:" '' 'Your answer is not a number'
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
 
-check_LOG_FILE 'Want to say something ? =>'
-
-result=
-MESSAGE --no-log "Test: ASK --with-break and --useless-option"
-MESSAGE --no-log "A LineBreak is added after the question"
-ASK --with-break --useless-option result "Want to say something ?"
-MESSAGE --no-log "You have type \"${result}\""
-MESSAGE --no-log ''
-
-check_LOG_FILE "Want to say something ? => ${result}"
+  check_LOG_FILE "Number: => ${result}"
+  echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
 
 
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK number with 9 in default * **"
+  ASK     ${msg_opt} --number result "Number [9]:" '9'
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
+
+  check_LOG_FILE "Number [9]: => ${result}"
+  echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
+
+
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK --no-print ** *"
+  ASK     ${msg_opt} --pass result "Password:"
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
+
+  check_LOG_FILE "Password: => ${result//?/#}"
+
+
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK --allow-empty * **"
+  MESSAGE ${msg_opt} --no-log "  Just hit ENTER for this test, and check that the response is an empty string"
+  ASK     ${msg_opt} --allow-empty result "Want to say something ?"
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
+
+  check_LOG_FILE 'Want to say something ? =>'
+  [ "${result}" != '' ] && TEST_FAILED
+
+
+  result=
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK --with-break and --useless-option * **"
+  MESSAGE ${msg_opt} --no-log "  A LineBreak is added after the question"
+  ASK     ${msg_opt} --with-break --useless-option result "Want to say something ?"
+  MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
+  MESSAGE ${msg_opt} --no-log ''
+
+  check_LOG_FILE "Want to say something ? => ${result}"
+
+
+  if [ "${loop_count}" = "0" ]; then
+    ASK_SET_AUTOANSWER_FILE "${TEST_ANSWER_FILE}"
+    msg_opt="--no-print"
+    MESSAGE --no-log '** * Test: ASK with automatic answer file * **'
+  fi
+
+  loop_count=$(( loop_count + 1))
+done
+
+rm -f "${TEST_FILE}" "${TEST_ANSWER_FILE}"
 exit 0

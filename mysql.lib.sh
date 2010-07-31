@@ -136,11 +136,13 @@ if [ "${__LIB_MYSQL__}" != 'Loaded' ]; then
   __LIB_MYSQL__='Loaded'
 
   # Load common lib
-  if [ -r ./functions.lib.sh ]; then
-    source ./functions.lib.sh
-  else
-    echo "ERROR: Unable to load ./functions.lib.sh library"
-    exit 2
+  if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
+    if [ -r ./functions.lib.sh ]; then
+      source ./functions.lib.sh
+    else
+      echo "ERROR: Unable to load ./functions.lib.sh library"
+      exit 2
+    fi
   fi
 
   # Internal variables

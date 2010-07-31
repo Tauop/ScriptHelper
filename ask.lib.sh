@@ -61,6 +61,11 @@
 if [ "${__LIB_ASK__}" != 'Loaded' ]; then
   __LIB_ASK__='Loaded'
 
+  # IMPORTANT: Don't set those variables directly in the parent script
+  __AUTOANSWER_FILE__=''
+  __AUTOANSWER_FP__=0
+  __ANSWER_LOG_FILE__=''
+
   # Load common lib
   if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
@@ -74,31 +79,69 @@ if [ "${__LIB_ASK__}" != 'Loaded' ]; then
   # ----------------------------------------------------------------------------
 
   HIT_TO_CONTINUE() {
-    MESSAGE ""
-    MESSAGE "Press ENTER to continue, or CTRL+C to exit"
-    MESSAGE ""
-    read
-    LOG "User press ENTER"
+    if [ ! -f "${__AUTOANSWER_FILE__}" ]; then
+      MESSAGE --no-log ""
+      MESSAGE --no-log "Press ENTER to continue, or CTRL+C to exit"
+      MESSAGE --no-log ""
+      read
+    else
+      MESSAGE --no-log ''
+    fi
+    LOG "User press ENTER to continue"
   }
 
+  # ----------------------------------------------------------------------------
+  ASK_SET_AUTOANSWER_FILE() {
+    [ -z "$1" ] && KO "ASK_SET_ANSWER_FILE is called without argument !"
+    [ $# -gt 1 ] && KO "ASK_SET_ANSWER_FILE: too much arguments !"
+
+    __AUTOANSWER_FILE__="$1"
+    __AUTOANSWER_FP__=0
+    if [ ! -r "${__AUTOANSWER_FILE__}" ]; then
+      __AUTOANSWER_FILE__=''
+      KO "${__AUTOANSWER_FILE__} can't be read"
+    fi
+  }
+
+  # ----------------------------------------------------------------------------
+  ASK_SET_ANSWER_LOG_FILE() {
+    [ -z "$1" ] && KO "ASK_SET_ANSWER_FILE is called without argument !"
+    [ $# -gt 1 ] && KO "ASK_SET_ANSWER_FILE: too much arguments !"
+
+    __ANSWER_LOG_FILE__="$1"
+    if [ -f "${__ANSWER_LOG_FILE__}" ]; then
+      rm -f "${__ANSWER_LOG_FILE__}" \
+        || KO "Unable to delete existing answer log file '${__ANSWER_LOG_FILE__}'."
+    fi
+
+    touch "${__ANSWER_LOG_FILE__}" \
+      || KO "Unable to create answer log file '${__ANSWER_LOG_FILE__}'."
+  }
+
+  # ----------------------------------------------------------------------------
   ASK() {
     local question= variable= default= error=
-    local answer= read_opt='' check='' allow_empty= message_opt=' --no-break ' do_pass='false' no_print='false'
+    local answer= read_opt='' check='' allow_empty= message_opt=
+    local do_break='false' do_pass='false' no_print='false' no_echo='false'
 
     # parse argument
     while [ true ]; do
       case "$1" in
-        "--no-print"      ) shift; no_print='true'    ;;
-        "--number"        ) shift; check='number'     ;;
-        "--yesno"         ) shift; check='yesno'      ;;
-        "--allow-empty"   ) shift; allow_empty='true' ;;
-        "--with-break"    ) shift; message_opt=''     ;;
-        "--pass"          ) shift; do_pass='true'     ;;
-        --*               ) shift ;; # ignore
-        *                 ) break ;;
+        --no-print      ) shift; no_print='true'    ;;
+        --no-echo       ) shift; no_echo='true'     ;;
+        --number        ) shift; check='number'     ;;
+        --yesno         ) shift; check='yesno'      ;;
+        --allow-empty   ) shift; allow_empty='true' ;;
+        --with-break    ) shift; do_break='true'    ;;
+        --pass          ) shift; do_pass='true'     ;;
+        --*             ) shift ;; # ignore
+        *               ) break ;;
       esac
     done
-    [ "${no_print}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s"
+    [ "${do_break}" = 'false' ] && message_opt="${message_opt} --no-break "
+    [ "${no_print}" = 'true'  ] && message_opt="${message_opt} --no-print"
+
+    [ "${no_echo}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s"
 
     # parse trailing arguments
     # note: the while is just a workaround, as bash has no GOTO statement
@@ -115,54 +158,63 @@ if [ "${__LIB_ASK__}" != 'Loaded' ]; then
 
     MESSAGE --no-log ${message_opt} "${question}  "
 
-    while read ${read_opt} answer; do
-      # deal with default, when user only press ENTER
-      if [ -z "${answer}" ]; then
-        if [ -n "${default}" ]; then
-          answer="${default}"
-          break;
+    if [ -f "${__AUTOANSWER_FILE__}" ]; then
+      # automatic mode
+      __AUTOANSWER_FP__=$((__AUTOANSWER_FP__ + 1 ))
+      answer=$( sed -n "${__AUTOANSWER_FP__}p" "${__AUTOANSWER_FILE__}" )
+      [ -z "${answer}" -a -n "${default}" ] && answer="${default}"
+      MESSAGE ${message_opt} --no-log ''
+    else
+      # interactive mode
+      while read ${read_opt} answer; do
+        # deal with default, when user only press ENTER
+        if [ -z "${answer}" ]; then
+          if [ -n "${default}" ]; then
+            answer="${default}"
+            break;
+          fi
+          [ "${allow_empty}" = 'true' ] && break;
+        else
+          # delete useless space
+          answer=`echo "${answer}" | sed -e 's/^ *//;s/ *$//;'`
+
+          # check user response
+          case "${check}" in
+            "yesno" )
+                  if [ "${answer^^}" = 'Y'   \
+                    -o "${answer^^}" = 'YES' \
+                    -o "${answer^^}" = 'N'   \
+                    -o "${answer^^}" = 'NO' ]; then
+                    answer=${answer^^}           # uppercase
+                    answer=${answer:0:1} # keep the first char
+                    break;
+                  fi
+              ;; # enf of "yesno"
+            "number" )
+                  echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+                  [ $? -eq 0 ] && break;
+                ;; # end of "number"
+            * ) break  ;;
+          esac
         fi
-        [ "${allow_empty}" = 'true' ] && break;
-      else
-        # delete useless space
-        answer=`echo "${answer}" | sed -e 's/^ *//;s/ *$//;'`
 
-        # check user response
-        case "${check}" in
-          "yesno" )
-                if [ "${answer^^}" = 'Y'   \
-                  -o "${answer^^}" = 'YES' \
-                  -o "${answer^^}" = 'N'   \
-                  -o "${answer^^}" = 'NO' ]; then
-                  answer=${answer^^}           # uppercase
-                  answer=${answer:0:1} # keep the first char
-                  break;
-                fi
-            ;; # enf of "yesno"
-          "number" )
-                echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
-                [ $? -eq 0 ] && break;
-              ;; # end of "number"
-          * ) break  ;;
-        esac
-      fi
+        # NOTE: with --no-print, no \n is printed out to the STDOUT.
+        #       This test has to be changed if there is more read options
+        #       deal with this script.
+        [ -n "${read_opt}" ] && MESSAGE --no-log ""
 
-      # NOTE: with --no-print, no \n is printed out to the STDOUT.
-      #       This test has to be changed if there is more read options
-      #       deal with this script.
-      [ -n "${read_opt}" ] && MESSAGE --no-log ""
+        # display error
+        if [ -n "${error}" ]; then
+          ERROR "${error}"
+        else
+          ERROR "invalid answer"
+        fi
 
-      # display error
-      if [ -n "${error}" ]; then
-        ERROR "${error}"
-      else
-        ERROR "invalid answer"
-      fi
+        # display the question again
+        MESSAGE --no-log ${message_opt} "${question}  "
 
-      # display the question again
-      MESSAGE --no-log ${message_opt} "${question}  "
-
-    done # enf of while read
+      done # enf of while read
+    fi
 
     if [ "${do_pass}" = 'true' ]; then
       LOG "${question}  => ${answer//?/#}"
@@ -175,6 +227,7 @@ if [ "${__LIB_ASK__}" != 'Loaded' ]; then
     #       deal with this script.
     [ -n "${read_opt}" ] && MESSAGE --no-log ""
 
+    [ -n "${__ANSWER_LOG_FILE__}" ] &&  echo "${answer}" >> "${__ANSWER_LOG_FILE__}"
     eval "${variable}=\"${answer}\"";
   }
 

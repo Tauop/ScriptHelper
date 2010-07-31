@@ -246,6 +246,8 @@ if [ "${__LIB_FUNCTIONS__}" != 'Loaded' ]; then
 
   SET_LOG_FILE() {
     [ -z "$1" ] && KO "SET_OUTPUT_LOG_FILE is called without argument !"
+    [ $# -gt 1 ] && KO "SET_OUTPUT_LOG_FILE: too much arguments !"
+
     __OUTPUT_LOG_FILE__="$1.output"
     __ERROR_LOG_FILE__="$1.error"
 

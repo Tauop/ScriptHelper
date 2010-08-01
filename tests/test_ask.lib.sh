@@ -113,7 +113,7 @@ while [ "$loop_count" != "2" ]; do
   MESSAGE ${msg_opt} --no-log ''
 
   check_LOG_FILE "Number: => ${result}"
-  echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+  echo "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
   [ $? -ne 0 ] && TEST_FAILED
 
 
@@ -124,7 +124,7 @@ while [ "$loop_count" != "2" ]; do
   MESSAGE ${msg_opt} --no-log ''
 
   check_LOG_FILE "Number [9]: => ${result}"
-  echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+  echo "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
   [ $? -ne 0 ] && TEST_FAILED
 
 

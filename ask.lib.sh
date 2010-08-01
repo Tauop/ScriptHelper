@@ -57,8 +57,12 @@
 #
 # ----------------------------------------------------------------------------
 
+# -f Disable pathname expansion.
+# -u Unset variables
+set -fu
+
 # don't load several times this file
-if [ "${__LIB_ASK__}" != 'Loaded' ]; then
+if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
   __LIB_ASK__='Loaded'
 
   # IMPORTANT: Don't set those variables directly in the parent script
@@ -67,7 +71,7 @@ if [ "${__LIB_ASK__}" != 'Loaded' ]; then
   __ANSWER_LOG_FILE__=''
 
   # Load common lib
-  if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
+  if [ "${__LIB_FUNCTIONS__-}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
       source ./functions.lib.sh
     else
@@ -125,7 +129,8 @@ if [ "${__LIB_ASK__}" != 'Loaded' ]; then
     local do_break='false' do_pass='false' no_print='false' no_echo='false'
 
     # parse argument
-    while [ true ]; do
+    while true; do
+      [ $# -eq 0 ] && break
       case "$1" in
         --no-print      ) shift; no_print='true'    ;;
         --no-echo       ) shift; no_echo='true'     ;;

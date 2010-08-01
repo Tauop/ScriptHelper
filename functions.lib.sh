@@ -93,8 +93,12 @@
 #
 # ----------------------------------------------------------------------------
 
+# -f Disable pathname expansion.
+# -u Unset variables
+set -fu
+
 # don't source several times this file
-if [ "${__LIB_FUNCTIONS__}" != 'Loaded' ]; then
+if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
   __LIB_FUNCTIONS__="Loaded"
 
   # IMPORTANT: Don't set those variables directly in the parent script
@@ -123,14 +127,15 @@ if [ "${__LIB_FUNCTIONS__}" != 'Loaded' ]; then
 
     # parse arguments
     while [ true ]; do
-      case $1 in
-        "--no-break" ) shift; echo_opt='-n' ;;
-        "--no-date"  ) shift; date=''            ;;
-        "--no-print" ) shift; do_print="false"   ;;
-        "--no-log"   ) shift; do_log="false"     ;;
-        "--"         ) shift; break;             ;;
-        --*          ) shift;                    ;; # ignore
-        *            ) break;                    ;;
+      [ $# -eq 0 ] && break
+      case "$1" in
+        --no-break ) shift; echo_opt='-n' ;;
+        --no-date  ) shift; date=''            ;;
+        --no-print ) shift; do_print="false"   ;;
+        --no-log   ) shift; do_log="false"     ;;
+        --         ) shift; break;             ;;
+        --*        ) shift;                    ;; # ignore
+        *          ) break;                    ;;
       esac
     done
 
@@ -200,12 +205,13 @@ if [ "${__LIB_FUNCTIONS__}" != 'Loaded' ]; then
 
     # parse arguments
     while true ; do
+      [ $# -eq 0 ] && break
       case "$1" in
-        "--with-log"   ) shift; do_log="true"   ;;
-        "--with-check" ) shift; do_check="true" ;;
-        --*            ) shift                  ;; # ignore this option
-        "--"           ) shift; break           ;;
-        *              ) break                  ;;
+        --with-log   ) shift; do_log="true"   ;;
+        --with-check ) shift; do_check="true" ;;
+        --*          ) shift                  ;; # ignore this option
+        --           ) shift; break           ;;
+        *            ) break                  ;;
       esac
     done
 

@@ -131,12 +131,16 @@
 #
 # ----------------------------------------------------------------------------
 
+# -f Disable pathname expansion.
+# -u Unset variables
+set -fu
+
 # Don't source this file several times
-if [ "${__LIB_MYSQL__}" != 'Loaded' ]; then
+if [ "${__LIB_MYSQL__-}" != 'Loaded' ]; then
   __LIB_MYSQL__='Loaded'
 
   # Load common lib
-  if [ "${__LIB_FUNCTIONS__}" != "Loaded" ]; then
+  if [ "${__LIB_FUNCTIONS__-}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
       source ./functions.lib.sh
     else
@@ -179,21 +183,22 @@ if [ "${__LIB_MYSQL__}" != 'Loaded' ]; then
     __MYSQL_NB_CONSUMMED_ARG__=0
 
     while [ true ]; do
-      case $1 in
+      [ $# -eq 0 ] && break;
+      case "$1" in
         # common connexion options
-        "--user"  ) shift; __MYSQL_USERNAME__=$1; shift; inc=2 ;;
-        "--pass"  ) shift; __MYSQL_PASSWORD__=$1; shift; inc=2 ;;
-        "--db"    ) shift; __MYSQL_DATABASE__=$1; shift; inc=2 ;;
-        "--host"  ) shift; __MYSQL_HOST__=$1;     shift; inc=2 ;;
-        "--port"  ) shift; __MYSQL_PORT__=$1;     shift; inc=2 ;;
+        --user  ) shift; __MYSQL_USERNAME__=$1; shift; inc=2 ;;
+        --pass  ) shift; __MYSQL_PASSWORD__=$1; shift; inc=2 ;;
+        --db    ) shift; __MYSQL_DATABASE__=$1; shift; inc=2 ;;
+        --host  ) shift; __MYSQL_HOST__=$1;     shift; inc=2 ;;
+        --port  ) shift; __MYSQL_PORT__=$1;     shift; inc=2 ;;
 
         # misc options
-        "--human" ) shift; __MYSQL_HUMAN__="true" ; inc=1 ;;
-        "--bash"  ) shift; __MYSQL_HUMAN__="false"; inc=1 ;;
+        --human ) shift; __MYSQL_HUMAN__="true" ; inc=1 ;;
+        --bash  ) shift; __MYSQL_HUMAN__="false"; inc=1 ;;
 
         # EXEC options
-        "--with-log"   ) shift; exec_with_log='true';   inc=1 ;;
-        "--with-check" ) shift; exec_with_check='true'; inc=1 ;;
+        --with-log   ) shift; exec_with_log='true';   inc=1 ;;
+        --with-check ) shift; exec_with_check='true'; inc=1 ;;
 
         # ignore but increment number of argument consummed
         --*       ) shift; inc=1 ;;

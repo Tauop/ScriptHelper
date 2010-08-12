@@ -194,14 +194,14 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
   ROLLBACK() { echo >/dev/null; }
 
   FATAL() {
-    MESSAGE "fATAL: $*"
+    MESSAGE "FATAL: $*"
     ROLLBACK
     exit 1
   }
 
 
   EXEC() {
-    local command= do_check="false" do_log="false" outputs= old_shell_opt=
+    local command= do_check="false" do_log="false" outputs= old_shell_opt= return_value=
 
     # parse arguments
     while true ; do
@@ -227,14 +227,18 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
 
     # exec the command
     if [ "${do_check}" = "true" ]; then
-      eval "(${command}) ${outputs} || KO '$*'"
+      eval "(${command}) ${outputs} || ( r= $?; F() { KO '$*'; return $1 }; F $r )"
+      return_value=$?
     else
       # execute the command
       eval "(${command}) ${outputs}"
+      return_value=$?
     fi
 
     # restaure shell options
     set -${old_shell_opt}
+
+    return ${return_value}
   }
 
   # aliases

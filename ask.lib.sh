@@ -25,8 +25,30 @@
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
 # __LIB_ASK__ : 'Loaded' when the lib is 'source'd
+# __ANSWER_LOG_FILE__ : filepath of the file in which user's answer, get with
+#                       ASK(), will be recorded.
+# __AUTOANSWER_FILE__ : filepath of the file from which answer will be taken
+# __AUTOANSWER_FP__ : file pointer, which determine the last line number of
+#                     the file __AUTOANSWER_FILE__ which has been read
 #
 # Methods ====================================================================
+#
+# ASK_SET_ANSWER_LOG_FILE()
+#   desc: create a log file, which will be used to store all user answer,
+#         one per line
+#   usage: ASK_SET_ANSWER_LOG_FILE <file>
+#   arguments:
+#     <file> : path to the file in which to log answers.
+#   note: the <file> will be deleted before use
+#
+# ASK_SET_AUTOANSWER_FILE()
+#   desc: set a file which contain previously recorded user's answer,
+#         ie a file which contain a answer per line. Each line of this
+#         file will be returned at each call of ASK().
+#   arguments:
+#     <file> : path to the file from which answers will be read
+#   note: Call of HIT_TO_CONTINUE() will have no interactive effect, if
+#         ASK_SET_AUTOANSWER_FILE has been used.
 #
 # HIT_TO_CONTINUE()
 #   desc: display a message to the user, which ask to press ENTER to continue
@@ -40,11 +62,15 @@
 #   usage: ASK [ <options> ] <variable> [ "<text>" ] [ <default value> ] [ "<error>" ]
 #   arguments: 
 #      <options> =
-#        --no-print : Don't print what the user type
+#        --no-print : all call of MESSAGE() won't print anything
+#        --no-echo : Don't print what the user type
+#        --with-break : make a break-line after the question printing.
+#        --pass : implies --no-print + don't log clear text password
 #        --number : The user answer must be a number
 #        --yesno : The asked question is a yes/no question.
 #                  Control the user answer.
-#        --pass : implies --no-print + don't log clear text password
+#        --allow-empty : user can hit enter, which reply to the question.
+#                        In this case, the answer will be a empty string
 #      <variable> = The name of the variable in which we have to store
 #                   the user response.
 #      <text> = The question to ask to the user.
@@ -54,7 +80,7 @@
 #      <error> = The custom error message displayed to the user if its
 #                answer is not valid.
 #                default: "Invalid answer."
-#
+#   note: format options are ignored if a __AUTOANSWER_FILE__ was set
 # ----------------------------------------------------------------------------
 
 # -f Disable pathname expansion.
@@ -132,13 +158,17 @@ if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
     while true; do
       [ $# -eq 0 ] && break
       case "$1" in
+        # display options
         --no-print      ) shift; no_print='true'    ;;
         --no-echo       ) shift; no_echo='true'     ;;
+        --with-break    ) shift; do_break='true'    ;;
+        --pass          ) shift; do_pass='true'     ;;
+
+        # answer format options
         --number        ) shift; check='number'     ;;
         --yesno         ) shift; check='yesno'      ;;
         --allow-empty   ) shift; allow_empty='true' ;;
-        --with-break    ) shift; do_break='true'    ;;
-        --pass          ) shift; do_pass='true'     ;;
+
         --*             ) shift ;; # ignore
         *               ) break ;;
       esac

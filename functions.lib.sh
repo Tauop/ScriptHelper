@@ -227,7 +227,7 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
 
     # exec the command
     if [ "${do_check}" = "true" ]; then
-      eval "(${command}) ${outputs} || ( r= $?; F() { KO '$*'; return $1 }; F $r )"
+      eval "(${command}) ${outputs} || ( r=\$?; F() { KO '$*'; return \$1; }; F \$r; )"
       return_value=$?
     else
       # execute the command

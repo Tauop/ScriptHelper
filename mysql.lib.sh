@@ -375,11 +375,12 @@ if [ "${__LIB_MYSQL__-}" != 'Loaded' ]; then
 
     [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELDS: missing or incorrect table name"
 
-    eval "MYSQL_QUERY --bash ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
+    eval "MYSQL_QUERY --bash ${arguments} 'DESCRIBE \`${table_name}\`'" \
+        | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
   }
 
   MYSQL_GET_FIELD_TYPE() {
-    local table_name= field_name=
+    local table_name= field_name= do_simple='false'
 
     [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
 
@@ -398,10 +399,19 @@ if [ "${__LIB_MYSQL__-}" != 'Loaded' ]; then
       arguments=
     fi
 
+    arguments=" ${arguments} "
+    # --simple option ?
+    if [ "${arguments/ --simple /}" != "${arguments}" ]; then
+      arguments=${arguments/ --simple /}
+      do_simple='true'
+    fi
+
     [ -z "${table_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect table name"
     [ -z "${field_name}" ] && FATAL "MYSQL_GET_FIELD_TYPE: missing or incorrect field name"
 
-    eval "MYSQL_QUERY --bash ${arguments} 'DESCRIBE \`${table_name}\`'" | tr $'\t' ' ' | grep "^${field_name} " | tr -s ' ' | cut  -d' ' -f2
+    eval "MYSQL_QUERY --bash ${arguments} 'DESCRIBE \`${table_name}\`'"      \
+        | tr $'\t' ' ' | grep "^${field_name} " | tr -s ' ' | cut  -d' ' -f2 \
+        | ( [ "${do_simple}" = "true" ] && sed -e 's/[(].*[)]$//' || cat )
   }
 
 fi # end of: if [ "${__LIB_MYSQL__}" = 'Loaded' ]; then

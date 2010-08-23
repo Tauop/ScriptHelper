@@ -1,6 +1,6 @@
 == Welcome to ScriptHelper
 
-ScriptHelper is a POSIC shell library of common functions, to facilitate code reuse.
+ScriptHelper is a POSIX shell library of common functions, to facilitate code reuse.
 
 First, I've wrote ScriptHelper to be able to send bash script to other users and
 always know what's wrong when they failed. This was the purpose of the CMD command,

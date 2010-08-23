@@ -49,6 +49,8 @@ TEST_FAILED() {
   echo
   echo '[ERROR] Test failed'
   echo "param = $*"
+  echo
+  echo "test file = ${TEST_FILE}"
   exit 1
 }
 
@@ -81,8 +83,9 @@ reset_LOG_FILES() {
   [ -f "${__ERROR_LOG_FILE__}"  ] && echo -n '' > "${__ERROR_LOG_FILE__}"
 }
 
-mDOTHIS() { DOTHIS "$*"; reset_LOG_FILES; }
-mOK() { OK; reset_LOG_FILES; }
+# don't use function.lib.sh functions !
+mDOTHIS() { echo -n "- $* ... "; reset_LOG_FILES; }
+mOK()     { echo 'OK';           reset_LOG_FILES; }
 
 # Make tests -----------------------------------------------------------------
 # 1/ test MESSAGE() without setting up logs files
@@ -91,6 +94,7 @@ mDOTHIS "MESSAGE() without logs files"
 
   MESSAGE "hello" > "${TEST_FILE}"
   check_TEST_FILE $'hello\n'
+
 
   MESSAGE --no-break "hello world" > "${TEST_FILE}"
   check_TEST_FILE 'hello world'
@@ -183,6 +187,40 @@ mDOTHIS "MESSAGE() alias functions"
   NOTICE "test" > "${TEST_FILE}"
   check_TEST_FILE $'NOTICE: test\n'
   check_LOG_FILE 'NOTICE: test'
+  reset_LOG_FILES
+
+  DOTHIS "A test" >  "${TEST_FILE}"
+  OK              >> "${TEST_FILE}"
+  check_TEST_FILE $'- A test ... OK\n'
+  check_LOG_FILE '- A test ... OK'
+  reset_LOG_FILES
+
+  MSG 'this test'   >  "${TEST_FILE}"
+  MSG_INDENT_INC
+  MSG 'is made'     >> "${TEST_FILE}"
+  MSG_INDENT_INC
+  MSG 'to test'     >> "${TEST_FILE}"
+  MSG_INDENT_DEC
+  MSG 'indentation' >> "${TEST_FILE}"
+  MSG_INDENT_DEC
+  MSG 'nice ;)'     >> "${TEST_FILE}"
+  check_TEST_FILE $'this test\n  is made\n    to test\n  indentation\nnice ;)\n'
+  check_LOG_FILE  $'this test\n  is made\n    to test\n  indentation\nnice ;)'
+  reset_LOG_FILES
+
+  MSG 'an other test'    >  "${TEST_FILE}"
+  MSG_INDENT_INC
+  MSG 'with indent'      >> "${TEST_FILE}"
+  MSG --no-indent 'oups' >> "${TEST_FILE}"
+  MSG_INDENT_INC
+  ERROR 'test an error'  >> "${TEST_FILE}"
+  MSG_INDENT_DEC
+  NOTICE 'huhu'          >> "${TEST_FILE}"
+  WARNING 'attention :p' >> "${TEST_FILE}"
+  MSG_INDENT_DEC
+  MSG 'the end !'        >> "${TEST_FILE}"
+  check_TEST_FILE $'an other test\n  with indent\noups\n    ERROR: test an error\n  NOTICE: huhu\n  WARNING: attention :p\nthe end !\n'
+  check_LOG_FILE $'an other test\n  with indent\noups\n    ERROR: test an error\n  NOTICE: huhu\n  WARNING: attention :p\nthe end !'
   reset_LOG_FILES
 
 mOK

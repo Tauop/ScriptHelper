@@ -58,7 +58,9 @@
 #
 # MESSAGE()
 #   desc: This function is used to display messages on standard output
-#         and/or write messages into  the output log file.
+#         and/or write messages into the output log file.
+#   note: Message are display with indentation if MSG_INDENT_* functions
+#         are called, or if the script call DOTHIS() and related functions
 #  usage: MESSAGE [<options>] "<message>"
 #  options:
 #    --no-break : use 'echo -n' instead of 'echo' to display/write message
@@ -70,12 +72,18 @@
 #    MSG()     = MESSAGE
 #    LOG()     = MESSAGE --no-print
 #    NOTICE()  = MESSAGE "NOTICE: <message>"
-#    ERROR()   = MESSAGE "ERROR: <message>"
-#    BR()      = MESSAGE --no-log ""
+#    ERROR()   = MESSAGE "ERROR: <message>" + close DOTHIS if one
+#    WARNING() = MESSAGE "WARN: <message>"  + close DOTHIS if one
+#    BR()      = MESSAGE --no-log $'\n'
 #    DOTHIS()  = MESSAGE --no-break -- '- <message> ... '
 #    OK()      = MESSAGE --no-date -- "OK" + close DOTHIS if one
 #    KO()      = MESSAGE --no-date -- "KO" + close DOTHIS if one + FATAL "<message>"
-#    WARNING() = MESSAGE --no-log "WARN: <message>"  + close DOTHIS if one
+#
+# MSG_INDENT_INC()
+#   desc: increment indentation of MESSAGE() display by one space
+#
+# MSG_INDENT_DEC()
+#   desc: decrement indentation of MESSAGE() display by one space
 #
 # FATAL()
 #   $1: error message
@@ -99,93 +107,99 @@ set -fu
 
 # don't source several times this file
 if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
-  __LIB_FUNCTIONS__="Loaded"
+  __LIB_FUNCTIONS__='Loaded'
 
   # IMPORTANT: Don't set those variables directly in the parent script
   __OUTPUT_LOG_FILE__=''
   __ERROR_LOG_FILE__=''
   __SYSTEM_NAME__=''
   __SYSTEM_RELEASE_NAME__=''
+  __MSG_INDENT__=''
 
   # used to known if we are in a DOTHIS - OK/KO block
   # note: do not modify this variable
-  __IN_DOTHIS__="false"
+  __IN_DOTHIS__='false'
 
   which lsb_release >/dev/null 2>/dev/null
   if [ $? -eq 0 ]; then
     __SYSTEM_NAME__=$( lsb_release -s -i )
     __SYSTEM_RELEASE_NAME__=$( lsb_release -s -c )
   else
-    __SYSTEM_NAME__="unknown"
-    __SYSTEM_RELEASE_NAME__="unknown"
+    __SYSTEM_NAME__='unknown'
+    __SYSTEM_RELEASE_NAME__='unknown'
   fi
 
   # Utility functions -------------------------------------
 
+  MSG_INDENT_INC() { __MSG_INDENT__="${__MSG_INDENT__}  ";  }
+  MSG_INDENT_DEC() { __MSG_INDENT__="${__MSG_INDENT__%  }"; }
+
   MESSAGE() {
-    local do_print="true" do_log="true" msg= date=$(date +"[%D %T]") echo_opt=
+    local do_print='true' do_log='true' do_indent='true'
+    local msg= date=$(date +"[%D %T]") echo_opt=
 
     # parse arguments
     while [ true ]; do
       [ $# -eq 0 ] && break
       case "$1" in
-        --no-break ) shift; echo_opt='-n' ;;
-        --no-date  ) shift; date=''            ;;
-        --no-print ) shift; do_print="false"   ;;
-        --no-log   ) shift; do_log="false"     ;;
-        --         ) shift; break;             ;;
-        --*        ) shift;                    ;; # ignore
-        *          ) break;                    ;;
+        --no-break  ) shift; echo_opt='-n' ;;
+        --no-date   ) shift; date=''            ;;
+        --no-print  ) shift; do_print='false'   ;;
+        --no-log    ) shift; do_log='false'     ;;
+        --no-indent ) shift; do_indent='false'  ;;
+        --          ) shift; break;             ;;
+        --*         ) shift;                    ;; # ignore
+        *           ) break;                    ;;
       esac
     done
 
     msg="$*"
-    if [ "${do_print}" = "true" ]; then
-      # don't put the date on standard output (STDOUT)
-      echo ${echo_opt} "${msg}"
-    fi
+    [ "${do_indent}" = 'true' ] && msg="${__MSG_INDENT__}${msg}"
 
-    if [ "${do_log}" = "true" -a -f "${__OUTPUT_LOG_FILE__}" ]; then
+    # don't put the date on standard output (STDOUT)
+    [ "${do_print}" = 'true' ] && echo ${echo_opt} "${msg}"
+
+    if [ "${do_log}" = 'true' -a -f "${__OUTPUT_LOG_FILE__}" ]; then
       [ -n "${date}" ] && msg="${date} ${msg}"
       echo ${echo_opt} "${msg}" >> "${__OUTPUT_LOG_FILE__}"
     fi
   }
 
-  MSG()    { MESSAGE $*;                        }
-  NOTICE() { MESSAGE "NOTICE: $*";              }
-  LOG()    { MESSAGE --no-print $@;             }
-  BR()     { MESSAGE --no-log --no-break $'\n'; }
+  MSG()    { MESSAGE $@;            }
+  LOG()    { MESSAGE --no-print $@; }
+  NOTICE() { MESSAGE --no-indent "${__MSG_INDENT__}NOTICE: $*"; }
+  BR()     { MESSAGE --no-log --no-break --no-indent  $'\n';    }
 
   ERROR() {
-    if [ "${__IN_DOTHIS__}" = "true" ]; then
-      MESSAGE --no-date -- "Err";
-      __IN_DOTHIS__="false"
+    if [ "${__IN_DOTHIS__}" = 'true' ]; then
+      MESSAGE --no-date --no-indent -- 'Err';
+      __IN_DOTHIS__='false'
     fi
-    MESSAGE --no-log "ERROR: $*"
+    MESSAGE --no-indent "${__MSG_INDENT__}ERROR: $*"
   }
 
   WARNING() {
-    if [ "${__IN_DOTHIS__}" = "true" ]; then
-      MESSAGE --no-date -- "Warn";
-      __IN_DOTHIS__="false"
+    if [ "${__IN_DOTHIS__}" = 'true' ]; then
+      MESSAGE --no-date --no-indent -- 'Warn';
+      __IN_DOTHIS__='false'
     fi
-    MESSAGE --no-log "WARNING: $*"
+    MESSAGE --no-indent "${__MSG_INDENT__}WARNING: $*"
   }
 
   DOTHIS() {
-    MESSAGE --no-break -- "- $* ... "
-    __IN_DOTHIS__="true"
+    MESSAGE --no-break --no-indent -- "${__MSG_INDENT__}- $* ... "
+    __IN_DOTHIS__='true'
   }
 
   OK() {
-    [ "${__IN_DOTHIS__}" = "true" ] && MESSAGE --no-date -- "OK"
-    __IN_DOTHIS__="false"
+    [ "${__IN_DOTHIS__}" = 'true' ] && MESSAGE --no-date --no-indent -- 'OK'
+    __IN_DOTHIS__='false'
   }
 
   KO() {
-    if [ "${__IN_DOTHIS__}" = "true" ]; then
-      MESSAGE --no-date -- "KO";
-      __IN_DOTHIS__="false"
+    if [ "${__IN_DOTHIS__}" = 'true' ]; then
+      MESSAGE --no-date --no-indent -- 'KO';
+      __IN_DOTHIS__='false'
     fi
     FATAL "$*"
   }
@@ -194,21 +208,22 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
   ROLLBACK() { echo >/dev/null; }
 
   FATAL() {
-    MESSAGE "FATAL: $*"
+    MESSAGE --no-indent "${__MSG_INDENT__}FATAL: $*"
+    private_DISPLAY_LOG_FILES
     ROLLBACK
     exit 1
   }
 
 
   EXEC() {
-    local command= do_check="false" do_log="false" outputs= old_shell_opt= return_value=
+    local command= do_check='false' do_log='false' outputs= old_shell_opt= return_value=
 
     # parse arguments
     while true ; do
       [ $# -eq 0 ] && break
       case "$1" in
-        --with-log   ) shift; do_log="true"   ;;
-        --with-check ) shift; do_check="true" ;;
+        --with-log   ) shift; do_log='true'   ;;
+        --with-check ) shift; do_check='true' ;;
         --*          ) shift                  ;; # ignore this option
         --           ) shift; break           ;;
         *            ) break                  ;;
@@ -217,7 +232,7 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
 
     # build the command
     command=$*
-    if [ "${do_log}" = "true" ]; then
+    if [ "${do_log}" = 'true' ]; then
       [ -n "${__OUTPUT_LOG_FILE__}" ] && outputs="${outputs} >>\"${__OUTPUT_LOG_FILE__}\" "
       [ -n "${__ERROR_LOG_FILE__}"  ] && outputs="${outputs} 2>>\"${__ERROR_LOG_FILE__}\" "
     fi
@@ -226,7 +241,7 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
     old_shell_opt=$-; set +x
 
     # exec the command
-    if [ "${do_check}" = "true" ]; then
+    if [ "${do_check}" = 'true' ]; then
       eval "(${command}) ${outputs} || ( r=\$?; F() { KO '$*'; return \$1; }; F \$r; )"
       return_value=$?
     else
@@ -255,8 +270,8 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
   }
 
   SET_LOG_FILE() {
-    [ -z "$1" ] && KO "SET_OUTPUT_LOG_FILE is called without argument !"
-    [ $# -gt 1 ] && KO "SET_OUTPUT_LOG_FILE: too much arguments !"
+    [ -z "$1" ] && KO 'SET_OUTPUT_LOG_FILE is called without argument !'
+    [ $# -gt 1 ] && KO 'SET_OUTPUT_LOG_FILE: too much arguments !'
 
     __OUTPUT_LOG_FILE__="$1.output"
     __ERROR_LOG_FILE__="$1.error"
@@ -282,7 +297,7 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
 
   private_DISPLAY_LOG_FILES() {
     if [ -n "${__OUTPUT_LOG_FILE__}" -a -n "${__ERROR_LOG_FILE__}" ]; then
-      NOTICE "Here are where you can find log files"
+      NOTICE 'Here are where you can find log files'
       MESSAGE "   output: ${__OUTPUT_LOG_FILE__}"
       MESSAGE "   error: ${__ERROR_LOG_FILE__}"
     fi

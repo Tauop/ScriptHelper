@@ -166,7 +166,7 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
   }
 
   MSG()    { MESSAGE $@;            }
-  LOG()    { MESSAGE --no-print $@; }
+  LOG()    { MESSAGE --no-indent --no-print $@; }
   NOTICE() { MESSAGE --no-indent "${__MSG_INDENT__}NOTICE: $*"; }
   BR()     { MESSAGE --no-log --no-break --no-indent  $'\n';    }
 

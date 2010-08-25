@@ -72,24 +72,29 @@ loop_count=0
 while [ "$loop_count" != "2" ]; do
 
   MESSAGE ${msg_opt} --no-log "** * Test: HIT_TO_CONTINUE() * **"
+  MSG_INDENT_INC
   HIT_TO_CONTINUE
   check_LOG_FILE "User press ENTER to continue"
-
+  MSG_INDENT_DEC
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK anything * **"
+  MSG_INDENT_INC
   ASK     ${msg_opt} result "Type anything:"
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "Type anything: => ${result}"
 
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK yes/no * **"
+  MSG_INDENT_INC
   ASK     ${msg_opt} --yesno result "yes or no ?"
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "yes or no ? => ${result}"
   [ "${result}" != "Y" -a "${result}" != "N" ] && TEST_FAILED
@@ -97,9 +102,11 @@ while [ "$loop_count" != "2" ]; do
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK yes/no with Yes in default * **"
+  MSG_INDENT_INC
   ASK     ${msg_opt} --yesno result "yes/no [Y] ?" 'Y'
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "yes/no [Y] ? => ${result}"
   [ "${result}" != "Y" -a "${result}" != "N" ] && TEST_FAILED
@@ -107,10 +114,12 @@ while [ "$loop_count" != "2" ]; do
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK number * **"
-  MESSAGE ${msg_opt} --no-log "  Enter a bad response to see the error message \"Your answer is not a number\""
+  MSG_INDENT_INC
+  MESSAGE ${msg_opt} --no-log "Enter a bad response to see the error message \"Your answer is not a number\""
   ASK     ${msg_opt} --number result "Number:" '' 'Your answer is not a number'
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "Number: => ${result}"
   echo "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
@@ -119,9 +128,11 @@ while [ "$loop_count" != "2" ]; do
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK number with 9 in default * **"
+  MSG_INDENT_INC
   ASK     ${msg_opt} --number result "Number [9]:" '9'
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "Number [9]: => ${result}"
   echo "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
@@ -130,19 +141,23 @@ while [ "$loop_count" != "2" ]; do
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK --no-print ** *"
+  MSG_INDENT_INC
   ASK     ${msg_opt} --pass result "Password:"
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "Password: => ${result//?/#}"
 
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK --allow-empty * **"
-  MESSAGE ${msg_opt} --no-log "  Just hit ENTER for this test, and check that the response is an empty string"
+  MSG_INDENT_INC
+  MESSAGE ${msg_opt} --no-log "Just hit ENTER for this test, and check that the response is an empty string"
   ASK     ${msg_opt} --allow-empty result "Want to say something ?"
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE 'Want to say something ? =>'
   [ "${result}" != '' ] && TEST_FAILED
@@ -150,10 +165,12 @@ while [ "$loop_count" != "2" ]; do
 
   result=
   MESSAGE ${msg_opt} --no-log "** * Test: ASK --with-break and --useless-option * **"
-  MESSAGE ${msg_opt} --no-log "  A LineBreak is added after the question"
+  MSG_INDENT_INC
+  MESSAGE ${msg_opt} --no-log "A LineBreak is added after the question"
   ASK     ${msg_opt} --with-break --useless-option result "Want to say something ?"
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""
   MESSAGE ${msg_opt} --no-log ''
+  MSG_INDENT_DEC
 
   check_LOG_FILE "Want to say something ? => ${result}"
 

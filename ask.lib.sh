@@ -192,6 +192,7 @@ if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
     eval "${variable}=''"
 
     MESSAGE --no-log ${message_opt} "${question}  "
+    [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
 
     if [ -f "${__AUTOANSWER_FILE__}" ]; then
       # automatic mode
@@ -233,20 +234,20 @@ if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
           esac
         fi
 
-        # NOTE: with --no-print, no \n is printed out to the STDOUT.
-        #       This test has to be changed if there is more read options
-        #       deal with this script.
-        [ -n "${read_opt}" ] && MESSAGE --no-log ""
+        # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'
+        [ "${read_opt/-s/}" != "${read_opt}" -a "${no_print}" = 'false' ] && BR
 
         # display error
+        # FIXME: Ugly. Don't use ERROR() alias, as it doesn't support --no-log options :/
         if [ -n "${error}" ]; then
-          ERROR "${error}"
+          MESSAGE --no-log --no-indent "${__MSG_INDENT__}ERROR: ${error}"
         else
-          ERROR "invalid answer"
+          MESSAGE --no-log --no-indent "${__MSG_INDENT__}ERROR: invalid answer"
         fi
 
         # display the question again
         MESSAGE --no-log ${message_opt} "${question}  "
+        [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
 
       done # enf of while read
     fi
@@ -257,10 +258,8 @@ if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
       LOG "${question}  => ${answer}"
     fi
 
-    # NOTE: with --no-print, no \n is printed out to the STDOUT.
-    #       This test has to be changed if there is more read options
-    #       deal with this script.
-    [ -n "${read_opt}" ] && MESSAGE --no-log ""
+    # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'
+    [ "${read_opt/-s/}" != "${read_opt}" -a "${no_print}" = 'false' ] && BR
 
     [ -n "${__ANSWER_LOG_FILE__}" ] &&  echo "${answer}" >> "${__ANSWER_LOG_FILE__}"
     eval "${variable}=\"${answer}\"";

@@ -305,7 +305,7 @@ if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
 
   SOURCE() {
     if [ -r "$1" ]; then
-      source "$1" || KO "Can't source $1"
+      . "$1" || KO "Can't source $1"
     else
       KO "$1 hasn't been find"
     fi

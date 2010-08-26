@@ -20,7 +20,7 @@
 # Load library ---------------------------------------------------------------
 
 if [ -r ../functions.lib.sh ]; then
-  source ../functions.lib.sh
+  . ../functions.lib.sh
 else
   echo "[ERROR] Unable to load function.lib.sh"
   exit 1

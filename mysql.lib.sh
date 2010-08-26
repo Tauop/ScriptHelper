@@ -142,7 +142,7 @@ if [ "${__LIB_MYSQL__-}" != 'Loaded' ]; then
   # Load common lib
   if [ "${__LIB_FUNCTIONS__-}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
-      source ./functions.lib.sh
+      . ./functions.lib.sh
     else
       echo "ERROR: Unable to load ./functions.lib.sh library"
       exit 2

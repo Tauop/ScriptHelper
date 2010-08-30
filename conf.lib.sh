@@ -52,11 +52,11 @@
 set -fu
 
 # don't load several times this file
-if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
+if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __LIB_CONF__='Loaded'
 
   # Load common lib
-  if [ "${__LIB_FUNCTIONS__-}" != "Loaded" ]; then
+  if [ "${__LIB_FUNCTIONS__:-}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
       . ./functions.lib.sh
     else

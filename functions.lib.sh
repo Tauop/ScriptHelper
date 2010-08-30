@@ -106,7 +106,7 @@
 set -fu
 
 # don't source several times this file
-if [ "${__LIB_FUNCTIONS__-}" != 'Loaded' ]; then
+if [ "${__LIB_FUNCTIONS__:-}" != 'Loaded' ]; then
   __LIB_FUNCTIONS__='Loaded'
 
   # IMPORTANT: Don't set those variables directly in the parent script

@@ -136,11 +136,11 @@
 set -fu
 
 # Don't source this file several times
-if [ "${__LIB_MYSQL__-}" != 'Loaded' ]; then
+if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   __LIB_MYSQL__='Loaded'
 
   # Load common lib
-  if [ "${__LIB_FUNCTIONS__-}" != "Loaded" ]; then
+  if [ "${__LIB_FUNCTIONS__:-}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
       . ./functions.lib.sh
     else

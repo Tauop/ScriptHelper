@@ -88,7 +88,7 @@
 set -fu
 
 # don't load several times this file
-if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
+if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __LIB_ASK__='Loaded'
 
   # IMPORTANT: Don't set those variables directly in the parent script
@@ -97,7 +97,7 @@ if [ "${__LIB_ASK__-}" != 'Loaded' ]; then
   __ANSWER_LOG_FILE__=''
 
   # Load common lib
-  if [ "${__LIB_FUNCTIONS__-}" != "Loaded" ]; then
+  if [ "${__LIB_FUNCTIONS__:-}" != "Loaded" ]; then
     if [ -r ./functions.lib.sh ]; then
       . ./functions.lib.sh
     else

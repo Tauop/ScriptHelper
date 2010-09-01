@@ -19,15 +19,18 @@
 #
 
 # Load library ---------------------------------------------------------------
-if [ -r ../functions.lib.sh ]; then
-  . ../functions.lib.sh
-else
-  echo "[ERROR] Unable to load function.lib.sh"
-  exit 1
-fi
+LOAD() {
+  if [ -r ../$1 ]; then
+    . ../$1
+  else
+    echo "[ERROR] Unable to load $1"
+    exit 1
+  fi
+}
 
-SOURCE ../ask.lib.sh
-SOURCE ../mysql.lib.sh
+LOAD message.lib.sh
+LOAD ask.lib.sh
+LOAD mysql.lib.sh
 
 # Make tests -----------------------------------------------------------------
 

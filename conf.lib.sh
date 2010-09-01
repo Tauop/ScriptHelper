@@ -54,12 +54,20 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __LIB_CONF__='Loaded'
 
   # Load common lib
-  if [ "${__LIB_FUNCTIONS__:-}" != "Loaded" ]; then
-    if [ -r ./functions.lib.sh ]; then
-      . ./functions.lib.sh
+  if [ "${__LIB_MESSAGE__:-}" != "Loaded" ]; then
+    if [ -r ./message.lib.sh ]; then
+      . ./message.lib.sh
     else
-      echo "ERROR: Unable to load ./functions.lib.sh library"
+      echo "ERROR: Unable to load ./message.lib.sh library"
       exit 2
+    fi
+  fi
+
+  if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
+    if [ -r ./exec.lib.sh ]; then
+      . ./exec.lib.sh
+    else
+      echo "ERROR: Unable to load ./exec.lib.sh library"
     fi
   fi
 

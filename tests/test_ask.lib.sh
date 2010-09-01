@@ -19,14 +19,19 @@
 #
 
 # Load library ---------------------------------------------------------------
-if [ -r ../functions.lib.sh ]; then
-  . ../functions.lib.sh
-else
-  echo "[ERROR] Unable to load function.lib.sh"
-  exit 1
-fi
+LOAD() {
+  if [ -r ../$1 ]; then
+    . ../$1
+  else
+    echo "[ERROR] Unable to load $1"
+    exit 1
+  fi
+}
 
-SOURCE ../ask.lib.sh
+LOAD message.lib.sh
+LOAD exec.lib.sh
+LOAD ask.lib.sh
+
 
 TEST_FILE="/tmp/test.${RANDOM}"
 SET_LOG_FILE "${TEST_FILE}"
@@ -49,9 +54,9 @@ check_TEST_FILE() {
 
 check_LOG_FILE() {
   local content=
-  if [ -n "${__OUTPUT_LOG_FILE__}" ]; then
+  if [ -n "${__OUTPUT_LOG_FILE__:-}" ]; then
     # delete the date, at the beginning of each line
-    content=`cat "${__OUTPUT_LOG_FILE__}" | cut -d ']' -f2- | sed -e 's/^ //' | tr $'\n' ':'`
+    content=`cat "${__OUTPUT_LOG_FILE__:-}" | cut -d ']' -f2- | sed -e 's/^ //' | tr $'\n' ':'`
     content2=`echo "$*" | tr $'\n' ':'`
     [ "${content}" != "${content2}" ] && TEST_FAILED
     reset_FILES
@@ -60,8 +65,8 @@ check_LOG_FILE() {
 
 reset_FILES() {
   echo -n '' > "${TEST_FILE}"
-  [ -f "${__OUTPUT_LOG_FILE__}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__}"
-  [ -f "${__ERROR_LOG_FILE__}"  ] && echo -n '' > "${__ERROR_LOG_FILE__}"
+  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__:-}"
+  [ -f "${__ERROR_LOG_FILE__:-}"  ] && echo -n '' > "${__ERROR_LOG_FILE__:-}"
 }
 
 

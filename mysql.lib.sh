@@ -19,9 +19,6 @@
 # README ---------------------------------------------------------------------
 # This is a bash library for helping writing shell script for simples
 # operations.
-# Author: Patrick Guiran <pguiran@linagora.com>
-# Creation: 04/05/2010
-# Update: 09/06/2010
 #
 # Global variables ===========================================================
 # IMPORTANT: Please don't write to those variables

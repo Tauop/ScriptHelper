@@ -85,7 +85,8 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
 
   MESSAGE() {
     local do_print='true' do_log='true' do_indent='true'
-    local msg= date=$(date +"[%D %T]") echo_opt=
+    local msg= date= echo_opt=
+    date=$(date +"[%D %T]")
 
     # parse arguments
     while [ true ]; do

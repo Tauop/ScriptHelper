@@ -27,11 +27,11 @@
 # Methods ====================================================================
 #
 # MESSAGE()
+#   usage: MESSAGE [<options>] "<message>"
 #   desc: This function is used to display messages on standard output
 #         and/or write messages into the output log file.
 #   note: Message are display with indentation if MSG_INDENT_* functions
 #         are called, or if the script call DOTHIS() and related functions
-#  usage: MESSAGE [<options>] "<message>"
 #  options:
 #    --no-break : use 'echo -n' instead of 'echo' to display/write message
 #    --no-date : Don't add the date in message written into the output log file
@@ -50,13 +50,13 @@
 #    KO()      = MESSAGE --no-date -- "KO" + close DOTHIS if one + FATAL "<message>"
 #
 # MSG_INDENT_INC()
-#   desc: increment indentation of MESSAGE() display by one space
+#   desc: increment indentation of MESSAGE() display by two spaces
 #
 # MSG_INDENT_DEC()
-#   desc: decrement indentation of MESSAGE() display by one space
+#   desc: decrement indentation of MESSAGE() display by two spaces
 #
 # FATAL()
-#   $1: error message
+#   usage: FATAL <error message>
 #   desc: prefix message with "FATAL:" and call MESSAGE().
 #         Then it call ROLLBACK() and exit(1).
 #
@@ -76,10 +76,10 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
 
   # Utility functions -------------------------------------
 
-  MSG_INDENT_INC() { __MSG_INDENT__="${__MSG_INDENT__:-}  "; }
-  MSG_INDENT_DEC() { __MSG_INDENT__="${__MSG_INDENT__%  }";  }
+  MSG_INDENT_INC () { __MSG_INDENT__="${__MSG_INDENT__:-}  "; }
+  MSG_INDENT_DEC () { __MSG_INDENT__="${__MSG_INDENT__%  }";  }
 
-  MESSAGE() {
+  MESSAGE () {
     local do_print='true' do_log='true' do_indent='true'
     local msg= date= echo_opt=
     date=$(date +"[%D %T]")
@@ -111,12 +111,12 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     fi
   }
 
-  MSG()    { MESSAGE $@; }
-  LOG()    { MESSAGE --no-indent --no-print $@; }
-  NOTICE() { MESSAGE --no-indent "${__MSG_INDENT__:-}NOTICE: $*"; }
-  BR()     { MESSAGE --no-log --no-break --no-indent  $'\n'; }
+  MSG ()    { MESSAGE $@; }
+  LOG ()    { MESSAGE --no-indent --no-print $@; }
+  NOTICE () { MESSAGE --no-indent "${__MSG_INDENT__:-}NOTICE: $*"; }
+  BR ()     { MESSAGE --no-log --no-break --no-indent  $'\n'; }
 
-  ERROR() {
+  ERROR () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'Err';
       __IN_DOTHIS__='false'
@@ -124,7 +124,7 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     MESSAGE --no-indent "${__MSG_INDENT__:-}ERROR: $*"
   }
 
-  WARNING() {
+  WARNING () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'Warn';
       __IN_DOTHIS__='false'
@@ -132,17 +132,17 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     MESSAGE --no-indent "${__MSG_INDENT__:-}WARNING: $*"
   }
 
-  DOTHIS() {
+  DOTHIS () {
     MESSAGE --no-break --no-indent -- "${__MSG_INDENT__:-}- $* ... "
     __IN_DOTHIS__='true'
   }
 
-  OK() {
+  OK () {
     [ "${__IN_DOTHIS__:-}" = 'true' ] && MESSAGE --no-date --no-indent -- 'OK'
     __IN_DOTHIS__='false'
   }
 
-  KO() {
+  KO () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'KO';
       __IN_DOTHIS__='false'
@@ -151,9 +151,9 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   }
 
   # do nothing. Can be override
-  ROLLBACK() { echo >/dev/null; }
+  ROLLBACK () { echo >/dev/null; }
 
-  FATAL() {
+  FATAL () {
     MESSAGE --no-indent "${__MSG_INDENT__:-}FATAL: $*"
     type DISPLAY_LOG_FILES >/dev/null 2>/dev/null
     [ $? -eq 0 ] && DISPLAY_LOG_FILES

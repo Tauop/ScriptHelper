@@ -31,9 +31,9 @@
 # Methods ====================================================================
 #
 # SET_LOG_FILE()
-#   $1: path to log file
-#   desc: will create $1.output (output log file) and $1.error (error log
-#         file) files, which will be used in CMD()
+#   usage: SET_LOG_FILE <filename>
+#   desc: will create <filename>.output (output log file) and <filename>.error
+#         (error log file) files, which will be used in CMD()
 #
 # DISPLAY_LOG_FILES()
 #   desc: display log files set with SET_LOG_FILES()
@@ -72,9 +72,9 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
   # we don't want to be dependant on message.lib.sh
   if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
-    MESSAGE() { echo $*;         }
-    NOTICE()  { echo $*;         }
-    KO()      { echo $*; exit 1; }
+    MESSAGE () { echo $*;         }
+    NOTICE  () { echo $*;         }
+    KO      () { echo $*; exit 1; }
   fi
 
 
@@ -89,14 +89,14 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
 
   # Check for root privileges
-  CHECK_ROOT() {
+  CHECK_ROOT () {
     user_id=`id -u`
     [ "${user_id}" != "0" ] \
       && KO "You must execute $0 with root privileges"
   }
 
 
-  SET_LOG_FILE() {
+  SET_LOG_FILE () {
     [ -z "$1"  ] && KO 'SET_OUTPUT_LOG_FILE is called without argument !'
     [ $# -gt 1 ] && KO 'SET_OUTPUT_LOG_FILE: too much arguments !'
 
@@ -111,7 +111,7 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
   }
 
-  DISPLAY_LOG_FILES() {
+  DISPLAY_LOG_FILES () {
     if [ -n "${__OUTPUT_LOG_FILE__:-}" -a -n "${__ERROR_LOG_FILE__:-}" ]; then
       NOTICE 'Here are where you can find log files'
       MESSAGE "   output: ${__OUTPUT_LOG_FILE__:-}"
@@ -119,7 +119,7 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
     fi
   }
 
-  EXEC() {
+  EXEC () {
     local command= do_check='false' do_log='false' outputs= old_shell_opt= return_value=
 
     # parse arguments
@@ -161,10 +161,10 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
   }
 
   # aliases
-  EXEC_WITH_CHECK()         { EXEC --with-check -- "$*";            }
-  EXEC_WITH_LOG()           { EXEC --with-log -- "$*";              }
-  EXEC_WITH_CHECK_AND_LOG() { EXEC --with-check --with-log -- "$*"; }
-  CMD()                     { EXEC_WITH_CHECK_AND_LOG $@;           }
+  EXEC_WITH_CHECK ()         { EXEC --with-check -- "$*";            }
+  EXEC_WITH_LOG ()           { EXEC --with-log -- "$*";              }
+  EXEC_WITH_CHECK_AND_LOG () { EXEC --with-check --with-log -- "$*"; }
+  CMD ()                     { EXEC_WITH_CHECK_AND_LOG $@;           }
 
 
 fi # end of: if [ "${__LIB_EXEC__}" = 'Loaded' ]; then

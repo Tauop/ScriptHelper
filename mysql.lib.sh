@@ -39,21 +39,21 @@
 #   --with-check : call EXEC with --with-check
 #
 # MYSQL_SET_CONF()
-#   desc: Save global MySQL configuration, which allow to not repeat mysql command
-#         options every time we call a MySQL function.
 #   usage: MYSQL_SET_CONF [ <options> ]
 #          MYSQL_SET_CONF <username> [ <password> [ <database> [ <host> [ <port> ] ] ] ]
+#   desc: Save global MySQL configuration, which allow to not repeat mysql command
+#         options every time we call a MySQL function.
 #   note : username is mandatory, through options or arguments
 #
 # MYSQL_QUERY()
-#   desc: execute a query on the MySQL instance/host.
 #   usage: MYSQL_QUERY [ <options> ] "<query>"
+#   desc: execute a query on the MySQL instance/host.
 #   arguments: <options> = common MySQL functions options
 #              "<query>" = a quoted MySQL query
 #
 # MYSQL_DUMP()
-#   desc: call mysqldump on a MySQL instance/host.
 #   usage: MYSQL_DUMP [ <options> ] [ <dumpfile> [ <database> ] ]
+#   desc: call mysqldump on a MySQL instance/host.
 #   arguments: <options> = common MySQL functions options
 #              <dumpfile> = path to the file in which database will be saved
 #              <database> = database to backup/dump.
@@ -63,8 +63,8 @@
 #        are backup'ed/dumped
 #
 # MYSQL_RESTORE()
-#   desc: call mysql with a dumpfile, to restaure one or severals databases
 #   usage: MYSQL_RESTORE [ <options> ] [ <dumpfile> [ <database> ] ]
+#   desc: call mysql with a dumpfile, to restaure one or severals databases
 #   arguments: <options> = common MySQL functions options
 #              <dumpfile> = path to the file to load for database restaure
 #              <database> = database to backup/dump.
@@ -76,24 +76,24 @@
 #     3/ when <database> is not specified, we don't use -D options
 #
 # MYSQL_GET_BASES()
-#   desc: get databases list of the mysql instance
 #   usage: MYSQL_GET_BASES() [ <options> ]
+#   desc: get databases list of the mysql instance
 #   arguments: <options> = common MySQL functions options
 #
 # MYSQL_GET_TABLES()
-#   desc: get the table list of the current (or selected) database
 #   usage: MYSQL_GET_TABLES [ <options> ]
+#   desc: get the table list of the current (or selected) database
 #   arguments: <options> = common MySQL functions options
 #
 # MYSQL_GET_FIELDS()
-#   desc: get the field list of a table
 #   usage: MYSQL_GET_FIELDS [ <options> ] <table_name>
+#   desc: get the field list of a table
 #   arguments: <options> = common MySQL functions options
 #              <table_name> = name of a table
 #
 # MYSQL_GET_FIELD_TYPE
-#   desc: Get the SQL type of a table field
 #   usage: MYSQL_GET_FIELD_TYPE [ <options> ] <table_name> <field_name>
+#   desc: Get the SQL type of a table field
 #   arguments: <options> = common MySQL functions options
 #              <table_name> = name of a table
 #              <field_name> = name of a field
@@ -101,8 +101,8 @@
 # private functions
 # =================
 # private_PARSE_MYSQL_OPTIONS()
-#   desc: parse arguments passed in argument
 #   usage: private_PARSE_MYSQL_OPTIONS $@
+#   desc: parse arguments passed in argument
 #   notes:
 #     1/ __MYSQL_*__ variables can be changes
 #     2/ __MYSQL_OPTIONS_CHANGED__ = 'true' is options changed the mysql configuration
@@ -111,11 +111,11 @@
 #   recommanded usage:
 #     | private_PARSE_MYSQL_OPTIONS $@
 #     | shift ${__MYSQL_NB_CONSUMMED_ARG__}
-# 
+#
 # private_BUILD_MYSQL_OPTIONS()
+#   usage: private_PARSE_MYSQL_OPTIONS
 #   desc: build the __MYSQL_OPTIONS__ variable which contain mysql commands
 #         common options and will be passed to mysql commands
-#   usage: private_PARSE_MYSQL_OPTIONS
 #   notes:
 #     1/ there is no argument/options
 #     2/ this method can changes __MYSQL_OPTIONS__
@@ -178,7 +178,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
 
   # PRIVATE METHODS ------------------------------------------------------------
 
-  private_PARSE_MYSQL_OPTIONS() {
+  private_PARSE_MYSQL_OPTIONS () {
     local inc=0 exec_with_log='false' exec_with_check='false'
 
     __MYSQL_OPTIONS_CHANGED__='false'
@@ -219,7 +219,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     [ "${exec_with_check}" = 'true' ] && __EXEC_OPTIONS__="${__EXEC_OPTIONS__} --with-check "
   }
 
-  private_BUILD_MYSQL_OPTIONS() {
+  private_BUILD_MYSQL_OPTIONS () {
     __MYSQL_OPTIONS__=''
     [ -n "${__MYSQL_USERNAME__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -u'${__MYSQL_USERNAME__}'"
     [ -n "${__MYSQL_PASSWORD__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -p'${__MYSQL_PASSWORD__}'"
@@ -228,7 +228,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     [ -n "${__MYSQL_PORT__}"     ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -P '${__MYSQL_PORT__}'"
   }
 
-  private_BACKUP_MYSQL_CONF() {
+  private_BACKUP_MYSQL_CONF () {
     __MYSQL_BACKUP_USERNAME__="${__MYSQL_USERNAME__}"
     __MYSQL_BACKUP_PASSWORD__="${__MYSQL_PASSWORD__}"
     __MYSQL_BACKUP_DATABASE__="${__MYSQL_DATABASE__}"
@@ -238,7 +238,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     __MYSQL_BACKUP_OPTIONS__="${__MYSQL_OPTIONS__}"
   }
 
-  private_RESTORE_MYSQL_CONF() {
+  private_RESTORE_MYSQL_CONF () {
     __MYSQL_USERNAME__="${__MYSQL_BACKUP_USERNAME__}"
     __MYSQL_PASSWORD__="${__MYSQL_BACKUP_PASSWORD__}"
     __MYSQL_DATABASE__="${__MYSQL_BACKUP_DATABASE__}"
@@ -250,7 +250,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
 
   # PUBLIC METHODS -------------------------------------------------------------
 
-  MYSQL_SET_CONF() {
+  MYSQL_SET_CONF () {
     # reset all config variables
     __MYSQL_USERNAME__=''
     __MYSQL_PASSWORD__=''
@@ -281,7 +281,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   }
 
 
-  MYSQL_QUERY() {
+  MYSQL_QUERY () {
     local return_value= query= mysql_exec_opt='-e'
 
     private_BACKUP_MYSQL_CONF
@@ -305,7 +305,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     return ${return_value}
   }
 
-  MYSQL_DUMP() {
+  MYSQL_DUMP () {
     local mysqldump_options= error_redir=
 
     mysqldump_options="--no-create-db --opt --max_allowed_packet=67108864 --routines"
@@ -334,7 +334,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     __MYSQL_OPTIONS_CHANGED__='false'
   }
 
-  MYSQL_RESTORE() {
+  MYSQL_RESTORE () {
     local dumpfile=
 
     private_BACKUP_MYSQL_CONF
@@ -356,11 +356,11 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     __MYSQL_OPTIONS_CHANGED__='false'
   }
 
-  MYSQL_GET_BASES()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
-  MYSQL_GET_TABLES() { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
+  MYSQL_GET_BASES ()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
+  MYSQL_GET_TABLES () { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
 
 
-  MYSQL_GET_FIELDS() {
+  MYSQL_GET_FIELDS () {
     local table_name=
 
     [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
@@ -381,7 +381,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
         | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
   }
 
-  MYSQL_GET_FIELD_TYPE() {
+  MYSQL_GET_FIELD_TYPE () {
     local table_name= field_name= do_simple='false'
 
     [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"

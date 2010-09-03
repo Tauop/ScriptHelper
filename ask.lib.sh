@@ -32,15 +32,16 @@
 # Methods ====================================================================
 #
 # ASK_SET_ANSWER_LOG_FILE()
-#   desc: create a log file, which will be used to store all user answer,
-#         one per line
 #   usage: ASK_SET_ANSWER_LOG_FILE <file>
+#   desc: create a log file, which will be used to store all user answers,
+#         one per line
 #   arguments:
 #     <file> : path to the file in which to log answers.
 #   note: the <file> will be deleted before use
 #
 # ASK_SET_AUTOANSWER_FILE()
-#   desc: set a file which contain previously recorded user's answer,
+#   usage: ASK_SET_AUTOANSWER_FILE <file>
+#   desc: set a file which contains previously recorded user's answers,
 #         ie a file which contain a answer per line. Each line of this
 #         file will be returned at each call of ASK().
 #   arguments:
@@ -52,12 +53,12 @@
 #   desc: display a message to the user, which ask to press ENTER to continue
 #
 # ASK()
+#   usage: ASK [ <options> ] <variable> [ "<text>" ] [ <default value> ] [ "<error>" ]
 #   desc: Ask a question to the user, get the user response and store it in
 #         the variable which name is stored in <variable>.
 #         Control can be made on user answer, and ASK() repeat question if
 #         the user answer is not valid.
 #         Display message and user answer are logged, if possible.
-#   usage: ASK [ <options> ] <variable> [ "<text>" ] [ <default value> ] [ "<error>" ]
 #   arguments: 
 #      <options> =
 #        --no-print : all call of MESSAGE() won't print anything
@@ -102,7 +103,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
-  HIT_TO_CONTINUE() {
+  HIT_TO_CONTINUE () {
     if [ ! -f "${__AUTOANSWER_FILE__}" ]; then
       MESSAGE --no-log ""
       MESSAGE --no-log "Press ENTER to continue, or CTRL+C to exit"
@@ -115,7 +116,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
-  ASK_SET_AUTOANSWER_FILE() {
+  ASK_SET_AUTOANSWER_FILE () {
     [ -z "$1" ] && KO "ASK_SET_ANSWER_FILE is called without argument !"
     [ $# -gt 1 ] && KO "ASK_SET_ANSWER_FILE: too much arguments !"
 
@@ -128,7 +129,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
-  ASK_SET_ANSWER_LOG_FILE() {
+  ASK_SET_ANSWER_LOG_FILE () {
     [ -z "$1" ] && KO "ASK_SET_ANSWER_FILE is called without argument !"
     [ $# -gt 1 ] && KO "ASK_SET_ANSWER_FILE: too much arguments !"
 
@@ -143,7 +144,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
-  ASK() {
+  ASK () {
     local question= variable= default= error=
     local answer= read_opt='' check='' allow_empty= message_opt=
     local do_break='false' do_pass='false' no_print='false' no_echo='false'

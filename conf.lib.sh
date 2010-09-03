@@ -27,21 +27,23 @@
 # Methods ====================================================================
 #
 # CONF_SET_FILE()
+#   usage: SET_CONF_FILE <file>
 #   desc: Save a file path where you will read/write data
-#   usage: SET_CONF_FILE [ <option> ] <file>
-#   arguments:
-#     <options> =
-#       --create
-#       --exists
-#     <file> = path to a file
+#   note: if the directory doesn't exist, it will be created
+#   note: if the configuration file doesn't exist, it will be created
 #
 # CONF_SAVE()
 #   usage: CONF_SAVE <conf_var> [ <value> ]
+#   desc: save a variable into the configuration file
 #
 # CONF_GET()
 #   usage: CONF_GET <conf_var> [ <result_var> ]
+#   desc: read a variable from the configuration file
 #
 # CONF_LOAD()
+#   usage: CONF_LOAD [<file>]
+#   desc: load a configuration file.
+#   note: if called without argument, use the file set by CONF_SET_FILE
 #
 # ----------------------------------------------------------------------------
 
@@ -57,14 +59,6 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     else
       echo "ERROR: Unable to load ./message.lib.sh library"
       exit 2
-    fi
-  fi
-
-  if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
-    if [ -r ./exec.lib.sh ]; then
-      . ./exec.lib.sh
-    else
-      echo "ERROR: Unable to load ./exec.lib.sh library"
     fi
   fi
 
@@ -85,9 +79,9 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     # create the configuration file if it doesn't exist
     if [ ! -e "${__CONF_FILE__}" ]; then
       [ -d "${dir:-./}" ] || CMD mkdir -p "${dir}"
-      CMD touch "${__CONF_FILE__}"
-      CMD chmod u+wr "${__CONF_FILE__}"
-      CMD chmod a-x "${__CONF_FILE__}"
+      touch "${__CONF_FILE__}"
+      chmod u+wr "${__CONF_FILE__}"
+      chmod a-x "${__CONF_FILE__}"
       LOG "Configuration file ${__CONF_FILE__} created"
     fi
   }
@@ -108,7 +102,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
          n; s/^$s*\(${var}\)$s*=.*$/\1=${value}/; t
          \$! b loop
          \$ a ${name}=${value}" \
-         ${__CONF_FILE__}
+         "${__CONF_FILE__}"
 
     LOG "CONF_SAVE: ${var}=${value}"
   }

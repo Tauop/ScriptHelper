@@ -81,10 +81,6 @@
 #   note: format options are ignored if a __AUTOANSWER_FILE__ was set
 # ----------------------------------------------------------------------------
 
-# -f Disable pathname expansion.
-# -u Unset variables
-set -fu
-
 # don't load several times this file
 if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __LIB_ASK__='Loaded'

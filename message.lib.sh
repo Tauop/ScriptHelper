@@ -66,10 +66,6 @@
 #
 # ----------------------------------------------------------------------------
 
-# -f Disable pathname expansion.
-# -u Unset variables
-set -fu
-
 # don't source several times this file
 if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   __LIB_MESSAGE__='Loaded'

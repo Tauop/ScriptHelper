@@ -18,6 +18,10 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+# -f Disable pathname expansion.
+# -u Unset variables
+set -fu
+
 # Load library ---------------------------------------------------------------
 if [ -r ../exec.lib.sh ]; then
   . ../exec.lib.sh

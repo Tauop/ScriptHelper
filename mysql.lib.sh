@@ -129,10 +129,6 @@
 #
 # ----------------------------------------------------------------------------
 
-# -f Disable pathname expansion.
-# -u Unset variables
-set -fu
-
 # Don't source this file several times
 if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   __LIB_MYSQL__='Loaded'

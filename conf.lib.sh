@@ -45,9 +45,6 @@
 #
 # ----------------------------------------------------------------------------
 
-# -f Disable pathname expansion.
-# -u Unset variables
-set -fu
 
 # don't load several times this file
 if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
@@ -131,7 +128,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
 
   CONF_LOAD() {
     local file=${1:-${__CONF_FILE__}}
-    SOURCE "${file}"
+    . "${file}"
     LOG "CONF_LOAD: ${file}"
   }
 

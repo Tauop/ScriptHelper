@@ -67,7 +67,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
-  CONF_SET_FILE() {
+  CONF_SET_FILE () {
     local dir= file=
 
     [ $# -ne 1 ] && FATAL "SET_CONF_FILE: bad arguments"
@@ -86,8 +86,17 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     fi
   }
 
-  CONF_SAVE() {
-    local var= value= s='[[:space:]]'
+  private_SED_SEPARATOR () {
+    for s in '/' '@' ',' '|'; do
+      if [ "${1//$s/}" = "$1" ]; then
+        echo "$s"; return 0;
+      fi
+    done
+    return 1;
+  }
+
+  CONF_SAVE () {
+    local var= value= sep= s='[[:space:]]'
 
     [ $# -eq 0 ] && FATAL "CONF_SAVE: Bad number of arguments"
     [ ! -w "${__CONF_FILE__}" ] && FATAL "Can't write into configuration file ${__CONF_FILE__}"
@@ -96,31 +105,38 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     [ $# -eq 2 ] && value="$2"
     [ $# -eq 1 ] && value="${!1}"
 
+    sep=$( private_SED_SEPARATOR "${var}${value}" )
+
     # save data into the configuration file
+    # 1. :loop label
+    # 2. get next line; doesn't it match ?; if match make a replace and exit
+    # 3. if not EOF and last s/// doesn't match, go to :loop
+    # 4. if EOF, append the conf
     sed -i -e \
         ":loop
-         n; s/^$s*\(${var}\)$s*=.*$/\1=${value}/; t
+         n; s${sep}^$s*\(${var}\)$s*=.*\$${sep}\1=${value}${sep}; t
          \$! b loop
-         \$ a ${name}=${value}" \
+         \$ a ${var}=${value}" \
          "${__CONF_FILE__}"
 
     LOG "CONF_SAVE: ${var}=${value}"
   }
 
-  CONF_GET() {
-    local result= resultvar= confvar= s='[[:space:]]'
+  CONF_GET () {
+    local result= resultvar= confvar= sep= s='[[:space:]]'
 
     [ $# -ne 0 ] && FATAL "CONF_GET: bad number of arguments"
 
     confvar="$1"
     resultvar="${2:-$1}"
+    sep=$( private_SED_SEPARATOR "${var}${value}" )
 
-    result=` sed -e -n "s/^$s*${confvar}$s*=$s*\(.*\)$s*$/\1/p" "${__CONF_FILE__}" `
+    result=$( sed -e -n "s${sep}^$s*${confvar}$s*=$s*\(.*\)$s*\$${sep}\1${sep}p" "${__CONF_FILE__}" )
     eval "${resultvar}=${result}"
     LOG "CONF_GET: ${resultvar}=${result}"
   }
 
-  CONF_LOAD() {
+  CONF_LOAD () {
     local file=${1:-${__CONF_FILE__}}
     . "${file}"
     LOG "CONF_LOAD: ${file}"

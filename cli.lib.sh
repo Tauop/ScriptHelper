@@ -110,9 +110,9 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     cli_menu="$1"
 
     sep=$( private_SED_SEPARATOR "${cli_menu}" )
-    cli_menu=$( private_BUILD_SED_COMMAND "\(${cli_menu}\)" )
+    cli_menu=$( private_BUILD_SED_COMMAND "${cli_menu}" )
 
-    __CLI_CODE__="${__CLI_CODE__} s${sep}${cli_menu}${sep}CLI_ENTER_MENU \1${sep}p; t;"
+    __CLI_CODE__="${__CLI_CODE__} s${sep}\(${cli_menu}\)${sep}CLI_ENTER_MENU \1${sep}p; t;"
   }
 
 

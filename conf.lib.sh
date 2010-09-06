@@ -108,15 +108,24 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     sep=$( private_SED_SEPARATOR "${var}${value}" )
 
     # save data into the configuration file
+    # sed code explanation :
     # 1. :loop label
-    # 2. get next line; doesn't it match ?; if match make a replace and exit
-    # 3. if not EOF and last s/// doesn't match, go to :loop
+    # 2. read next line; s///; if match s/// match goto :loop2
+    # 3. if not EOF, goto :loop
     # 4. if EOF, append the conf
+    # 5. exit
+    # 6. :loop2 label
+    # 7. read next line; s///
+    # 8. if not EOF, goto :loop2
     sed -i -e \
         ":loop
-         n; s${sep}^$s*\(${var}\)$s*=.*\$${sep}\1=${value}${sep}; t
+         n; s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=${value}${sep}; t loop2;
          \$! b loop
-         \$ a ${var}=${value}" \
+         \$ a ${var}=${value}
+         t;
+         :loop2
+         n; s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=${value}${sep};
+         \$! b loop2" \
          "${__CONF_FILE__}"
 
     LOG "CONF_SAVE: ${var}=${value}"

@@ -60,6 +60,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   # ---------------------------------------------------
   # Do not write to those vairables.
   __CLI_CODE__=
+  __CLI_KCODE__=
   __CLI_PROMPT__=
   __CLI_CONTEXT_MENU__=
 
@@ -86,11 +87,19 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   CLI_SET_PROMPT () { __CLI_PROMPT__="$1"; }
 
   CLI_REGISTER_COMMAND () {
-    local cli_cmd= func= sep=
-
     [ $# -ne 2 ] && ERROR "CLI_REGISTER_COMMAND: invalid arguments"
-    cli_cmd=$1; func=$2
+    private_CLI_COMPIL "$1" "$2" "__CLI_CODE__"
+  }
 
+  CLI_REGISTER_KCOMMAND() {
+    [ $# -ne 2 ] && ERROR "CLI_REGISTER_KCOMMAND: invalid arguments"
+    private_CLI_COMPIL "$1" "$2" "__CLI_KCODE__"
+  }
+
+  private_CLI_COMPIL() {
+    local cli_cmd= func= sep= code=
+
+    cli_cmd=$1; func=$2; code=$3
     # delete trailing space
     cli_cmd=${cli_cmd%% }; cli_cmd=${cli_cmd## }
     func=${func%% }; func=${func## }
@@ -100,8 +109,8 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     sep=$( private_SED_SEPARATOR "${cli_cmd}" )
     cli_cmd=$( private_BUILD_SED_COMMAND "${cli_cmd}" )
 
-    # update the CLI code
-    __CLI_CODE__="${__CLI_CODE__} s${sep}${cli_cmd}${sep}${func}${sep}p; t;"
+    # update the code
+    eval "$code=\"${!code} s${sep}${cli_cmd}${sep}${func}${sep}p; t;\""
   }
 
   CLI_REGISTER_MENU () {
@@ -126,6 +135,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     code="${__CLI_CODE__} ; a CLI_UNKNOWN_COMMAND;"
 
     # internal CLI special commands
+    kcode="${__CLI_KCODE__}"
     kcode="${kcode} s/^ *quit *$/CLI_EXIT/p; t;"
     kcode="${kcode} s/^ *exit *$/break/p; t;"
 

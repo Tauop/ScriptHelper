@@ -127,7 +127,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
   CLI_RUN () {
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }
-    CLI_ENTER_MENU () { __CLI_CONTEXT_MENU__="${__CLI_CONTEXT_MENU__}$*"; }
+    CLI_ENTER_MENU () { __CLI_CONTEXT_MENU__="$*"; }
     CLI_EXIT () { [ -z "${__CLI_CONTEXT_MENU__}" ] && exit 0 || __CLI_CONTEXT_MENU__=; }
 
     local kcode= code= input= cmd=
@@ -141,6 +141,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     while [ true ]; do
       ASK input "${__CLI_PROMPT__} ${__CLI_CONTEXT_MENU__:+[${__CLI_CONTEXT_MENU__}]}>"
+      [ -z "${input}" ] && continue
       cmd=$( echo "${input}" | sed -n -e "${kcode}" )
       [ -z "${cmd}" ] && \
         cmd=$( echo "${__CLI_CONTEXT_MENU__} ${input}" | sed -n -e "${code}" )

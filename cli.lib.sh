@@ -140,7 +140,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     kcode="${kcode} s/^ *exit *$/break/p; t;"
 
     while [ true ]; do
-      ASK input "${__CLI_PROMPT__} ${__CLI_CONTEXT_MENU__:+[${__CLI_CONTEXT_MENU__}]}> "
+      ASK input "${__CLI_PROMPT__} ${__CLI_CONTEXT_MENU__:+[${__CLI_CONTEXT_MENU__}]}>"
       cmd=$( echo "${input}" | sed -n -e "${kcode}" )
       [ -z "${cmd}" ] && \
         cmd=$( echo "${__CLI_CONTEXT_MENU__} ${input}" | sed -n -e "${code}" )

@@ -186,7 +186,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     # reset global variable
     eval "${variable}=''"
 
-    MESSAGE --no-log ${message_opt} "${question}  "
+    MESSAGE --no-log ${message_opt} "${question} "
     [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
 
     if [ -f "${__AUTOANSWER_FILE__}" ]; then
@@ -241,7 +241,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
         fi
 
         # display the question again
-        MESSAGE --no-log ${message_opt} "${question}  "
+        MESSAGE --no-log ${message_opt} "${question} "
         [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
 
       done # enf of while read

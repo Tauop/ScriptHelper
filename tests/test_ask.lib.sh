@@ -150,7 +150,7 @@ while [ "$loop_count" != "2" ]; do
 
 
   result=
-  MESSAGE ${msg_opt} --no-log "** * Test: ASK --no-print ** *"
+  MESSAGE ${msg_opt} --no-log "** * Test: ASK --no-print * **"
   MSG_INDENT_INC
   ASK     ${msg_opt} --pass result "Password:"
   MESSAGE ${msg_opt} --no-log "You have type \"${result}\""

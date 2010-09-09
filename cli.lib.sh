@@ -76,11 +76,13 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
   # build a sed pattern for parsing CLI command
   private_BUILD_SED_COMMAND () {
-    local sed_cmd=
-    for word in $( echo "$1" | tr ' ' $'\n' ); do
-      [ "${word}" = '?' ] && word="\([^ ]*\)"
-      sed_cmd="${sed_cmd} *${word}"
-    done
+    local sed_cmd= list=
+    echo "$1" | tr ' ' $'\n' \
+      | while read word; do
+          [ -z "${word}" ] && continue
+          [ "${word}" = '?' ] && word="\([^ ]*\)"
+          sed_cmd="${sed_cmd} *${word}"
+        done
     echo "^${sed_cmd} *$"
   }
 
@@ -97,12 +99,11 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   }
 
   private_CLI_COMPIL() {
-    local cli_cmd= func= sep= code=
+    local cli_cmd="$1" func="$2" code="$3" sep=
 
-    cli_cmd=$1; func=$2; code=$3
     # delete trailing space
-    cli_cmd=${cli_cmd%% }; cli_cmd=${cli_cmd## }
-    func=${func%% }; func=${func## }
+    cli_cmd="${cli_cmd%% }"; cli_cmd="${cli_cmd## }"
+    func="${func%% }"; func="${func## }"
 
     [ "${cli_cmd:-}" = '' -o "${func:-}" = '' ] && ERROR "CLI_REGISTER_COMMAND: invalid arguments"
 

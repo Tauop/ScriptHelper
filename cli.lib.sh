@@ -76,14 +76,14 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
   # build a sed pattern for parsing CLI command
   private_BUILD_SED_COMMAND () {
-    local sed_cmd= list=
+    echo -n "^"
     echo "$1" | tr ' ' $'\n' \
       | while read word; do
           [ -z "${word}" ] && continue
           [ "${word}" = '?' ] && word="\([^ ]*\)"
-          sed_cmd="${sed_cmd} *${word}"
+          echo -n " *${word}"
         done
-    echo "^${sed_cmd} *$"
+    echo " *$"
   }
 
   CLI_SET_PROMPT () { __CLI_PROMPT__="$1"; }

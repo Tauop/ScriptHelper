@@ -187,7 +187,7 @@ while [ "$loop_count" != "2" ]; do
 
   if [ "${loop_count}" = "0" ]; then
     ASK_SET_AUTOANSWER_FILE "${TEST_ANSWER_FILE}"
-    msg_opt="--no-print"
+    msg_opt="--no-print --no-echo"
     MESSAGE --no-log '** * Test: ASK with automatic answer file * **'
   fi
 

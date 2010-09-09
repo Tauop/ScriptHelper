@@ -194,7 +194,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
       __AUTOANSWER_FP__=$((__AUTOANSWER_FP__ + 1 ))
       answer=$( sed -n "${__AUTOANSWER_FP__}p" "${__AUTOANSWER_FILE__}" )
       [ -z "${answer}" -a -n "${default}" ] && answer="${default}"
-      MESSAGE ${message_opt} --no-log ''
+      [ "${no_echo}" = 'false' -a "${do_pass}" = 'false' ] && MESSAGE --no-break --no-log "${answer}"
+      [ "${no_print}" = 'false' ] && BR
     else
       # interactive mode
       while read ${read_opt} answer; do

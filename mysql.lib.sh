@@ -308,7 +308,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   MYSQL_DUMP () {
     local mysqldump_options= error_redir=
 
-    mysqldump_options="--no-create-db --opt --max_allowed_packet=67108864 --routines"
+    mysqldump_options="--no-create-db --quote-names --opt --max_allowed_packet=67108864 --routines"
     [ -n "${__ERROR_LOG_FILE__}" ] && error_redir=">>'${__ERROR_LOG_FILE__}'"
 
     private_BACKUP_MYSQL_CONF

@@ -90,6 +90,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __AUTOANSWER_FILE__=''
   __AUTOANSWER_FP__=0
   __ANSWER_LOG_FILE__=''
+  __USE_READLINE__='false'
 
   # Load common lib
   if [ "${__LIB_MESSAGE__:-}" != "Loaded" ]; then
@@ -144,6 +145,14 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
+  ASK_USE_READLINE () {
+    local shell=${SHELL##*/}
+    if [ "${shell}" = 'bash' -o "${shell}" = 'zsh' ]; then
+      __USE_READLINE__='true'
+    fi
+  }
+
+  # ----------------------------------------------------------------------------
   ASK () {
     local question= variable= default= error=
     local answer= read_opt='' check='' allow_empty= message_opt=
@@ -171,7 +180,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     [ "${do_break}" = 'false' ] && message_opt="${message_opt} --no-break "
     [ "${no_print}" = 'true'  ] && message_opt="${message_opt} --no-print"
 
-    [ "${no_echo}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s"
+    [ "${no_echo}" = 'true' -o "${do_pass}" = 'true' ] && read_opt="${read_opt} -s "
+    [ "${__USE_READLINE__}" = 'true' ] && read_opt="${read_opt} -e "
 
     # parse trailing arguments
     # note: the while is just a workaround, as bash has no GOTO statement

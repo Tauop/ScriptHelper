@@ -87,7 +87,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   }
 
   CLI_SET_PROMPT () { __CLI_PROMPT__="$1"; }
-  CLI_USE_READLINE () { ASK_USE_READLINE ; }
+  CLI_USE_READLINE () { ASK_ENABLE_READLINE $@; }
 
   CLI_REGISTER_COMMAND () {
     [ $# -ne 2 ] && ERROR "CLI_REGISTER_COMMAND: invalid arguments"

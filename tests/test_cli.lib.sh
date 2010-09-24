@@ -57,28 +57,28 @@ quit
 EOF
 
 cat >"${expected_output_file}" <<EOF
-cli > msg hello
+cli >  msg hello
 hello
-cli > msg
-cli [msg]> reply toto
+cli >  msg
+cli [msg]>  reply toto
 toto
-cli [msg]> prout
+cli [msg]>  prout
 ERROR: Unknown CLI command
-cli [msg]> ping cat pong lol
+cli [msg]>  ping cat pong lol
 ERROR: Unknown CLI command
-cli [msg]> quit
-cli > ping cat pong lol
+cli [msg]>  quit
+cli >  ping cat pong lol
 lol - cat
-cli > msg reply lol
+cli >  msg reply lol
 lol
-cli > quit
+cli >  quit
 EOF
 
 ASK_SET_AUTOANSWER_FILE "${input_file}"
 
 ( CLI_RUN > "${output_file}" )
 diff -au "${expected_output_file}" "${output_file}"
-
+[ $? -eq 0 ] && echo "*** All Tests OK ***"
 
 rm -f "${input_file}"
 rm -f "${output_file}"

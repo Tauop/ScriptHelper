@@ -52,6 +52,19 @@
 # HIT_TO_CONTINUE()
 #   desc: display a message to the user, which ask to press ENTER to continue
 #
+# ASK_ENABLE_READLINE()
+#   usage: ASK_ENABLE_READLINE [ <options> ]
+#   desc: enable readline module, used by read shell builtin, if we are in zsh or bash
+#   arguments:
+#      <options> =
+#        --force : force usage of read -e
+#        --history-file : set history file to use
+#   note: if --history-file is not specified, history builtin will use HISTFILE env var
+#
+# ASK_DISABLE_READLINE()
+#   usage: ASK_DISABLE_READLINE
+#   desc: disable readline module, used by read shell builtin
+#
 # ASK()
 #   usage: ASK [ <options> ] <variable> [ "<text>" ] [ <default value> ] [ "<error>" ]
 #   desc: Ask a question to the user, get the user response and store it in
@@ -59,7 +72,7 @@
 #         Control can be made on user answer, and ASK() repeat question if
 #         the user answer is not valid.
 #         Display message and user answer are logged, if possible.
-#   arguments: 
+#   arguments:
 #      <options> =
 #        --no-print : all call of MESSAGE() won't print anything
 #        --no-echo : Don't print what the user type
@@ -145,11 +158,34 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
-  ASK_USE_READLINE () {
-    local shell=${SHELL##*/}
-    if [ "${shell}" = 'bash' -o "${shell}" = 'zsh' ]; then
+  ASK_ENABLE_READLINE () {
+    local shell=${SHELL##*/} do_force='false'
+
+    while true; do
+      [ $# -eq 0 ] && break
+      case "$1" in
+        --force        ) do_force='true'; shift ;;
+        --history-file ) shift; [ $# -gt 1 ] && HISTFILE="$1"; shift ;;
+        --*            ) shift        ;;
+        --             ) shift; break ;;
+        *              ) break        ;;
+      esac
+    done
+
+    if [    "${do_force}" = 'true' \
+         -o "${shell}" = 'bash'    \
+         -o "${shell}" = 'zsh' ]; then
+      set +o emacs
+      set +o history
+      history -r
       __USE_READLINE__='true'
     fi
+  }
+
+  ASK_DISABLE_READLINE () {
+    set -o emacs
+    set -o history
+    __USE_READLINE__='false'
   }
 
   # ----------------------------------------------------------------------------
@@ -177,6 +213,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
         *               ) break ;;
       esac
     done
+
+    # interprete some options
     [ "${do_break}" = 'false' ] && message_opt="${message_opt} --no-break "
     [ "${no_print}" = 'true'  ] && message_opt="${message_opt} --no-print"
 
@@ -193,22 +231,31 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
       break
     done
 
+    [ -n "${question}" -a "${question}" = "${question%  }" ] && question="${question}  "
+
     # reset global variable
     eval "${variable}=''"
 
-    MESSAGE --no-log ${message_opt} "${question} "
-    [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
-
     if [ -f "${__AUTOANSWER_FILE__}" ]; then
       # automatic mode
+      MESSAGE --no-log ${message_opt} "${question}"
+      [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
+
       __AUTOANSWER_FP__=$((__AUTOANSWER_FP__ + 1 ))
       answer=$( sed -n "${__AUTOANSWER_FP__}p" "${__AUTOANSWER_FILE__}" )
+
       [ -z "${answer}" -a -n "${default}" ] && answer="${default}"
       [ "${no_echo}" = 'false' -a "${do_pass}" = 'false' ] && MESSAGE --no-break --no-log "${answer}"
       [ "${no_print}" = 'false' ] && BR
     else
       # interactive mode
-      while read ${read_opt} answer; do
+      if [ "${no_print}" = 'false' ]; then
+        question="${__MSG_INDENT__}${question}"
+        [ "${do_break}" = 'true'  ] && question=${question}$'\n'${__MSG_INDENT__}
+        read_opt="${read_opt} -p '${question}' "
+      fi
+
+      while eval "read ${read_opt} answer"; do
         # deal with default, when user only press ENTER
         if [ -z "${answer}" ]; then
           if [ -n "${default}" ]; then
@@ -250,11 +297,6 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
         else
           MESSAGE --no-log --no-indent "${__MSG_INDENT__}ERROR: invalid answer"
         fi
-
-        # display the question again
-        MESSAGE --no-log ${message_opt} "${question} "
-        [ "${do_break}" = 'true' ] && MESSAGE ${message_opt} --no-log --no-break $''
-
       done # enf of while read
     fi
 
@@ -262,6 +304,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
       LOG "${question}  => ${answer//?/#}"
     else
       LOG "${question}  => ${answer}"
+      [ "${__USE_READLINE__}" ] && history -s "${answer}"
     fi
 
     # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'

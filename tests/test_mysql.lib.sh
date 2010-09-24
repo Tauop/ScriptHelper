@@ -34,6 +34,7 @@ LOAD() {
 
 LOAD message.lib.sh
 LOAD ask.lib.sh
+LOAD exec.lib.sh
 LOAD mysql.lib.sh
 
 # Make tests -----------------------------------------------------------------

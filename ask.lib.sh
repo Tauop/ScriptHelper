@@ -165,7 +165,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
       [ $# -eq 0 ] && break
       case "$1" in
         --force        ) do_force='true'; shift ;;
-        --history-file ) shift; [ $# -gt 1 ] && HISTFILE="$1"; shift ;;
+        --history-file ) shift; [ $# -ge 1 ] && HISTFILE="$1"; shift ;;
         --*            ) shift        ;;
         --             ) shift; break ;;
         *              ) break        ;;

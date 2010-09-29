@@ -20,18 +20,36 @@
 # CLI_REGISTER_COMMAND()
 #   usage: CLI_REGISTER_COMMAND "<cli_command>" <function>
 #   desc: register a cli command <cli_command>, which may call the <function>
+#   note: commands, registered with this method, will take care of the CLI context
+#
+# CLI_REGISTER_COMMAND()
+#   usage: CLI_REGISTER_COMMAND "<cli_command>" <function>
+#   desc: register a cli command <cli_command>, which may call the <function>
+#         and don't take care of the CLI context
 #
 # CLI_REGISTER_MENU()
 #   usage: CLI_REGISTER_MENU "<cli_menu>"
 #   desc: register a cli menu, which will be added at the beginnig of new CLI command.
 #
-# CLI_RUN()
-#   usage: CLI_RUN
-#   desc: Run the CLI
-#
 # CLI_SET_PROMPT()
 #   usage: CLI_SET_PROMPT "<string>"
 #   desc: set the CLI prompt
+#
+# CLI_USE_READLINE()
+#   usage: CLI_USE_READLINE <options>
+#   desc: Enable the readline functionnalities of read
+#
+# CLI_RUN_COMMAND()
+#   usage: CLI_RUN_COMMAND <command>
+#   desc: Run a single command into the CLI
+#   alias: CLI_RUN_CMD
+#   note: this function return 0 if a valid CLI command is passed in argument, otherwise 1
+#
+# CLI_RUN()
+#   usage: CLI_RUN
+#   desc: Run the CLI
+#   note: this function add some "sugar" CLI command, like 'quit', 'exit',
+#         and deal with CLI context menu for command registered with CLI_REGISTER_COMMAND()
 
 if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   __LIB_CLI__='Loaded';
@@ -110,6 +128,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     sep=$( private_SED_SEPARATOR "${cli_cmd}" )
     cli_cmd=$( private_BUILD_SED_COMMAND "${cli_cmd}" )
+    func=$( echo "${func}" | sed -e "s/\([\\][0-9]\)/'\1'/g" )
 
     # update the code
     eval "$code=\"${!code} s${sep}${cli_cmd}${sep}${func}${sep}p; t;\""
@@ -126,6 +145,18 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     __CLI_CODE__="${__CLI_CODE__} s${sep}\(${cli_menu}\)${sep}CLI_ENTER_MENU \1${sep}p; t;"
   }
 
+
+  CLI_RUN_COMMAND () {
+    local cmd=
+    [ $# -eq 0 ] && return;
+
+    cmd=$( echo "$*" | sed -n -e "${__CLI_KCODE__}" )
+    [ -z "${cmd}" ] && cmd=$( echo "$*" | sed -n -e "${__CLI_CODE__}" )
+
+    [ -n "${cmd}" ] && eval "${cmd}"
+    [ -n "${cmd}" ] && return 0 || return 1
+  }
+  CLI_RUN_CMD() { CLI_RUN_COMMAND $@; }
 
   CLI_RUN () {
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }

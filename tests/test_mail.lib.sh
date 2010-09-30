@@ -55,7 +55,7 @@ reset_MAIL_CREATE() {
 
 check_MAIL_CREATE() {
   parent_path="$1"
-  counter="find -H '$parent_path' -name test_mail_lib_* -maxdepth 1 | wc -l"
+  counter="find -H '$parent_path' -maxdepth 1 -name test_mail_lib_* | wc -l"
   count_before=$( eval $counter )
   MAIL_CREATE "$parent_path/test_mail_lib_%"
   count_after=$( eval $counter )

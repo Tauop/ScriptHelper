@@ -89,6 +89,8 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
   # ----------------------------------------------------------------------------
   MAIL_APPEND() {
     [ -z "$1" ] && KO "MAIL_APPEND is called without argument !"
+    [ -e "${__MAIL_FILE__:-}" ]
+      || KO "MAIL_APPEND temporary mail file doesn't exists !"
 
     while [ $# -ne 0 ]; do
       echo "$1" >> ${__MAIL_FILE__}
@@ -98,7 +100,7 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
   MAIL_PRINT() {
-    [ -s ${__MAIL_FILE__} ] && cat ${__MAIL_FILE__}
+    [ -s "${__MAIL_FILE__:-}" ] && cat "${__MAIL_FILE__}"
   }
 
   # ----------------------------------------------------------------------------
@@ -106,10 +108,14 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     [ -z "$1" ] && KO "MAIL_SEND is called without argument !"
     [ $# -lt 2 ] && KO "MAIL_SEND: not enough arguments !"
 
-    subject="$1"
-    shift
-    mails=$( echo "$*" | tr ' ' ',' )
+    if [ -s "${__MAIL_FILE__:-}" ]; then
+      subject="$1"
+      shift
+      mails=$( echo "$*" | tr ' ' ',' )
 
-    MAIL_PRINT | mail -s "$subject" "$mails"
+      MAIL_PRINT | mail -s "$subject" "$mails"
+    else
+      NOTICE "No modification noticed. Recap e-mail will not be sent."
+    fi
   }
 fi

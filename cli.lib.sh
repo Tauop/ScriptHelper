@@ -161,7 +161,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   CLI_RUN () {
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }
     CLI_ENTER_MENU () { __CLI_CONTEXT_MENU__="$*"; }
-    CLI_EXIT () { [ -z "${__CLI_CONTEXT_MENU__}" ] && exit 0 || __CLI_CONTEXT_MENU__=; }
+    CLI_QUIT='[ -z ${__CLI_CONTEXT_MENU__:-} ] && break || __CLI_CONTEXT_MENU__= ;'
 
     local kcode= code= input= cmd=
 
@@ -169,7 +169,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     # internal CLI special commands
     kcode="${__CLI_KCODE__}"
-    kcode="${kcode} s/^ *quit *$/CLI_EXIT/p; t;"
+    kcode="${kcode} s/^ *quit *$/${CLI_QUIT}/p; t;"
     kcode="${kcode} s/^ *exit *$/break/p; t;"
 
     while [ true ]; do

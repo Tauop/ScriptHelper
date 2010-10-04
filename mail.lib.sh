@@ -151,7 +151,7 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     [ -z "${mail_file}" ] && KO "MAIL_APPEND: no mail file was setup"
 
     if [ ! -s "${mail_file}" ]; then
-      NOTICE "No modification noticed. Recap e-mail will not be sent."
+      NOTICE "No modification noticed. Prepared e-mail will not be sent."
       return 2;
     fi
 

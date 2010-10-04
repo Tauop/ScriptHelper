@@ -161,7 +161,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   CLI_RUN () {
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }
     CLI_ENTER_MENU () { __CLI_CONTEXT_MENU__="$*"; }
-    CLI_QUIT='[ -z ${__CLI_CONTEXT_MENU__:-} ] && break || __CLI_CONTEXT_MENU__= ;'
+    CLI_QUIT='[ -z "${__CLI_CONTEXT_MENU__:-}" ] \&\& break || __CLI_CONTEXT_MENU__= '
 
     local kcode= code= input= cmd=
 

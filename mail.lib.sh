@@ -152,10 +152,12 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
     if [ ! -s "${mail_file}" ]; then
       NOTICE "No modification noticed. Prepared e-mail will not be sent."
+      rm -f "${mail_file}"
       return 2;
     fi
 
     MAIL_PRINT | mail -s "$1" "$2"
+    rm -f "${mail_file}"
     return $?
   }
 

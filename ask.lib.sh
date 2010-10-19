@@ -265,16 +265,16 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
           [ "${allow_empty}" = 'true' ] && break;
         else
           # delete useless space
-          answer=`echo "${answer}" | sed -e 's/^ *//;s/ *$//;'`
+          answer=$( echo "${answer}" | sed -e 's/^ *//;s/ *$//;' )
 
           # check user response
           case "${check}" in
             "yesno" )
-                  if [ "${answer^^}" = 'Y'   \
-                    -o "${answer^^}" = 'YES' \
-                    -o "${answer^^}" = 'N'   \
-                    -o "${answer^^}" = 'NO' ]; then
-                    answer=${answer^^}           # uppercase
+                  answer=$( echo "${answer}" | tr '[:lower:]' '[:upper:]' )
+                  if [ "${answer}" = 'Y'   \
+                    -o "${answer}" = 'YES' \
+                    -o "${answer}" = 'N'   \
+                    -o "${answer}" = 'NO' ]; then
                     answer=${answer:0:1} # keep the first char
                     break;
                   fi

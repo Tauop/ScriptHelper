@@ -121,7 +121,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
         ":loop
          n; s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=${value}${sep}; t loop2;
          \$! b loop
-         \$ a ${var}=${value}
+         \$ a \ ${var}=${value}
          t;
          :loop2
          n; s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=${value}${sep};

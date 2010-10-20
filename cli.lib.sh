@@ -165,7 +165,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     local kcode= code= input= cmd=
 
-    code="${__CLI_CODE__} ; a CLI_UNKNOWN_COMMAND;"
+    code="${__CLI_CODE__} ; a \ CLI_UNKNOWN_COMMAND;"
 
     # internal CLI special commands
     kcode="${__CLI_KCODE__}"

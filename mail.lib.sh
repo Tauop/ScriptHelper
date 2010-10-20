@@ -119,7 +119,7 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     local mail_file=
 
     [ $# -ne 1 -a $# -ne 2 ] && KO "MAIL_APPEND: Bad argument(s)"
-    [ $# -eq 2 ] && mail_file="$1" || mail_file="${__MAIL_FILE__:-}"
+    [ $# -eq 2 ] && ( mail_file="$1"; shift ) || mail_file="${__MAIL_FILE__:-}"
 
     [ -z "${mail_file}" ] && KO "MAIL_APPEND: no mail file was setup"
     [ -w "${mail_file}" ] || KO "MAIL_APPEND: can't write to mail file"

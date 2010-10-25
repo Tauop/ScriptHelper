@@ -113,9 +113,9 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
   DISPLAY_LOG_FILES () {
     if [ -n "${__OUTPUT_LOG_FILE__:-}" -a -n "${__ERROR_LOG_FILE__:-}" ]; then
-      NOTICE 'Here are where you can find log files'
-      MESSAGE "   output: ${__OUTPUT_LOG_FILE__:-}"
-      MESSAGE "   error: ${__ERROR_LOG_FILE__:-}"
+      MESSAGE --no-log  'NOTICE: Here are where you can find log files'
+      MESSAGE --no-log "   output: ${__OUTPUT_LOG_FILE__:-}"
+      MESSAGE --no-log "   error: ${__ERROR_LOG_FILE__:-}"
     fi
   }
 

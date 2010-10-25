@@ -33,15 +33,17 @@
 #   note: if the configuration file doesn't exist, it will be created
 #
 # CONF_SAVE()
-#   usage: CONF_SAVE <conf_var> [ <value> ]
+#   usage: CONF_SAVE [ <option> ] <conf_var> [ <value> ]
 #   desc: save a variable into the configuration file
+#   options: --conf-file <file> : the configuration file to use
 #
 # CONF_GET()
-#   usage: CONF_GET <conf_var> [ <result_var> ]
+#   usage: CONF_GET [ <options> ] <conf_var> [ <result_var> ]
 #   desc: read a variable from the configuration file
+#   options: --conf-file <file> : the configuration file to use
 #
 # CONF_LOAD()
-#   usage: CONF_LOAD [<file>]
+#   usage: CONF_LOAD [ <file> ]
 #   desc: load a configuration file.
 #   note: if called without argument, use the file set by CONF_SET_FILE
 #
@@ -70,11 +72,11 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   CONF_SET_FILE () {
     local dir= file=
 
-    [ $# -ne 1 ] && FATAL "SET_CONF_FILE: bad arguments"
+    [ $# -ne 1 ] && FATAL 'SET_CONF_FILE: bad arguments'
     __CONF_FILE__="$1"
 
     file="${__CONF_FILE__##*/}"
-    dir="${__CONF_FILE__##${file}}"
+    dir="${__CONF_FILE__%${file}}"
 
     # create the configuration file if it doesn't exist
     if [ ! -e "${__CONF_FILE__}" ]; then
@@ -96,10 +98,18 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   }
 
   CONF_SAVE () {
-    local var= value= sep= s='[[:space:]]'
+    local var= value= sep= conf_file="${__CONF_FILE__}"
 
-    [ $# -eq 0 ] && FATAL "CONF_SAVE: Bad number of arguments"
-    [ ! -w "${__CONF_FILE__}" ] && FATAL "Can't write into configuration file ${__CONF_FILE__}"
+    while true ; do
+      [ $# -eq 0 ] && break;
+      case "$1" in
+        --conf-file) shift; conf_file="$1"; shift ;;
+        *) break;
+      esac
+    done
+
+    [ $# -eq 0 -o $# -gt 2 ] && FATAL 'CONF_SAVE: Bad number of arguments'
+    [ ! -w "${conf_file}" ] && FATAL "CONF_SAVE: Can't write into configuration file '${conf_file}'"
 
     var="$1";
     [ $# -eq 2 ] && value="$2"
@@ -108,45 +118,40 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     sep=$( private_SED_SEPARATOR "${var}${value}" )
 
     # save data into the configuration file
-    # sed code explanation :
-    # 1. :loop label
-    # 2. read next line; s///; if match s/// match goto :loop2
-    # 3. if not EOF, goto :loop
-    # 4. if EOF, append the conf
-    # 5. exit
-    # 6. :loop2 label
-    # 7. read next line; s///
-    # 8. if not EOF, goto :loop2
-    sed -i -e \
-        ":loop
-         n; s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=${value}${sep}; t loop2;
-         \$! b loop
-         \$ a \ ${var}=${value}
-         t;
-         :loop2
-         n; s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=${value}${sep};
-         \$! b loop2" \
-         "${__CONF_FILE__}"
+    tmp_file="/tmp/${RANDOM}"
+    grep -v "^\(${var}\)=" < "${conf_file}" > "${tmp_file}"
+    mv "${tmp_file}" "${conf_file}"
+    echo "${var}=\"${value}\"" >> "${conf_file}"
 
-    LOG "CONF_SAVE: ${var}=${value}"
+    LOG "CONF_SAVE: ${var}=\"${value}\""
   }
 
   CONF_GET () {
-    local result= resultvar= confvar= sep= s='[[:space:]]'
+    local result= resultvar= confvar= sep= conf_file="${__CONF_FILE__}"
 
-    [ $# -ne 0 ] && FATAL "CONF_GET: bad number of arguments"
+    while true ; do
+      [ $# -eq 0 ] && break
+      case "$1" in
+        --conf-file) shift; conf_file="$1"; shift ;;
+        *) break;
+      esac
+    done
+
+    [ $# -eq 0 -o $# -gt 2 ] && FATAL 'CONF_GET: bad number of arguments'
+    [ ! -r "${conf_file}" ] && FATAL "CONF_GET: Can't read from '${conf_file}'"
 
     confvar="$1"
     resultvar="${2:-$1}"
-    sep=$( private_SED_SEPARATOR "${var}${value}" )
+    sep=$( private_SED_SEPARATOR "${confvar}${resultvar}" )
 
-    result=$( sed -e -n "s${sep}^$s*${confvar}$s*=$s*\(.*\)$s*\$${sep}\1${sep}p" "${__CONF_FILE__}" )
+    result=$( sed -n -e "s${sep}^${confvar}=\(.*\)\$${sep}\1${sep}p" "${conf_file}" )
     eval "${resultvar}=${result}"
     LOG "CONF_GET: ${resultvar}=${result}"
   }
 
   CONF_LOAD () {
     local file=${1:-${__CONF_FILE__}}
+    [ ! -r "${file}" ] && FATAL "CONF_LOAD: Can't read from '${file}'"
     . "${file}"
     LOG "CONF_LOAD: ${file}"
   }

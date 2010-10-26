@@ -194,5 +194,5 @@ while [ "$loop_count" != "2" ]; do
   loop_count=$(( loop_count + 1))
 done
 
-rm -f "${TEST_FILE}" "${TEST_ANSWER_FILE}"
+find /tmp -maxdepth 1 \( -name "test.*" -o -name "test_answer.*" \) -exec rm -f {} \;
 exit 0

@@ -190,5 +190,7 @@ mDOTHIS 'Test CONF_GET()'
 
 mOK
 
+find /tmp -maxdepth 1 \( -name "test.*" -o -name "conf.*" -o -name "test_answer.*" \) -exec rm -f {} \;
+
 echo
 echo "*** All Tests OK ***"

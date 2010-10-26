@@ -224,4 +224,6 @@ mDOTHIS "MAIL_SEND()"
   reset_LOG_FILES
 mOK
 
+find /tmp -maxdepth 1 \( -name "test.*" -o -name "mail.*" \) -exec rm -f {} \;
+
 exit 0

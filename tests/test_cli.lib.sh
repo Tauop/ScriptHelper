@@ -78,8 +78,6 @@ ASK_SET_AUTOANSWER_FILE "${input_file}"
 
 ( CLI_RUN > "${output_file}" )
 diff -au "${expected_output_file}" "${output_file}"
-[ $? -eq 0 ] && echo "*** All Tests OK ***"
+[ $? -eq 0 ] && ( echo ; echo "*** All Tests OK ***" )
 
-rm -f "${input_file}"
-rm -f "${output_file}"
-rm -f "${expected_output_file}"
+find /tmp -maxdepth 1 -name "cli_test.*" -exec rm -f {} \;

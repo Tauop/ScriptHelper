@@ -240,5 +240,6 @@ mDOTHIS "MESSAGE() alias functions"
 
 mOK
 
+find /tmp -maxdepth 1 \( -name "test.*" -o -name "set_log_file.*" \) -exec rm -f {} \;
 echo
 echo "*** All Tests OK ***"

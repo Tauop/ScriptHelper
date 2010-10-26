@@ -154,7 +154,8 @@ OK
 
 MYSQL_QUERY "DROP DATABASE ${test_db}"
 MYSQL_QUERY "DROP DATABASE ${test_db2}"
-rm -f "${TEST_FILE}" "${TEST_FILE2}"
+
+find /tmp -maxdepth 1 -name "test.*" -exec rm -f {} \;
 
 echo
 echo "*** All Tests OK ***"

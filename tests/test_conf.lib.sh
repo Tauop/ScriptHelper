@@ -52,11 +52,6 @@ TEST_FAILED() {
   exit 1
 }
 
-check_TEST_FILE() {
-  content=`cat ${TEST_FILE}`
-  [ "${content}" != "$*" ] && TEST_FAILED
-}
-
 check_LOG_FILE() {
   local content=
   if [ -n "${__OUTPUT_LOG_FILE__:-}" ]; then

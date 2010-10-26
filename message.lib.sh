@@ -59,6 +59,7 @@
 #   usage: FATAL <error message>
 #   desc: prefix message with "FATAL:" and call MESSAGE().
 #         Then it call ROLLBACK() and exit(1).
+#   note: close DOTHIS if one
 #
 # ROLLBACK()
 #   desc: by default, it's done nothing. Its purpose is to be
@@ -154,6 +155,10 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   ROLLBACK () { echo >/dev/null; }
 
   FATAL () {
+    if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
+      MESSAGE --no-date --no-indent -- 'Fatal';
+      __IN_DOTHIS__='false'
+    fi
     MESSAGE --no-indent "${__MSG_INDENT__:-}FATAL: $*"
     type DISPLAY_LOG_FILES >/dev/null 2>/dev/null
     [ $? -eq 0 ] && DISPLAY_LOG_FILES

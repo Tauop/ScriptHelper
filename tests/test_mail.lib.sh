@@ -33,76 +33,195 @@ LOAD() {
 }
 
 LOAD message.lib.sh
+LOAD exec.lib.sh # for SET_LOG_FILE
 LOAD mail.lib.sh
+
+TEST_FILE="/tmp/test.${RANDOM}"
+SET_LOG_FILE "${TEST_FILE}"
 
 # Utility functions ----------------------------------------------------------
 
 TEST_FAILED() {
-  echo
+  rm -f "${TEST_FILE}"
   echo '[ERROR] Test failed'
-  echo -e "$*"
   exit 1
 }
+
+check_LOG_FILE() {
+  local content=
+  if [ -n "${__OUTPUT_LOG_FILE__:-}" ]; then
+    # delete the date, at the beginning of each line
+    content=`cat "${__OUTPUT_LOG_FILE__:-}" | cut -d ']' -f2- | sed -e 's/^ //' | tr $'\n' ':'`
+    content2=`echo "$*" | tr $'\n' ':'`
+    [ "${content}" != "${content2}" ] && TEST_FAILED
+    reset_LOG_FILES
+  fi
+}
+
+reset_LOG_FILES() {
+  echo -n '' > "${TEST_FILE}"
+  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__:-}"
+  [ -f "${__ERROR_LOG_FILE__:-}"  ] && echo -n '' > "${__ERROR_LOG_FILE__:-}"
+}
+
 
 # don't use function.lib.sh functions !
 mDOTHIS() { echo -n "- $* ... "; }
 mOK()     { echo 'OK';           }
 
-reset_MAIL_CREATE() {
-  rm -f /tmp/test_mail_lib_* \
-    || TEST_FAILED 'reset_MAIL_CREATE cannot remove test files'
-}
-
-check_MAIL_CREATE() {
-  parent_path="$1"
-  counter="find -H '$parent_path' -maxdepth 1 -name test_mail_lib_* | wc -l"
-  count_before=$( eval $counter )
-  MAIL_CREATE "$parent_path/test_mail_lib_%"
-  count_after=$( eval $counter )
-
-  [ $count_after -gt $count_before ] \
-    || TEST_FAILED "MAIL_CREATE cannot create mail file"
-}
-
-check_MAIL_APPEND() {
-  lines_before=$( cat ${__MAIL_FILE__} | wc -l )
-  MAIL_APPEND "$@"
-  lines_after=$( cat ${__MAIL_FILE__} | wc -l )
-  (( $lines_after - $lines_before == $# )) \
-    || TEST_FAILED "MAIL_APPEND failed with" $*
-}
-
-check_MAIL_PRINT() {
-  model="$1"
-  diff=$( diff <(MAIL_PRINT) <(echo -e $model) )
-  [ -z "$diff" ] || TEST_FAILED "MAIL_PRINT didn't output what was expected\n$diff"
-}
-
-check_MAIL_SEND() {
-  echo -n "TODO "
-}
 
 # Make tests -----------------------------------------------------------------
 
-parent_path='/tmp'
+MAIL_FILE="/tmp/mail.lib.test.${RANDOM}"
+MAIL_FILE2="/tmp/mail.lib.test.${RANDOM}"
 
-reset_MAIL_CREATE
 
-mDOTHIS "MAIL_CREATE()"
-  check_MAIL_CREATE $parent_path
+# -------------------------------------------------------------
+mDOTHIS 'test MAIL_CREATE()'
+  res=$( MAIL_CREATE '' )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: Can't create a mail with empty filename"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  MAIL_CREATE "${MAIL_FILE}"
+  [ $? -ne 0 ] && TEST_FAILED
+  check_LOG_FILE "MAIL_CREATE: ${MAIL_FILE}"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  touch ${MAIL_FILE2}; chmod 0000 "${MAIL_FILE2}"
+  res=$( MAIL_CREATE "${MAIL_FILE2}" )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_CREATE can't create temp mail file ${MAIL_FILE2}"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  MAIL_CREATE
+  [ $? -ne 0 ] && TEST_FAILED
+  check_LOG_FILE "MAIL_CREATE: $( MAIL_GET_FILE )"
+  reset_LOG_FILES
 mOK
 
+# -------------------------------------------------------------
+mDOTHIS "MAIL_SET_FILE()"
+  res=$( MAIL_SET_FILE )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_SET_FILE: Bad argument(s)"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  chmod a-w "${MAIL_FILE}"
+  res=$( MAIL_SET_FILE "${MAIL_FILE}")
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_SET_FILE: ${MAIL_FILE} is not writable"
+  reset_LOG_FILES
+  chmod a+w "${MAIL_FILE}"
+mOK
+
+# -------------------------------------------------------------
 mDOTHIS "MAIL_APPEND()"
-  check_MAIL_APPEND "first test line"
-  check_MAIL_APPEND "second test line" "with another line"
+  rm -f "${MAIL_FILE}" "${MAIL_FILE2}"
+  echo "first test line" >> "${MAIL_FILE2}"
+  echo "second test line" >> "${MAIL_FILE2}"
+
+  MAIL_CREATE "${MAIL_FILE}"
+  reset_LOG_FILES
+  MAIL_APPEND "first test line"
+  check_LOG_FILE "MAIL_APPEND[${MAIL_FILE}]> first test line"
+  reset_LOG_FILES
+  MAIL_APPEND "second test line"
+  check_LOG_FILE "MAIL_APPEND[${MAIL_FILE}]> second test line"
+  reset_LOG_FILES
+
+  res=$( cat "${MAIL_FILE}" | wc -l )
+  [ ${res} -ne 2 ] && TEST_FAILED
+
+  diff "${MAIL_FILE}" "${MAIL_FILE2}" >/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
+
+  res=$( tail -n 1 < "${MAIL_FILE}" )
+  [ "${res}" != 'second test line' ] && TEST_FAILED
+
+  # -------------------------------------------------------------
+  rm -f "${MAIL_FILE}"
+  MAIL_CREATE "${MAIL_FILE}"
+  MAIL_APPEND "${MAIL_FILE}" "first test line"
+  MAIL_APPEND "${MAIL_FILE}" "second test line"
+  reset_LOG_FILES
+
+  diff "${MAIL_FILE2}" "${MAIL_FILE}" >/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
+
+  # -------------------------------------------------------------
+  chmod a-w "${MAIL_FILE}"
+  res=$( MAIL_APPEND "${MAIL_FILE}" "test failed" )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_APPEND: can't write to mail file"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  res=$( MAIL_APPEND )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_APPEND: Bad argument(s)"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  __MAIL_FILE__=
+  res=$( MAIL_APPEND "test failed" )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_APPEND: no mail file was setup"
+  reset_LOG_FILES
 mOK
 
+# -------------------------------------------------------------
 mDOTHIS "MAIL_PRINT()"
-  check_MAIL_PRINT "first test line\nsecond test line\nwith another line"
+  chmod a+r "${MAIL_FILE}" "${MAIL_FILE2}"
+  MAIL_SET_FILE "${MAIL_FILE2}"
+  test_file="/tmp/test.${RANDOM}"
+  MAIL_PRINT > ${test_file}
+  diff "${test_file}" "${MAIL_FILE}" >/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
+  rm -f "${test_file}"
+
+  # -------------------------------------------------------------
+  res=$( MAIL_PRINT '' )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_PRINT: no mail file was setup"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+
+  chmod a-r "${MAIL_FILE}"
+  res=$( MAIL_PRINT "${MAIL_FILE}" )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_PRINT: can't read mail file"
+  reset_LOG_FILES
 mOK
 
 mDOTHIS "MAIL_SEND()"
-  check_MAIL_SEND "subject of mail" "address@ofthe.mail"
+  res=$( MAIL_SEND "1" "2" "3" "failed" )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_SEND: Bad argument(s)"
+  reset_LOG_FILES
+
+  # -------------------------------------------------------------
+  __MAIL_FILE__=''
+  res=$( MAIL_SEND "mail@mail.com" "failed" )
+  [ $? -eq 0 ] && TEST_FAILED
+  [ "${res}" = '' ] && TEST_FAILED
+  check_LOG_FILE "FATAL: MAIL_SEND: no mail file was setup"
+  reset_LOG_FILES
 mOK
 
-reset_MAIL_CREATE
+exit 0

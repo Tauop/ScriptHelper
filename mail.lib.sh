@@ -93,22 +93,32 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
   # ----------------------------------------------------------------------------
 
   MAIL_CREATE () {
-    [ $# -eq 0 ] && __MAIL_FILE__="/tmp/mail.${RANDOM}"
+    local mail_file=
+    [ $# -eq 0 ] && mail_file="/tmp/mail.${RANDOM}" || mail_file="$1"
 
-    touch ${__MAIL_FILE__} \
-      || KO "MAIL_CREATE can't create temp mail file ${__MAIL_FILE__}"
+    [ -z "${mail_file}" ] && FATAL "Can't create a mail with empty filename"
+
+    touch "${mail_file}" 2>/dev/null
+    if [ $? -ne 0 -o ! -w "${mail_file}" ]; then
+      FATAL "MAIL_CREATE can't create temp mail file ${mail_file}"
+      return 1;
+    fi
+
+    __MAIL_FILE__="${mail_file}"
+    LOG "MAIL_CREATE: ${__MAIL_FILE__}"
+    return 0;
   }
 
   # ----------------------------------------------------------------------------
 
   MAIL_GET_FILE () {
-    echo "${__MAIL_FILE__:-}";
+    echo "${__MAIL_FILE__}";
     return 0;
   }
 
   MAIL_SET_FILE () {
-    [ $# -ne 1  ] && KO "MAIL_SET_FILE: Bad argument(s)"
-    [ ! -w "$1" ] && KO "MAIL_SET_FILE: $1 is not writable"
+    [ $# -ne 1  ] && FATAL "MAIL_SET_FILE: Bad argument(s)"
+    [ ! -w "$1" ] && FATAL "MAIL_SET_FILE: $1 is not writable"
     __MAIL_FILE__="$1"
     return 0;
   }
@@ -116,15 +126,18 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
   # ----------------------------------------------------------------------------
 
   MAIL_APPEND () {
-    local mail_file=
+    local mail_file="${__MAIL_FILE__:-}"
 
-    [ $# -ne 1 -a $# -ne 2 ] && KO "MAIL_APPEND: Bad argument(s)"
-    [ $# -eq 2 ] && ( mail_file="$1"; shift ) || mail_file="${__MAIL_FILE__:-}"
+    [ $# -ne 1 -a $# -ne 2 ] && FATAL "MAIL_APPEND: Bad argument(s)"
+    if [ $# -eq 2 ]; then
+      mail_file="$1"; shift
+    fi
 
-    [ -z "${mail_file}" ] && KO "MAIL_APPEND: no mail file was setup"
-    [ -w "${mail_file}" ] || KO "MAIL_APPEND: can't write to mail file"
+    [ -z "${mail_file}" ] && FATAL "MAIL_APPEND: no mail file was setup"
+    [ -w "${mail_file}" ] || FATAL "MAIL_APPEND: can't write to mail file"
 
-    echo "$*" >> "${__MAIL_FILE__}"
+    echo "$*" >> "${mail_file}"
+    LOG "MAIL_APPEND[${mail_file}]> $*"
     return 0;
   }
 
@@ -134,30 +147,34 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     local mail_file=
     [ $# -eq 1 ] && mail_file="$1" || mail_file="${__MAIL_FILE__:-}"
 
-    [ -z "${mail_file}" ] && KO "MAIL_APPEND: no mail file was setup"
-    [ -r "${mail_file}" ] || KO "MAIL_APPEND: can't write to mail file"
+    [ -z "${mail_file}" ] && FATAL "MAIL_PRINT: no mail file was setup"
+    [ -r "${mail_file}" ] || FATAL "MAIL_PRINT: can't read mail file"
 
-    cat "${__MAIL_FILE__}"
+    cat "${mail_file}"
     return 0;
   }
 
   # ----------------------------------------------------------------------------
 
   MAIL_SEND () {
-    local mail_file=
-    [ $# -ne 2 -a $# -ne 3 ] && KO "MAIL_SEND: Bad argument(s)"
-    [ $# -eq 3 ] && ( mail_file="$1"; shift ) || mail_file="${__MAIL_FILE__:-}"
+    local mail_file="${__MAIL_FILE__:-}"
+    [ $# -ne 2 -a $# -ne 3 ] && FATAL "MAIL_SEND: Bad argument(s)"
+    if [ $# -eq 3 ]; then
+      mail_file="$1"; shift
+    fi
 
-    [ -z "${mail_file}" ] && KO "MAIL_APPEND: no mail file was setup"
+    [ -z "${mail_file}" ] && FATAL "MAIL_SEND: no mail file was setup"
 
     if [ ! -s "${mail_file}" ]; then
       NOTICE "No modification noticed. Prepared e-mail will not be sent."
+      LOG "MAIL_SEND[${mail_file}] Not sent, as file is empty"
       rm -f "${mail_file}"
       return 2;
     fi
 
     MAIL_PRINT | mail -s "$1" "$2"
     rm -f "${mail_file}"
+    LOG "MAIL_SEND[${mail_file}]"
     return $?
   }
 

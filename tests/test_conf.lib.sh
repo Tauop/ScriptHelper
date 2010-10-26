@@ -93,6 +93,7 @@ mDOTHIS 'Test CONF_SET_FILE()'
   reset_LOG_FILES
 mOK
 
+# --------------------------------------------------------------------------
 mDOTHIS 'Test CONF_LOAD()'
   echo 'TEST=true' >> "${test_conf_file}"
   CONF_LOAD
@@ -102,12 +103,14 @@ mDOTHIS 'Test CONF_LOAD()'
   [ "${TEST}" != 'true' ] && TEST_FAILED
   rm -f "${test_conf_file}"
 
+  # --------------------------------------------------------------------------
   test_conf_file="/tmp/conf.${RANDOM}"
   res=$( CONF_LOAD "${test_conf_file}" )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_LOAD: Can't read from '${test_conf_file}'"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   test_conf_file="/tmp/conf.${RANDOM}"
   echo 'TEST=false' >> "${test_conf_file}"
   CONF_SET_FILE "${test_conf_file}"
@@ -118,17 +121,20 @@ mDOTHIS 'Test CONF_LOAD()'
   [ "${TEST}" != 'false' ] && TEST_FAILED
 mOK
 
+# --------------------------------------------------------------------------
 mDOTHIS 'Test CONF_SAVE()'
   res=$( CONF_SAVE )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_SAVE: Bad number of arguments"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   res=$( CONF_SAVE riri fifi loulou )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_SAVE: Bad number of arguments"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   test_file2="/tmp/conf.${RANDOM}"
   touch "${test_file2}" && chmod 000 "${test_file2}" || TEST_FAILED
 
@@ -137,24 +143,36 @@ mDOTHIS 'Test CONF_SAVE()'
   check_LOG_FILE "FATAL: CONF_SAVE: Can't write into configuration file '${test_file2}'"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   TOTO='patrick'
   CONF_SAVE TOTO
   [ $? -ne 0 ] && TEST_FAILED
   check_LOG_FILE "CONF_SAVE: TOTO=\"patrick\""
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   TOTO=
   CONF_LOAD
   reset_LOG_FILES
   [ "${TOTO}" != 'patrick' ] && TEST_FAILED
 
+  # --------------------------------------------------------------------------
+  TOTO=
+  echo '  TOTO="patrick"' > "${test_conf_file}"
+  CONF_LOAD
+  reset_LOG_FILES
+  [ "${TOTO}" != 'patrick' ] && TEST_FAILED
+
+  # --------------------------------------------------------------------------
   long_sentence="coucou tout le monde"
   CONF_SAVE long_sentence
   [ $? -ne 0 ] && TEST_FAILED
   check_LOG_FILE "CONF_SAVE: long_sentence=\"coucou tout le monde\""
   reset_LOG_FILES
+
 mOK
 
+# --------------------------------------------------------------------------
 mDOTHIS 'Test CONF_GET()'
 
   res=$( CONF_GET )
@@ -162,26 +180,31 @@ mDOTHIS 'Test CONF_GET()'
   check_LOG_FILE "FATAL: CONF_GET: bad number of arguments"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   res=$( CONF_GET riri fifi loulou )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_GET: bad number of arguments"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   res=$( CONF_GET --conf-file "${test_file2}" )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_GET: bad number of arguments"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   res=$( CONF_GET --conf-file "${test_file2}" TOTO )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_GET: Can't read from '${test_file2}'"
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   CONF_GET long_sentence
   [ "${long_sentence}" != 'coucou tout le monde' ] && TEST_FAILED
   check_LOG_FILE "CONF_GET: long_sentence=\"coucou tout le monde\""
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
   CONF_GET long_sentence other_var
   [ $? -ne 0 ] && TEST_FAILED
   [ "${other_var}" != 'coucou tout le monde' ] && TEST_FAILED

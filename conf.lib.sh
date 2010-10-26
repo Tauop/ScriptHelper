@@ -98,7 +98,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   }
 
   CONF_SAVE () {
-    local var= value= sep= conf_file="${__CONF_FILE__}"
+    local var= value= sep= conf_file="${__CONF_FILE__}" s='[[:space:]]'
 
     while true ; do
       [ $# -eq 0 ] && break;
@@ -119,15 +119,19 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
 
     # save data into the configuration file
     tmp_file="/tmp/${RANDOM}"
-    grep -v "^\(${var}\)=" < "${conf_file}" > "${tmp_file}"
-    mv "${tmp_file}" "${conf_file}"
-    echo "${var}=\"${value}\"" >> "${conf_file}"
+    grep "^$s*${var}$s*=" < "${conf_file}" >/dev/null 2>/dev/null
+    if [ $? -eq 0 ]; then # found -> replace
+      sed -e "s/^\($s*${var}\)$s*=.*\$/\1=\"${value}\"/" < "${conf_file}" > "${tmp_file}"
+      mv "${tmp_file}" "${conf_file}"
+    else # append
+      echo "${var}=\"${value}\"" >> "${conf_file}"
+    fi
 
     LOG "CONF_SAVE: ${var}=\"${value}\""
   }
 
   CONF_GET () {
-    local result= resultvar= confvar= sep= conf_file="${__CONF_FILE__}"
+    local result= resultvar= confvar= sep= conf_file="${__CONF_FILE__}" s='[[:space:]]'
 
     while true ; do
       [ $# -eq 0 ] && break
@@ -144,7 +148,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     resultvar="${2:-$1}"
     sep=$( private_SED_SEPARATOR "${confvar}${resultvar}" )
 
-    result=$( sed -n -e "s${sep}^${confvar}=\(.*\)\$${sep}\1${sep}p" "${conf_file}" )
+    result=$( sed -n -e "s${sep}^$s*${confvar}$s*=$s*\(.*\)$s*\$${sep}\1${sep}p" "${conf_file}" )
     eval "${resultvar}=${result}"
     LOG "CONF_GET: ${resultvar}=${result}"
   }

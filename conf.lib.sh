@@ -121,7 +121,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     tmp_file="/tmp/${RANDOM}"
     grep "^$s*${var}$s*=" < "${conf_file}" >/dev/null 2>/dev/null
     if [ $? -eq 0 ]; then # found -> replace
-      sed -e "s/^\($s*${var}\)$s*=.*\$/\1=\"${value}\"/" < "${conf_file}" > "${tmp_file}"
+      sed -e "s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=\"${value}\"${sep}" < "${conf_file}" > "${tmp_file}"
       mv "${tmp_file}" "${conf_file}"
     else # append
       echo "${var}=\"${value}\"" >> "${conf_file}"

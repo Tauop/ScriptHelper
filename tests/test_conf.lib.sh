@@ -144,6 +144,12 @@ mDOTHIS 'Test CONF_SAVE()'
   reset_LOG_FILES
 
   # --------------------------------------------------------------------------
+  res=$( CONF_SAVE '' )
+  [ $? -eq 0 ] && TEST_FAILED
+  check_LOG_FILE "FATAL: CONF_SAVE: variable name is empty"
+  reset_LOG_FILES
+
+  # --------------------------------------------------------------------------
   TOTO='patrick'
   CONF_SAVE TOTO
   [ $? -ne 0 ] && TEST_FAILED
@@ -211,6 +217,11 @@ mDOTHIS 'Test CONF_GET()'
   check_LOG_FILE "CONF_GET: other_var=\"coucou tout le monde\""
   reset_LOG_FILES
 
+  # --------------------------------------------------------------------------
+  res=$( CONF_GET '' )
+  [ $? -eq 0 ] && TEST_FAILED
+  check_LOG_FILE "FATAL: CONF_GET: variable name is empty"
+  reset_LOG_FILES
 mOK
 
 find /tmp -maxdepth 1 \( -name "test.*" -o -name "conf.*" -o -name "test_answer.*" \) -exec rm -f {} \;

@@ -112,6 +112,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     [ ! -w "${conf_file}" ] && FATAL "CONF_SAVE: Can't write into configuration file '${conf_file}'"
 
     var="$1";
+    [ -z "${var}" ] && FATAL "CONF_SAVE: variable name is empty"
     [ $# -eq 2 ] && value="$2"
     [ $# -eq 1 ] && value="${!1}"
 
@@ -146,8 +147,9 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
 
     confvar="$1"
     resultvar="${2:-$1}"
-    sep=$( private_SED_SEPARATOR "${confvar}${resultvar}" )
+    [ -z "${confvar}" ] && FATAL "CONF_GET: variable name is empty"
 
+    sep=$( private_SED_SEPARATOR "${confvar}${resultvar}" )
     result=$( sed -n -e "s${sep}^$s*${confvar}$s*=$s*\(.*\)$s*\$${sep}\1${sep}p" "${conf_file}" )
     eval "${resultvar}=${result}"
     LOG "CONF_GET: ${resultvar}=${result}"

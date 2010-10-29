@@ -50,8 +50,6 @@
 #   arguments:
 #     <mail_filename> : mail file to use (optional)
 #     <message> : the message to add to the mail content.
-#   note: if called without --mail-file, try to use the last mail file used, ie
-#         use __MAIL_FILE__ filename.
 #   note: if <mail_filename> is not given, use __MAIL_FILE__ instead
 #
 # MAIL_PRINT()

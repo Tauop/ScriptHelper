@@ -153,10 +153,13 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     cmd=$( echo "$*" | sed -n -e "${__CLI_KCODE__}" )
     [ -z "${cmd}" ] && cmd=$( echo "$*" | sed -n -e "${__CLI_CODE__}" )
 
-    [ -n "${cmd}" ] && eval "${cmd}"
-    [ -n "${cmd}" ] && return 0 || return 1
+    if [ -n "${cmd}" ]; then
+      eval "${cmd}"
+      return $?
+    fi
+    return 1;
   }
-  CLI_RUN_CMD() { CLI_RUN_COMMAND $@; }
+  CLI_RUN_CMD() { CLI_RUN_COMMAND $@; return $? }
 
   CLI_RUN () {
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }

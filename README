@@ -15,63 +15,20 @@ tests/* : test files
 
 Each file have description of their functions, usage, options, etc..
 
-== List of Functions
+== List of libraries
 
-message.lib.sh
-   MESSAGE() - This function is used to display messages on standard output and/or 
-               write messages into the output log file
-      alias: MSG(), LOG(), NOTICE(), ERROR(), WARNING(), BR(), DOTHIS(), OK(), KO()
-   MSG_INDENT_INC() - increment indentation of MESSAGE() display by two spaces
-   MSG_INDENT_DEC() - decrement indentation of MESSAGE() display by two spaces
-   FATAL() - prefix message with "FATAL:" and call MESSAGE().
-             then, it call ROLLBACK() and exit(1)
-   ROLLBACK() - by default, it's done nothing. its purpose is to be override by the
-                parent script (script which use message.lib.sh)
+I try to make one lib for each purpose :
+ - message.lib.sh : messaging functions.
+ - exec.lib.sh    : execute commands, check the return code, Rollback feature
+ - ask.lib.sh     : usefull when you have to ask question to the user
+ - cli.lib.sh     : create easily Command Line Interface for interactive scripts
+ - conf.lib.sh    : deal with configuration file (where data are stored with key=value format)
+ - mail.lib.sh    : to prepare and send mails
+ - mysql.lib.sh   : to make mysql scripts
 
-exec.lib.sh
-   SET_LOG_FILE() - Create a standard output file and error output file
-   DISPLAY_LOG_FILES() - Display log files set with SET_LOG_FILES()
-   CHECK_ROOT() - Check that the user is 'root' user
-   EXEC() - Execute a command.
-            Can redirect output to output log file and redirect error output to error log file
-            can call KO() on error
-      alias: EXEC_WITH_CHECK(), EXEC_WITH_LOG(), EXEC_WITH_CHECK_AND_LOG(), CMD()
+== Usage
 
-ask.lib.sh
-   ASK()
-     Ask a question to the user, get the user response and store it in
-     the variable which name is stored in <variable>.
-     Control can be made on user answer, and ASK() repeat question if
-     the user answer is not valid.
-     Display message and user answer are logged, if possible.
-   HIT_TO_CONTINUE() - Simply ask the user to hit ENTER to continue
-   ASK_SET_ANSWER_LOG_FILE()
-      Create a log file, which will be used to store all user answers, one per line
-   ASK_SET_AUTOANSWER_FILE()
-      Set a file which contains previously recored user's answers, ie a file which
-      contain one answer per lie. Each line of this file will be returned at each
-      call of ASK().
-
-cli.lib.sh
-   CLI_REGISTER_COMMAND() - register a CLI command, which may call a shell function
-   CLI_REGISTER_MENU() - register a CLI menu
-   CLI_SET_PROMPT() - set the CLI prompt
-   CLI_RUN() - run the CLI
-
-conf.lib.sh
-   CONF_SET_FILE() - Save a file path where you will read/write data
-   CONF_SAVE()     - Save a variable into the configuration file
-   CONF_GET()      - read a variable from the configuration file
-   CONF_LOAD()     - load the configuration with SOURCE()
-
-
-mysql.lib.sh
-   MYSQL_SET_CONF() - Save global MySQL configuration, which allow to not repeat mysql command
-                      options every time we call a MySQL function.
-   MYSQL_QUERY() - execute a query on the MySQL instance/host
-   MYSQL_DUMP() - call mysqldump on a MySQL instance/host
-   MYSQL_RESTAURE() - call mysql with a dumpfile, to restaure one or severals databases
-   MYSQL_GET_BASES() - get databases list of the mysql instance
-   MYSQL_GET_TABLES() - get the table list of the current (or select) database
-   MYSQL_GET_FIELDS() - get the field list of a table
-   MYSQL_GET_FIELD_TYPE() - get the SQL type of a table field
+ScriptHelper is used in those projects :
+ - Tosca (http://tosca-project.net/) - deployment scripts
+ - sshGate (http://github.com/Tauop/sshGate) - ssh proxy in bash
+ - ScriptCollection (http://github.com/Tauop/ScriptCollection) - little script to make specify tasks

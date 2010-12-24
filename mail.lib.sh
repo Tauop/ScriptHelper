@@ -170,10 +170,16 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
       return 2;
     fi
 
-    MAIL_PRINT | mail -s "$1" "$2"
-    rm -f "${mail_file}"
-    LOG "MAIL_SEND[${mail_file}]"
-    return $?
+    which mail >/dev/null
+    if [ $? -eq 0 ]; then
+      MAIL_PRINT | mail -s "$1" "$2"
+      rm -f "${mail_file}"
+      LOG "MAIL_SEND[${mail_file}] Mail sent"
+    else
+      NOTICE "'mail' command can't be found. The mail wasn't sent. See '${mail_file}' file."
+      LOG "MAIL_SEND[${mail_file}] Not sent, as 'mail' command wasn't found."
+    fi
+    return 0;
   }
 
 fi

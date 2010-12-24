@@ -115,7 +115,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     var="$1";
     [ -z "${var}" ] && FATAL "CONF_SAVE: variable name is empty"
     [ $# -eq 2 ] && value="$2"
-    [ $# -eq 1 ] && value="${!1}"
+    [ $# -eq 1 ] && eval "value=\"\${${1}}\""
 
     sep=$( private_SED_SEPARATOR "${var}${value}" )
 

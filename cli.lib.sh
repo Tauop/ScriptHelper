@@ -132,7 +132,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     func=$( echo "${func}" | sed -e "s/\([\\][0-9]\)/'\1'/g" )
 
     # update the code
-    eval "$code=\"${!code} s${sep}${cli_cmd}${sep}${func}${sep}p; t;\""
+    eval "$code=\"\${${code}} s${sep}${cli_cmd}${sep}${func}${sep}p; t;\""
   }
 
   CLI_REGISTER_MENU () {

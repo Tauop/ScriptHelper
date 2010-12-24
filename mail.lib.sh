@@ -87,12 +87,20 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
       exit 2
     fi
   fi
+  if [ "${__LIB_RANDOM__:-}" != "Loaded" ]; then
+    if [ -r ./random.lib.sh ]; then
+      . ./random.lib.sh
+    else
+      echo "ERROR: Unable to load ./random.lib.sh library"
+      exit 2
+    fi
+  fi
 
   # ----------------------------------------------------------------------------
 
   MAIL_CREATE () {
     local mail_file=
-    [ $# -eq 0 ] && mail_file="/tmp/mail.${RANDOM}" || mail_file="$1"
+    [ $# -eq 0 ] && mail_file="/tmp/mail.$(RANDOM)" || mail_file="$1"
 
     [ -z "${mail_file}" ] && FATAL "Can't create a mail with empty filename"
 

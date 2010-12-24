@@ -32,6 +32,7 @@ LOAD() {
   fi
 }
 
+LOAD random.lib.sh
 LOAD message.lib.sh
 LOAD ask.lib.sh
 LOAD exec.lib.sh
@@ -39,7 +40,7 @@ LOAD mysql.lib.sh
 
 # Make tests -----------------------------------------------------------------
 
-TEST_FILE="/tmp/test.${RANDOM}"
+TEST_FILE="/tmp/test.$(RANDOM)"
 TEST_FILE2="${TEST_FILE}2"
 
 check_TEST_FILE() {
@@ -81,7 +82,7 @@ DOTHIS "MYSQL_QUERY --db"
   compare_TEST_FILES
 OK
 
-test_db="TEST${RANDOM}"
+test_db="TEST$(RANDOM)"
 test_db2="${test_db}2"
 
 ROLLBACK() {

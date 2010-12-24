@@ -33,9 +33,9 @@ LOAD() {
 }
 
 LOAD message.lib.sh
+LOAD random.lib.sh
 
-
-TEST_FILE="/tmp/test.${RANDOM}"a
+TEST_FILE="/tmp/test.$(RANDOM)"
 TEST_FILE2="${TEST_FILE}2"
 
 

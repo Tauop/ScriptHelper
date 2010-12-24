@@ -29,8 +29,14 @@ else
   echo "[ERROR] Unable to load exec.lib.sh"
   exit 1
 fi
+if [ -r ../random.lib.sh ]; then
+  . ../random.lib.sh
+else
+  echo "[ERROR] Unable to load random.lib.sh"
+  exit 1
+fi
 
-TEST_FILE="/tmp/test.${RANDOM}"
+TEST_FILE="/tmp/test.$(RANDOM)"
 TEST_FILE2="${TEST_FILE}2"
 
 

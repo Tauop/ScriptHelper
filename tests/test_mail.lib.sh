@@ -32,11 +32,12 @@ LOAD() {
   fi
 }
 
+LOAD random.lib.sh
 LOAD message.lib.sh
 LOAD exec.lib.sh # for SET_LOG_FILE
 LOAD mail.lib.sh
 
-TEST_FILE="/tmp/test.${RANDOM}"
+TEST_FILE="/tmp/test.$(RANDOM)"
 SET_LOG_FILE "${TEST_FILE}"
 
 # Utility functions ----------------------------------------------------------
@@ -72,8 +73,8 @@ mOK()     { echo 'OK';           }
 
 # Make tests -----------------------------------------------------------------
 
-MAIL_FILE="/tmp/mail.lib.test.${RANDOM}"
-MAIL_FILE2="/tmp/mail.lib.test.${RANDOM}"
+MAIL_FILE="/tmp/mail.lib.test.$(RANDOM)"
+MAIL_FILE2="/tmp/mail.lib.test.$(RANDOM)"
 
 
 # -------------------------------------------------------------
@@ -185,7 +186,7 @@ mOK
 mDOTHIS "MAIL_PRINT()"
   chmod a+r "${MAIL_FILE}" "${MAIL_FILE2}"
   MAIL_SET_FILE "${MAIL_FILE2}"
-  test_file="/tmp/test.${RANDOM}"
+  test_file="/tmp/test.$(RANDOM)"
   MAIL_PRINT > ${test_file}
   diff "${test_file}" "${MAIL_FILE}" >/dev/null
   [ $? -ne 0 ] && TEST_FAILED

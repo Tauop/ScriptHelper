@@ -64,6 +64,15 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     fi
   fi
 
+  if [ "${__LIB_RANDOM__:-}" != "Loaded" ]; then
+    if [ -r ./random.lib.sh ]; then
+      . ./random.lib.sh
+    else
+      echo "ERROR: Unable to load ./random.lib.sh library"
+      exit 2
+    fi
+  fi
+
   # ----------------------------------------------------------------------------
   __CONF_FILE__=
 
@@ -120,7 +129,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     sep=$( private_SED_SEPARATOR "${var}${value}" )
 
     # save data into the configuration file
-    tmp_file="/tmp/${RANDOM}"
+    tmp_file="/tmp/conf.$(RANDOM)"
     grep "^$s*${var}$s*=" < "${conf_file}" >/dev/null 2>/dev/null
     if [ $? -eq 0 ]; then # found -> replace
       sed -e "s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=\"${value}\"${sep}" < "${conf_file}" > "${tmp_file}"

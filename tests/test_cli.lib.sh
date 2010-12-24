@@ -31,6 +31,7 @@ LOAD() {
 LOAD message.lib.sh
 LOAD ask.lib.sh
 LOAD cli.lib.sh
+LOAD random.lib.sh
 
 CLI_SET_PROMPT "cli"
 CLI_REGISTER_MENU    "msg"
@@ -40,9 +41,9 @@ CLI_REGISTER_COMMAND "ping ? pong ?" "PING_PONG \2 \1"
 
 PING_PONG() { echo "$1 - $2"; }
 
-input_file="/tmp/cli_test.in.${RANDOM}"
-output_file="/tmp/cli_test.out.${RANDOM}"
-expected_output_file="/tmp/cli_test.result_out.${RANDOM}"
+input_file="/tmp/cli_test.in.$(RANDOM)"
+output_file="/tmp/cli_test.out.$(RANDOM)"
+expected_output_file="/tmp/cli_test.result_out.$(RANDOM)"
 
 cat >"${input_file}" <<EOF
 msg hello

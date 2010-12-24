@@ -150,6 +150,14 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
       exit 2
     fi
   fi
+  if [ "${__LIB_RANDOM__:-}" != 'Loaded' ]; then
+    if [ -r ./random.lib.sh ]; then
+      . ./random.lib.sh
+    else
+      echo "ERROR: Unable to load ./random.lib.sh library"
+      exit 2
+    fi
+  fi
 
   # Internal variables
   # ---------------------------------------------------
@@ -164,7 +172,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
 
   __MYSQL_OPTIONS_CHANGED__='false'
   __MYSQL_NB_CONSUMMED_ARG__=0
-  __MYSQL_DUMP_FILE__="/tmp/mysqldump_${RANDOM}.sql"
+  __MYSQL_DUMP_FILE__="/tmp/mysqldump_$(RANDOM).sql"
   __EXEC_OPTIONS__='' # options to pass to EXEC (see functions.lib.sh)
 
   # backup variables. si private_* functions

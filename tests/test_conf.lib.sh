@@ -35,13 +35,13 @@ LOAD message.lib.sh
 LOAD exec.lib.sh
 LOAD ask.lib.sh
 LOAD conf.lib.sh
-
+LOAD random.lib.sh
 
 # Utility functions ----------------------------------------------------------
-TEST_FILE="/tmp/test.${RANDOM}"
+TEST_FILE="/tmp/test.$(RANDOM)"
 SET_LOG_FILE "${TEST_FILE}"
 
-TEST_ANSWER_FILE="/tmp/test_answer.${RANDOM}"
+TEST_ANSWER_FILE="/tmp/test_answer.$(RANDOM)"
 ASK_SET_ANSWER_LOG_FILE "${TEST_ANSWER_FILE}"
 
 # Utility functions ----------------------------------------------------------
@@ -77,7 +77,7 @@ reset_LOG_FILES
 
 # Make tests -----------------------------------------------------------------
 
-test_conf_file="/tmp/conf.${RANDOM}"
+test_conf_file="/tmp/conf.$(RANDOM)"
 
 mDOTHIS 'Test CONF_SET_FILE()'
   ROLLBACK() { echo 'rollback called'; }
@@ -104,14 +104,14 @@ mDOTHIS 'Test CONF_LOAD()'
   rm -f "${test_conf_file}"
 
   # --------------------------------------------------------------------------
-  test_conf_file="/tmp/conf.${RANDOM}"
+  test_conf_file="/tmp/conf.$(RANDOM)"
   res=$( CONF_LOAD "${test_conf_file}" )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_LOAD: Can't read from '${test_conf_file}'"
   reset_LOG_FILES
 
   # --------------------------------------------------------------------------
-  test_conf_file="/tmp/conf.${RANDOM}"
+  test_conf_file="/tmp/conf.$(RANDOM)"
   echo 'TEST=false' >> "${test_conf_file}"
   CONF_SET_FILE "${test_conf_file}"
   CONF_LOAD "${test_conf_file}"
@@ -135,7 +135,7 @@ mDOTHIS 'Test CONF_SAVE()'
   reset_LOG_FILES
 
   # --------------------------------------------------------------------------
-  test_file2="/tmp/conf.${RANDOM}"
+  test_file2="/tmp/conf.$(RANDOM)"
   touch "${test_file2}" && chmod 000 "${test_file2}" || TEST_FAILED
 
   res=$( CONF_SAVE --conf-file "${test_file2}" test_file2 )

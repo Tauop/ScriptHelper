@@ -159,7 +159,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     fi
     return 1;
   }
-  CLI_RUN_CMD() { CLI_RUN_COMMAND $@; return $? }
+  CLI_RUN_CMD() { CLI_RUN_COMMAND $@; return $?; }
 
   CLI_RUN () {
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }

@@ -85,7 +85,8 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   # determine a good sed separator
   private_SED_SEPARATOR () {
     for s in '/' '@' ',' '|'; do
-      if [ "${1//$s/}" = "$1" ]; then
+      echo "$1" | grep "$s" >/dev/null
+      if [ $? -ne 0 ]; then
         echo "$s"; return 0;
       fi
     done

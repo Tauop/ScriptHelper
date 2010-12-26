@@ -42,6 +42,11 @@
 #   desc: read a variable from the configuration file
 #   options: --conf-file <file> : the configuration file to use
 #
+# CONF_DEL()
+#   usage: CONF_DEL [ <options> ] <conf_var>
+#   desc: remove the <conf_var> from the configuration file
+#   options: --conf-file <file> : the configuration file to use
+#
 # CONF_LOAD()
 #   usage: CONF_LOAD [ <file> ]
 #   desc: load a configuration file.
@@ -163,6 +168,29 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     result=$( sed -n -e "s${sep}^$s*${confvar}$s*=$s*\(.*\)$s*\$${sep}\1${sep}p" "${conf_file}" )
     eval "${resultvar}=${result}"
     LOG "CONF_GET: ${resultvar}=${result}"
+  }
+
+  CONF_DEL () {
+    local confvar= tmp_file= conf_file="${__CONF_FILE__}" s='[[:space:]]'
+
+   while true ; do
+     [ $# -eq 0 ] && break
+     case "$1" in
+       --conf-file) shift; conf_file="$1"; shift ;;
+       *) break;
+     esac
+   done
+
+   confvar="$1"
+   [ $# -ne 1 ] && FATAL 'CONF_DEL: bad number of arguments'
+   [ ! -w "${conf_file}" ] && FATAL "CONF_DEL: Can't write to '${conf_file}'"
+   [ -z "${confvar}" ] && FATAL 'CONF_DEL: variable name is empty'
+
+   tmp_file="/tmp/conf.$(RANDOM)"
+   grep -v "^$s*${confvar}$s*=.*\$" < "${conf_file}" > "${tmp_file}"
+   mv "${tmp_file}" "${conf_file}"
+
+   LOG "CONF_DEL: remove '${confvar}'"
   }
 
   CONF_LOAD () {

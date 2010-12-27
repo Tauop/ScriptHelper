@@ -31,11 +31,11 @@ LOAD() {
   fi
 }
 
+LOAD random.lib.sh
 LOAD message.lib.sh
 LOAD exec.lib.sh
 LOAD ask.lib.sh
 LOAD conf.lib.sh
-LOAD random.lib.sh
 
 # Utility functions ----------------------------------------------------------
 TEST_FILE="/tmp/test.$(RANDOM)"
@@ -80,7 +80,6 @@ reset_LOG_FILES
 test_conf_file="/tmp/conf.$(RANDOM)"
 
 mDOTHIS 'Test CONF_SET_FILE()'
-  ROLLBACK() { echo 'rollback called'; }
   res=$( CONF_SET_FILE )
   [ $? -eq 0      ] && TEST_FAILED
   [ "${res}" = '' ] && TEST_FAILED
@@ -221,6 +220,75 @@ mDOTHIS 'Test CONF_GET()'
   res=$( CONF_GET '' )
   [ $? -eq 0 ] && TEST_FAILED
   check_LOG_FILE "FATAL: CONF_GET: variable name is empty"
+  reset_LOG_FILES
+mOK
+
+# --------------------------------------------------------------------------
+mDOTHIS 'Test CONF_DEL()'
+  echo -n '' > "${test_conf_file}"
+  CONF_SAVE --conf-file "${test_conf_file}" long_setence "coucou tout le monde"
+  reset_LOG_FILES
+
+  CONF_DEL toto
+  [ $? -ne 0 ] && TEST_FAILED
+  check_LOG_FILE "CONF_DEL: remove 'toto'"
+  reset_LOG_FILES
+
+  # --------------------------------------------------------------------------
+  echo -n '' > "${test_conf_file}"
+  CONF_SAVE long_setence "coucou tout le monde"
+  CONF_SAVE again "coucou tout le monde"
+  reset_LOG_FILES
+
+  CONF_DEL long_setence
+  [ $? -ne 0 ] && TEST_FAILED
+  check_LOG_FILE "CONF_DEL: remove 'long_setence'"
+  reset_LOG_FILES
+
+  # --------------------------------------------------------------------------
+  echo -n '' > "${test_conf_file}"
+  CONF_SAVE --conf-file "${test_conf_file}" toto "coucou"
+  CONF_SAVE --conf-file "${test_conf_file}" tata "tout le monde"
+  reset_LOG_FILES
+  CONF_DEL --conf-file "${test_conf_file}" toto
+  [ $# -ne 0 ] && TEST_FAILED
+  check_LOG_FILE "CONF_DEL: remove 'toto'"
+  res=$( CONF_GET toto )
+  [ -n "${res}" ] && TEST_FAILED
+  reset_LOG_FILES
+
+  CONF_DEL --conf-file "${test_conf_file}" tata
+  [ $? -ne 0 ] && TEST_FAILED
+  check_LOG_FILE "CONF_DEL: remove 'tata'"$'\n'"CONF_DEL: '${test_conf_file}' deleted"
+  [ -f "${test_conf_file}" ] && TEST_FAILED
+  reset_LOG_FILES
+
+  # --------------------------------------------------------------------------
+  echo -n '' > "${test_conf_file}"
+  CONF_SAVE --conf-file "${test_conf_file}" toto "coucou"
+  chmod a-w "${test_conf_file}"
+  reset_LOG_FILES
+
+  res=$( CONF_DEL --conf-file "${test_conf_file}" toto )
+  [ $? -eq 0 ] && TEST_FAILED
+  check_LOG_FILE "FATAL: CONF_DEL: Can't write to '${test_conf_file}'"
+  chmod a+w "${test_conf_file}"
+  reset_LOG_FILES
+
+  # --------------------------------------------------------------------------
+  res=$( CONF_DEL --conf-file "${test_conf_file}" )
+  [ $? -eq 0 ] && TEST_FAILED
+  check_LOG_FILE "FATAL: CONF_DEL: bad number of arguments"
+  reset_LOG_FILES
+
+  res=$( CONF_DEL toto tata )
+  [ $? -eq 0 ] && TEST_FAILED
+  check_LOG_FILE "FATAL: CONF_DEL: bad number of arguments"
+  reset_LOG_FILES
+
+  res=$( CONF_DEL '' )
+  [ $? -eq 0 ] && TEST_FAILED
+  check_LOG_FILE "FATAL: CONF_DEL: variable name is empty"
   reset_LOG_FILES
 mOK
 

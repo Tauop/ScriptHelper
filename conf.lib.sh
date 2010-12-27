@@ -181,16 +181,21 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
      esac
    done
 
-   confvar="$1"
    [ $# -ne 1 ] && FATAL 'CONF_DEL: bad number of arguments'
+   confvar="$1"
    [ ! -w "${conf_file}" ] && FATAL "CONF_DEL: Can't write to '${conf_file}'"
    [ -z "${confvar}" ] && FATAL 'CONF_DEL: variable name is empty'
 
    tmp_file="/tmp/conf.$(RANDOM)"
    grep -v "^$s*${confvar}$s*=.*\$" < "${conf_file}" > "${tmp_file}"
    mv "${tmp_file}" "${conf_file}"
-
    LOG "CONF_DEL: remove '${confvar}'"
+
+   if [ ! -s "${conf_file}" ]; then
+     rm -f "${conf_file}"
+     LOG "CONF_DEL: '${conf_file}' deleted"
+   fi
+   return 0;
   }
 
   CONF_LOAD () {

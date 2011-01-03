@@ -1,0 +1,31 @@
+
+== Install ScriptHelper system-wide
+
+Copy content of the tarball in a directory (/usr/lib/ScriptHelper/ for example).
+
+Copy the file ScriptHelper.conf in /etc/ and edit it to change the value of
+SCRIPT_HELPER_DIRECTORY variable, which has to be set to the path where you
+put ScriptHelper (here: /usr/lib/ScriptHelper)
+
+== Use ScriptHelper in a specific project
+
+If you don't want to install ScriptHelper on the system, and only use
+ScriptHelper for your script, you have to set the SCRIPT_HELPER_DIRECTORY
+variable, before source any files of ScriptHelper.
+
+Here is an example, assumed that you put ScriptHelper in the './lib/'
+directory :
+  # simple code to show how to use ScriptHelper from a script
+  # without install it
+  SCRIPT_HELPER_DIRECTORY='./lib'
+  
+  # load ScriptHelper libraries
+  source ${SCRIPT_HELPER_DIRECTORY}/ask.lib.sh
+  source ${SCRIPT_HELPER_DIRECTORY}/ask.lib.sh
+  
+  ASK --yesno "Does it work [Yes] ?" result 'Y'
+  MESSAGE "the result is '${result}'"
+  
+  return 0
+
+This script whill ask "Does it work [Yes] ?" and print your answer :-)

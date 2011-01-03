@@ -105,15 +105,28 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __ANSWER_LOG_FILE__=''
   __USE_READLINE__='false'
 
-  # Load common lib
-  if [ "${__LIB_MESSAGE__:-}" != "Loaded" ]; then
-    if [ -r ./message.lib.sh ]; then
-      . ./message.lib.sh
+  load() {
+    local var= value= file=
+
+    var="$1"; file="$2"
+    value=$( eval "echo \"\${${var}:-}\"" )
+
+    [ -n "${value}" ] && return 1;
+    if [ -f "${file}" ]; then
+      . "${file}"
     else
-      echo "ERROR: Unable to load ./message.lib.sh library"
+      echo "ERROR: Unable to load ${file}"
       exit 2
     fi
-  fi
+    return 0;
+  }
+
+  # Load configuration file
+  load SCRIPT_HELPER_DIRECTORY /etc/ScriptHelper.conf
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY:-}"
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY%%/}"
+
+  load __LIB_MESSAGE__ "${SCRIPT_HELPER_DIRECTORY}/message.lib.sh"
 
   # ----------------------------------------------------------------------------
 

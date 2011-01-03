@@ -25,6 +25,11 @@ I try to make one lib for each purpose :
  - conf.lib.sh    : deal with configuration file (where data are stored with key=value format)
  - mail.lib.sh    : to prepare and send mails
  - mysql.lib.sh   : to make mysql scripts
+ - random.lib.sh  : random number generator
+
+== Install
+
+read INSTALL file
 
 == Usage
 

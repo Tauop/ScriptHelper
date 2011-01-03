@@ -20,17 +20,21 @@
 
 # -f Disable pathname expansion.
 # -u Unset variables
-set -u
+set -fu
 
 # Load library ---------------------------------------------------------------
+SCRIPT_HELPER_DIRECTORY='..'
+[ -r /etc/ScriptHelper.conf ] && . /etc/ScriptHelper.conf
+
 LOAD() {
-  if [ -r ../$1 ]; then
-    . ../$1
+  if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
+    . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
     echo "[ERROR] Unable to load $1"
     exit 1
   fi
 }
+
 
 LOAD random.lib.sh
 LOAD message.lib.sh

@@ -59,24 +59,29 @@
 if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   __LIB_CONF__='Loaded'
 
-  # Load common lib
-  if [ "${__LIB_MESSAGE__:-}" != "Loaded" ]; then
-    if [ -r ./message.lib.sh ]; then
-      . ./message.lib.sh
-    else
-      echo "ERROR: Unable to load ./message.lib.sh library"
-      exit 2
-    fi
-  fi
+  load() {
+    local var= value= file=
 
-  if [ "${__LIB_RANDOM__:-}" != "Loaded" ]; then
-    if [ -r ./random.lib.sh ]; then
-      . ./random.lib.sh
+    var="$1"; file="$2"
+    value=$( eval "echo \"\${${var}:-}\"" )
+
+    [ -n "${value}" ] && return 1;
+    if [ -f "${file}" ]; then
+      . "${file}"
     else
-      echo "ERROR: Unable to load ./random.lib.sh library"
+      echo "ERROR: Unable to load ${file}"
       exit 2
     fi
-  fi
+    return 0;
+  }
+
+  # Load configuration file
+  load SCRIPT_HELPER_DIRECTORY /etc/ScriptHelper.conf
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY:-}"
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY%%/}"
+
+  load __LIB_MESSAGE__ "${SCRIPT_HELPER_DIRECTORY}/message.lib.sh"
+  load __LIB_RANDOM__  "${SCRIPT_HELPER_DIRECTORY}/random.lib.sh"
 
   # ----------------------------------------------------------------------------
   __CONF_FILE__=

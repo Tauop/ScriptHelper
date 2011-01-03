@@ -23,18 +23,20 @@
 set -fu
 
 # Load library ---------------------------------------------------------------
-if [ -r ../exec.lib.sh ]; then
-  . ../exec.lib.sh
-else
-  echo "[ERROR] Unable to load exec.lib.sh"
-  exit 1
-fi
-if [ -r ../random.lib.sh ]; then
-  . ../random.lib.sh
-else
-  echo "[ERROR] Unable to load random.lib.sh"
-  exit 1
-fi
+SCRIPT_HELPER_DIRECTORY='..'
+[ -r /etc/ScriptHelper.conf ] && . /etc/ScriptHelper.conf
+
+LOAD() {
+  if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
+    . "${SCRIPT_HELPER_DIRECTORY}/$1"
+  else
+    echo "[ERROR] Unable to load $1"
+    exit 1
+  fi
+}
+
+LOAD exec.lib.sh
+LOAD random.lib.sh
 
 TEST_FILE="/tmp/test.$(RANDOM)"
 TEST_FILE2="${TEST_FILE}2"

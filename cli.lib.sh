@@ -54,25 +54,29 @@
 if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   __LIB_CLI__='Loaded';
 
-  # Load command lib
-  if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
-    if [ -r ./message.lib.sh ]; then
-      . ./message.lib.sh
-    else
-      echo "ERROR: Unable to load ./message.lib.sh library"
-      exit 2
-    fi
-  fi
+  load() {
+    local var= value= file=
 
-  # Load ask lib
-  if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
-    if [ -r ./ask.lib.sh ]; then
-      . ./ask.lib.sh
+    var="$1"; file="$2"
+    value=$( eval "echo \"\${${var}:-}\"" )
+
+    [ -n "${value}" ] && return 1;
+    if [ -f "${file}" ]; then
+      . "${file}"
     else
-      echo "ERROR: Unable to load ./ask.lib.sh library"
+      echo "ERROR: Unable to load ${file}"
       exit 2
     fi
-  fi
+    return 0;
+  }
+
+  # Load configuration file
+  load SCRIPT_HELPER_DIRECTORY /etc/ScriptHelper.conf
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY:-}"
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY%%/}"
+
+  load __LIB_MESSAGE__ "${SCRIPT_HELPER_DIRECTORY}/message.lib.sh"
+  load __LIB_ASK__     "${SCRIPT_HELPER_DIRECTORY}/ask.lib.sh"
 
   # Internal variables
   # ---------------------------------------------------

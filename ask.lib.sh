@@ -324,6 +324,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     [ "${read_opt/-s/}" != "${read_opt}" -a "${no_print}" = 'false' ] && BR
 
     [ -n "${__ANSWER_LOG_FILE__}" ] &&  echo "${answer}" >> "${__ANSWER_LOG_FILE__}"
+    answer=$( echo "${answer}" | sed -e 's/["]/\\"/g' )
     eval "${variable}=\"${answer}\"";
   }
 

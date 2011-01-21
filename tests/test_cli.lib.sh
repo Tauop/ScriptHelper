@@ -40,11 +40,14 @@ LOAD ask.lib.sh
 LOAD cli.lib.sh
 LOAD random.lib.sh
 
+help_file="/tmp/cli_test.help.$(RANDOM)"
+CLI_REGISTER_HELP "${help_file}"
+
 CLI_SET_PROMPT "cli"
 CLI_REGISTER_MENU    "msg"
 CLI_REGISTER_COMMAND "msg hello"   "echo 'hello'"
-CLI_REGISTER_COMMAND "msg reply ?" "echo '\1'"
-CLI_REGISTER_COMMAND "ping ? pong ?" "PING_PONG \2 \1"
+CLI_REGISTER_COMMAND "msg reply <what>" "echo '\1'"
+CLI_REGISTER_COMMAND "ping ? pong <target>[:<optional>]" "PING_PONG \2 \1" "Like to play ping-pong"
 
 PING_PONG() { echo "$1 - $2"; }
 
@@ -61,6 +64,7 @@ ping cat pong lol
 quit
 ping cat pong lol
 msg reply lol
+help ping
 quit
 EOF
 
@@ -79,6 +83,8 @@ cli >  ping cat pong lol
 lol - cat
 cli >  msg reply lol
 lol
+cli >  help ping
+ping ? pong <target>[:<optional>]	Like to play ping-pong
 cli >  quit
 EOF
 

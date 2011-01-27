@@ -44,7 +44,7 @@ help_file="/tmp/cli_test.help.$(RANDOM)"
 CLI_REGISTER_HELP "${help_file}"
 
 CLI_SET_PROMPT "cli"
-CLI_REGISTER_MENU    "msg"
+CLI_REGISTER_MENU    "msg" 'help message'
 CLI_REGISTER_COMMAND "msg hello"   "echo 'hello'"
 CLI_REGISTER_COMMAND "msg reply <what>" "echo '\1'"
 CLI_REGISTER_COMMAND "ping ? pong <target>[:<optional>]" "PING_PONG \2 \1" "Like to play ping-pong"

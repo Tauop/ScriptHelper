@@ -256,7 +256,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
   CLI_REGISTER_MENU () {
     local cli_menu= sep=
-    [ $# -ne 1 ] && ERROR "CLI_REGISTER_MENU: invalid arguments"
+    [ $# -ne 1 -a $# -ne 2 ] && ERROR "CLI_REGISTER_MENU: invalid arguments"
     cli_menu="$1"
 
     sep=$( private_SED_SEPARATOR "${cli_menu}" )

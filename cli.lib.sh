@@ -160,25 +160,12 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   CLI_SET_PROMPT () { __CLI_PROMPT__="$1"; }
   CLI_USE_READLINE () { ASK_ENABLE_READLINE $@; }
 
-  private_CLI_GET_COMMAND_BASE() {
-    local result=
-    echo "$1" | tr ' ' $'\n' \
-      | ( while read word; do
-            [ -z "${word}" ] && continue
-            [ "${word}" = '?' ] && break
-            result="${result} ${word}"
-         done
-         echo "${result# }"
-        )
-    return 0
-  }
-
   private_CLI_DEFAULT_GET_HELP() {
     local type="$1" cli_command="$2" help=
     [ "${type}" = 'command' ] && help="$4" || help="$3"
     if [ "${type}" = 'menu' ]; then
       cli_command=$( private_PURIFY_CLI_COMMAND "${cli_command}" )
-      cli_command=$( private_CLI_GET_COMMAND_BASE "${cli_command}" )
+      cli_command=$( echo "${cli_command}" | sed -e 's/?//g;s/ */ /g;' )
     fi
     printf "%s\t%s\t%s" "${type}" "${cli_command}" "${help}"
     return 0;
@@ -294,8 +281,8 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     # internal CLI special commands
     kcode="${__CLI_KCODE__}"
-    kcode="${kcode} s/^ *help *$/private_CLI_DEFAULT_DISPLAY_HELP/p; t;"
-    kcode="${kcode} s/^ *help *\(.*\)$/private_CLI_DEFAULT_DISPLAY_HELP_FOR \1/p; t;"
+    kcode="${kcode} s/^ *help *$/${__CLI_DISPLAY_HELP__}/p; t;"
+    kcode="${kcode} s/^ *help *\(.*\)$/${__CLI_DISPLAY_HELP_FOR__} \1/p; t;"
     kcode="${kcode} s/^ *quit *$/${CLI_QUIT}/p; t;"
     kcode="${kcode} s/^ *exit *$/break/p; t;"
 

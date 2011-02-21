@@ -26,6 +26,7 @@ I try to make one lib for each purpose :
  - mail.lib.sh    : to prepare and send mails
  - mysql.lib.sh   : to make mysql scripts
  - random.lib.sh  : random number generator
+ - record.lib.sh  : record tty session
 
 == Install
 

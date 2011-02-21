@@ -17,48 +17,21 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library for helping writing shell script for simples
-# operations.
+# This library helps to deal with configuration files
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
 # __LIB_CONF__ : 'Loaded' when the lib is 'source'd
-#
-# Methods ====================================================================
-#
-# CONF_SET_FILE()
-#   usage: SET_CONF_FILE <file>
-#   desc: Save a file path where you will read/write data
-#   note: if the directory doesn't exist, it will be created
-#   note: if the configuration file doesn't exist, it will be created
-#
-# CONF_SAVE()
-#   usage: CONF_SAVE [ <option> ] <conf_var> [ <value> ]
-#   desc: save a variable into the configuration file
-#   options: --conf-file <file> : the configuration file to use
-#
-# CONF_GET()
-#   usage: CONF_GET [ <options> ] <conf_var> [ <result_var> ]
-#   desc: read a variable from the configuration file
-#   options: --conf-file <file> : the configuration file to use
-#
-# CONF_DEL()
-#   usage: CONF_DEL [ <options> ] <conf_var>
-#   desc: remove the <conf_var> from the configuration file
-#   options: --conf-file <file> : the configuration file to use
-#
-# CONF_LOAD()
-#   usage: CONF_LOAD [ <file> ]
-#   desc: load a configuration file.
-#   note: if called without argument, use the file set by CONF_SET_FILE
-#
+# __CONF_FILE__ : configuration file to deal with when not given with --file
 # ----------------------------------------------------------------------------
 
 
 # don't load several times this file
 if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   __LIB_CONF__='Loaded'
+  __CONF_FILE__=
 
+  # load dependencies
   load() {
     local var= value= file=
 
@@ -84,10 +57,11 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   load __LIB_RANDOM__  "${SCRIPT_HELPER_DIRECTORY}/random.lib.sh"
 
   # ----------------------------------------------------------------------------
-  __CONF_FILE__=
 
-  # ----------------------------------------------------------------------------
-
+  # usage: SET_CONF_FILE <file>
+  # desc: Save a file path where you will read/write data
+  # note: if the directory doesn't exist, it will be created
+  # note: if the configuration file doesn't exist, it will be created
   CONF_SET_FILE () {
     local dir= file=
 
@@ -107,6 +81,8 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     fi
   }
 
+  # usage: private_SED_SEPARATOR <string> 
+  # desc: determine a good sed separator
   private_SED_SEPARATOR () {
     for s in '/' '@' ',' '|'; do
       echo "$1" | grep "$s" >/dev/null
@@ -117,6 +93,9 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     return 1;
   }
 
+  # usage: CONF_SAVE [ <option> ] <conf_var> [ <value> ]
+  # desc: save a variable into the configuration file
+  # options: --conf-file <file> : the configuration file to use
   CONF_SAVE () {
     local var= value= sep= conf_file="${__CONF_FILE__}" s='[[:space:]]'
 
@@ -151,6 +130,9 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     LOG "CONF_SAVE: ${var}=\"${value}\""
   }
 
+  # usage: CONF_GET [ <options> ] <conf_var> [ <result_var> ]
+  # desc: read a variable from the configuration file
+  # options: --conf-file <file> : the configuration file to use
   CONF_GET () {
     local result= resultvar= confvar= sep= conf_file="${__CONF_FILE__}" s='[[:space:]]'
 
@@ -175,6 +157,9 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     LOG "CONF_GET: ${resultvar}=${result}"
   }
 
+  # usage: CONF_DEL [ <options> ] <conf_var>
+  # desc: remove the <conf_var> from the configuration file
+  # options: --conf-file <file> : the configuration file to use
   CONF_DEL () {
     local confvar= tmp_file= conf_file="${__CONF_FILE__}" s='[[:space:]]'
 
@@ -203,6 +188,9 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
    return 0;
   }
 
+  # usage: CONF_LOAD [ <file> ]
+  # desc: load a configuration file.
+  # note: if called without argument, use the file set by CONF_SET_FILE
   CONF_LOAD () {
     local file=${1:-${__CONF_FILE__}}
     [ ! -r "${file}" ] && FATAL "CONF_LOAD: Can't read from '${file}'"
@@ -210,4 +198,4 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     LOG "CONF_LOAD: ${file}"
   }
 
-fi # end of: if [ "${__LIB_ASK__}" = 'Loaded' ]; then
+fi # end of: if [ "${__LIB_CONF__}" != 'Loaded' ]; then

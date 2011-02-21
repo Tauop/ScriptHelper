@@ -17,67 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library for helping writing shell script for simples
-# operations.
+# This library helps to deal with mails (prepare and send)
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
 # __LIB_MAIL__ : 'Loaded' when the lib is 'source'd
 # __MAIL_FILE__ : path the log file in which messages will be stored
-#
-# Methods ====================================================================
-#
-# MAIL_CREATE()
-#   usage: MAIL_CREATE [ <mail_filename> ]
-#   desc: creates a file to store the mail content.
-#   arguments:
-#     <mail_filename> : mail file to use, which MUST exist
-#   note: if no file is given, a random-named file is created in /tmp
-#
-# MAIL_GET_FILE()
-#   usage: MAIL_GET_FILE
-#   desc: return the content of __MAIL_FILE__, ie the current mail file used
-#
-# MAIL_SET_FILE()
-#   usage: MAIL_SET_FILE <mail_filename>
-#   desc: set the current mail file to use, ie the content of __MAIL_FILE__
-#   arguments:
-#     <mail_filename> : mail file to use, which MUST exist
-#
-# MAIL_APPEND()
-#   usage: MAIL_APPEND [ <mail_filename> ] <message>
-#   desc: adds <message> to the mail file
-#   arguments:
-#     <mail_filename> : mail file to use (optional)
-#     <message> : the message to add to the mail content.
-#   note: if <mail_filename> is not given, use __MAIL_FILE__ instead
-#
-# MAIL_PRINT()
-#   usage: MAIL_PRINT [ <mail_filename> ]
-#   desc: prints the content of the mail to send
-#   arguments:
-#     <mail_filename> : mail file to use (optional)
-#   note: if <mail_filename> is not given, use __MAIL_FILE__ instead
-#
-# MAIL_SEND()
-#   usage: MAIL_SEND [ <mail_filename> ] <subject> <addresses>
-#   desc: use default system mail options to send the mail
-#   arguments:
-#     <mail_filename> : mail file to use (optional)
-#     <subject> : subject of the mail.
-#     <addresse> : A commat separated list of mail addresses.
-#   note: if <mail_filename> is not given, use __MAIL_FILE__ instead
-#   note: for more specific usages of the mail command use
-#         MAIL_PRINT | mail [options] ...
 # ----------------------------------------------------------------------------
 
 # don't load several times this file
 if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
   __LIB_MAIL__='Loaded'
-
-  # IMPORTANT: Don't set those variables directly in the parent script
   __MAIL_FILE__=''
 
+  # load dependencies
   load() {
     local var= value= file=
 
@@ -104,6 +57,10 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
+  # usage: MAIL_CREATE [ <mail_filename> ]
+  # desc: creates a file to store the mail content.
+  # arguments: <mail_filename> : mail file to use, which MUST exist
+  # note: if no file is given, a random-named file is created in /tmp
   MAIL_CREATE () {
     local mail_file=
     [ $# -eq 0 ] && mail_file="/tmp/mail.$(RANDOM)" || mail_file="$1"
@@ -123,11 +80,17 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
+  # usage: MAIL_GET_FILE
+  # desc: return the content of __MAIL_FILE__, ie the current mail file used
   MAIL_GET_FILE () {
     echo "${__MAIL_FILE__}";
     return 0;
   }
 
+  # usage: MAIL_SET_FILE <mail_filename>
+  # desc: set the current mail file to use, ie the content of __MAIL_FILE__
+  # arguments:
+  #   <mail_filename> : mail file to use, which MUST exist
   MAIL_SET_FILE () {
     [ $# -ne 1  ] && FATAL "MAIL_SET_FILE: Bad argument(s)"
     [ ! -w "$1" ] && FATAL "MAIL_SET_FILE: $1 is not writable"
@@ -137,6 +100,12 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
+  # usage: MAIL_APPEND [ <mail_filename> ] <message>
+  # desc: adds <message> to the mail file
+  # arguments:
+  #   <mail_filename> : mail file to use (optional)
+  #   <message> : the message to add to the mail content.
+  # note: if <mail_filename> is not given, use __MAIL_FILE__ instead
   MAIL_APPEND () {
     local mail_file="${__MAIL_FILE__:-}"
 
@@ -155,6 +124,10 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
+  # usage: MAIL_PRINT [ <mail_filename> ]
+  # desc: prints the content of the mail to send
+  # arguments: <mail_filename> : mail file to use (optional)
+  # note: if <mail_filename> is not given, use __MAIL_FILE__ instead
   MAIL_PRINT () {
     local mail_file=
     [ $# -eq 1 ] && mail_file="$1" || mail_file="${__MAIL_FILE__:-}"
@@ -168,6 +141,15 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
+  # usage: MAIL_SEND [ <mail_filename> ] <subject> <addresses>
+  # desc: use default system mail options to send the mail
+  # arguments:
+  #   <mail_filename> : mail file to use (optional)
+  #   <subject> : subject of the mail.
+  #   <addresse> : A commat separated list of mail addresses.
+  # note: if <mail_filename> is not given, use __MAIL_FILE__ instead
+  # note: for more specific usages of the mail command use
+  #       MAIL_PRINT | mail [options] ...
   MAIL_SEND () {
     local mail_file="${__MAIL_FILE__:-}"
     [ $# -ne 2 -a $# -ne 3 ] && FATAL "MAIL_SEND: Bad argument(s)"
@@ -196,4 +178,4 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     return 0;
   }
 
-fi
+fi # end of: if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then

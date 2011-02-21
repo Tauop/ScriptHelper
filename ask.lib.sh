@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library for helping writing shell script for simples
-# operations.
+# This is a bash library purpose is to give ability to ask question, which
+# checking answer, in the simpliest way
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
@@ -28,71 +28,6 @@
 # __AUTOANSWER_FILE__ : filepath of the file from which answer will be taken
 # __AUTOANSWER_FP__ : file pointer, which determine the last line number of
 #                     the file __AUTOANSWER_FILE__ which has been read
-#
-# Methods ====================================================================
-#
-# ASK_SET_ANSWER_LOG_FILE()
-#   usage: ASK_SET_ANSWER_LOG_FILE <file>
-#   desc: create a log file, which will be used to store all user answers,
-#         one per line
-#   arguments:
-#     <file> : path to the file in which to log answers.
-#   note: the <file> will be deleted before use
-#
-# ASK_SET_AUTOANSWER_FILE()
-#   usage: ASK_SET_AUTOANSWER_FILE <file>
-#   desc: set a file which contains previously recorded user's answers,
-#         ie a file which contain a answer per line. Each line of this
-#         file will be returned at each call of ASK().
-#   arguments:
-#     <file> : path to the file from which answers will be read
-#   note: Call of HIT_TO_CONTINUE() will have no interactive effect, if
-#         ASK_SET_AUTOANSWER_FILE has been used.
-#
-# HIT_TO_CONTINUE()
-#   desc: display a message to the user, which ask to press ENTER to continue
-#
-# ASK_ENABLE_READLINE()
-#   usage: ASK_ENABLE_READLINE [ <options> ]
-#   desc: enable readline module, used by read shell builtin, if we are in zsh or bash
-#   arguments:
-#      <options> =
-#        --force : force usage of read -e
-#        --history-file : set history file to use
-#   note: if --history-file is not specified, history builtin will use HISTFILE env var
-#
-# ASK_DISABLE_READLINE()
-#   usage: ASK_DISABLE_READLINE
-#   desc: disable readline module, used by read shell builtin
-#
-# ASK()
-#   usage: ASK [ <options> ] <variable> [ "<text>" ] [ <default value> ] [ "<error>" ]
-#   desc: Ask a question to the user, get the user response and store it in
-#         the variable which name is stored in <variable>.
-#         Control can be made on user answer, and ASK() repeat question if
-#         the user answer is not valid.
-#         Display message and user answer are logged, if possible.
-#   arguments:
-#      <options> =
-#        --no-print : all call of MESSAGE() won't print anything
-#        --no-echo : Don't print what the user type
-#        --with-break : make a break-line after the question printing.
-#        --pass : implies --no-print + don't log clear text password
-#        --number : The user answer must be a number
-#        --yesno : The asked question is a yes/no question.
-#                  Control the user answer.
-#        --allow-empty : user can hit enter, which reply to the question.
-#                        In this case, the answer will be a empty string
-#      <variable> = The name of the variable in which we have to store
-#                   the user response.
-#      <text> = The question to ask to the user.
-#      <default value> = value of the answer of the user, when he only
-#                        press ENTER. Set this variable to empty string
-#                        when you don't want default value.
-#      <error> = The custom error message displayed to the user if its
-#                answer is not valid.
-#                default: "Invalid answer."
-#   note: format options are ignored if a __AUTOANSWER_FILE__ was set
 # ----------------------------------------------------------------------------
 
 # don't load several times this file
@@ -105,6 +40,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   __ANSWER_LOG_FILE__=''
   __USE_READLINE__='false'
 
+  # Load dependencies
   load() {
     local var= value= file=
 
@@ -130,6 +66,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
 
   # ----------------------------------------------------------------------------
 
+  # usage: HIT_TO_CONTINUE
+  # desc: display a message to the user, which ask to press ENTER to continue
   HIT_TO_CONTINUE () {
     if [ ! -f "${__AUTOANSWER_FILE__}" ]; then
       MESSAGE --no-log ""
@@ -143,6 +81,14 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
+  # usage: ASK_SET_AUTOANSWER_FILE <file>
+  # desc: set a file which contains previously recorded user's answers,
+  #         ie a file which contain a answer per line. Each line of this
+  #         file will be returned at each call of ASK().
+  # arguments:
+  #   <file> : path to the file from which answers will be read
+  # note: Call of HIT_TO_CONTINUE() will have no interactive effect, if
+  #       ASK_SET_AUTOANSWER_FILE has been used.
   ASK_SET_AUTOANSWER_FILE () {
     [ -z "$1" ] && KO "ASK_SET_ANSWER_FILE is called without argument !"
     [ $# -gt 1 ] && KO "ASK_SET_ANSWER_FILE: too much arguments !"
@@ -156,6 +102,12 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
+  # usage: ASK_SET_ANSWER_LOG_FILE <file>
+  # desc: create a log file, which will be used to store all user answers,
+  #       one per line
+  # arguments:
+  #   <file> : path to the file in which to log answers.
+  # note: the <file> will be deleted before use
   ASK_SET_ANSWER_LOG_FILE () {
     [ -z "$1" ] && KO "ASK_SET_ANSWER_FILE is called without argument !"
     [ $# -gt 1 ] && KO "ASK_SET_ANSWER_FILE: too much arguments !"
@@ -171,6 +123,11 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
+  # usage: ASK_ENABLE_READLINE [ <options> ]
+  # desc: enable readline module, used by read shell builtin, if we are in zsh or bash
+  # options: --force : force usage of read -e
+  #          --history-file : set history file to use
+  # note: if --history-file is not specified, history builtin will use HISTFILE env var
   ASK_ENABLE_READLINE () {
     local shell=${SHELL##*/} do_force='false'
 
@@ -195,6 +152,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     fi
   }
 
+  # usage: ASK_DISABLE_READLINE
+  # desc: disable readline module, used by read shell builtin
   ASK_DISABLE_READLINE () {
     set -o emacs
     set -o history
@@ -202,6 +161,30 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   }
 
   # ----------------------------------------------------------------------------
+  # usage: ASK [ <options> ] <variable> [ "<text>" ] [ <default value> ] [ "<error>" ]
+  # desc: Ask a question to the user, get the user response and store it in
+  #       the variable which name is stored in <variable>.
+  #       Control can be made on user answer, and ASK() repeat question if
+  #       the user answer is not valid.
+  #       Display message and user answer are logged, if possible.
+  # options: --no-print : all call of MESSAGE() won't print anything
+  #          --no-echo : Don't print what the user type
+  #          --with-break : make a break-line after the question printing.
+  #          --pass : implies --no-print + don't log clear text password
+  #          --number : The user answer must be a number
+  #          --yesno : The asked question is a yes/no question.
+  #                    Control the user answer.
+  #          --allow-empty : user can hit enter, which reply to the question.
+  #                          In this case, the answer will be a empty string
+  # arguments: <variable> = The name of the variable in which we have to store
+  #                         the user response.
+  #            <text> = The question to ask to the user.
+  #            <default value> = value of the answer of the user, when he only
+  #                              press ENTER. Set this variable to empty string
+  #                              when you don't want default value.
+  #            <error> = The custom error message displayed to the user if its
+  #                      answer is not valid. default: "Invalid answer."
+  # note: format options are ignored if a __AUTOANSWER_FILE__ was set
   ASK () {
     local question= variable= default= error=
     local answer= read_opt='' check='' allow_empty= message_opt=
@@ -328,4 +311,4 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     eval "${variable}=\"${answer}\"";
   }
 
-fi # enf of: if [ "${__LIB_ASK__}" = 'Loaded' ]; then
+fi # enf of: if [ "${__LIB_ASK__}" != 'Loaded' ]; then

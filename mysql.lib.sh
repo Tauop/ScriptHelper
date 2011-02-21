@@ -17,17 +17,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library for helping writing shell script for simples
-# operations.
+# This library helps to write scripts which have to work with mysql
 #
-# Global variables ===========================================================
-# IMPORTANT: Please don't write to those variables
-# __LIB_MYSQL__ : 'Loaded' when this lib is 'source'd
-# __MYSQL_DUMP_FILE__ : Path to the dump file, deals by MYSQL_DUMP and
-#                       MYSQL_RESTORE
-# Methods ====================================================================
-#
-# All mysql functions supports options which can be :
+# All mysql functions supports following options :
 #   --user : MySQL username to use
 #   --pass : MySQL password
 #   --db : database to use
@@ -38,101 +30,52 @@
 #   --with-log : call EXEC with --with-log
 #   --with-check : call EXEC with --with-check
 #
-# MYSQL_SET_CONF()
-#   usage: MYSQL_SET_CONF [ <options> ]
-#          MYSQL_SET_CONF <username> [ <password> [ <database> [ <host> [ <port> ] ] ] ]
-#   desc: Save global MySQL configuration, which allow to not repeat mysql command
-#         options every time we call a MySQL function.
-#   note : username is mandatory, through options or arguments
-#
-# MYSQL_QUERY()
-#   usage: MYSQL_QUERY [ <options> ] "<query>"
-#   desc: execute a query on the MySQL instance/host.
-#   arguments: <options> = common MySQL functions options
-#              "<query>" = a quoted MySQL query
-#
-# MYSQL_DUMP()
-#   usage: MYSQL_DUMP [ <options> ] [ <dumpfile> [ <database> ] ]
-#   desc: call mysqldump on a MySQL instance/host.
-#   arguments: <options> = common MySQL functions options
-#              <dumpfile> = path to the file in which database will be saved
-#              <database> = database to backup/dump.
-#   notes:
-#     1/ when <dumpfile> is egual to "-", a generated dumpfile path is used
-#     2/ when <databae> is not specified, all database of the MySQL instance/host
-#        are backup'ed/dumped
-#
-# MYSQL_RESTORE()
-#   usage: MYSQL_RESTORE [ <options> ] [ <dumpfile> [ <database> ] ]
-#   desc: call mysql with a dumpfile, to restaure one or severals databases
-#   arguments: <options> = common MySQL functions options
-#              <dumpfile> = path to the file to load for database restaure
-#              <database> = database to backup/dump.
-#   notes :
-#     1/ When MYSQL_RESTORE is called without argument, the last dumpfile
-#        created with MYSQL_DUMP is used to restaure all databases.
-#     2/ When <dumpfile> is equal to "-", the last dumpfile created with
-#        MYSQL_DUMP is used.
-#     3/ when <database> is not specified, we don't use -D options
-#
-# MYSQL_GET_BASES()
-#   usage: MYSQL_GET_BASES() [ <options> ]
-#   desc: get databases list of the mysql instance
-#   arguments: <options> = common MySQL functions options
-#
-# MYSQL_GET_TABLES()
-#   usage: MYSQL_GET_TABLES [ <options> ]
-#   desc: get the table list of the current (or selected) database
-#   arguments: <options> = common MySQL functions options
-#
-# MYSQL_GET_FIELDS()
-#   usage: MYSQL_GET_FIELDS [ <options> ] <table_name>
-#   desc: get the field list of a table
-#   arguments: <options> = common MySQL functions options
-#              <table_name> = name of a table
-#
-# MYSQL_GET_FIELD_TYPE
-#   usage: MYSQL_GET_FIELD_TYPE [ <options> ] <table_name> <field_name>
-#   desc: Get the SQL type of a table field
-#   arguments: <options> = common MySQL functions options
-#              <table_name> = name of a table
-#              <field_name> = name of a field
-# ----------------------------------------------------------------------------
-# private functions
-# =================
-# private_PARSE_MYSQL_OPTIONS()
-#   usage: private_PARSE_MYSQL_OPTIONS $@
-#   desc: parse arguments passed in argument
-#   notes:
-#     1/ __MYSQL_*__ variables can be changes
-#     2/ __MYSQL_OPTIONS_CHANGED__ = 'true' is options changed the mysql configuration
-#     3/ this method doesn't call private_BUILD_MYSQL_OPTIONS()
-#     4/ __MYSQL_NB_CONSUMMED_ARG__ contains number of arguments consummed
-#   recommanded usage:
-#     | private_PARSE_MYSQL_OPTIONS $@
-#     | shift ${__MYSQL_NB_CONSUMMED_ARG__}
-#
-# private_BUILD_MYSQL_OPTIONS()
-#   usage: private_PARSE_MYSQL_OPTIONS
-#   desc: build the __MYSQL_OPTIONS__ variable which contain mysql commands
-#         common options and will be passed to mysql commands
-#   notes:
-#     1/ there is no argument/options
-#     2/ this method can changes __MYSQL_OPTIONS__
-#     3/ this method doesn't changes __MYSQL_OPTIONS_CHANGED__ value
-#
-# private_BACKUP_MYSQL_CONF()
-#   desc: backup global mysql configuration
-#
-# private_RESTORE_MYSQL_CONF()
-#   desc: restaure global mysql configuration
-#
+# Global variables ===========================================================
+# IMPORTANT: Please don't write to those variables
+# __LIB_MYSQL__ : 'Loaded' when this lib is 'source'd
+# __MYSQL_USERNAME__ : mysql username to use when not given by options
+# __MYSQL_PASSWORD__ : mysql password to use when not given by options
+# __MYSQL_DATABASE__ : mysql database to use when not given by options
+# __MYSQL_HOST__ : mysql host to connect to when not given by options
+# __MYSQL_PORT__ : mysql port to connect to when not given by options
+# __MYSQL_HUMAN__ : display result in human readable display
+# __MYSQL_OPTIONS__ : compute mysql options from previous variables
+# __MYSQL_OPTIONS_CHANGED__ : do we have to compute __MYSQL_OPTIONS__ again
+# __MYSQL_NB_CONSUMMED_ARG__ : needed for argument parsing
+# __MYSQL_DUMP_FILE__ : file which dump is stored in or read from
+# __EXEC_OPTIONS__ : options to pass to EXEC (see exec.lib.sh)
+# __MYSQL_BACKUP_* : variables used to backup previous variables
+# __MYSQL_DUMP_FILE__ : Path to the dump file, deals by MYSQL_DUMP and
+#                       MYSQL_RESTORE
 # ----------------------------------------------------------------------------
 
 # Don't source this file several times
 if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   __LIB_MYSQL__='Loaded'
 
+  # FIXME: TOO much global variables :-(
+  __MYSQL_USERNAME__=''
+  __MYSQL_PASSWORD__=''
+  __MYSQL_DATABASE__=''
+  __MYSQL_HOST__='localhost'
+  __MYSQL_PORT__='3306'
+  __MYSQL_HUMAN__='false'
+  __MYSQL_OPTIONS__=''
+
+  __MYSQL_OPTIONS_CHANGED__='false'
+  __MYSQL_NB_CONSUMMED_ARG__=0
+  __MYSQL_DUMP_FILE__="/tmp/mysqldump_$(RANDOM).sql"
+  __EXEC_OPTIONS__=''
+
+  __MYSQL_BACKUP_USERNAME__=''
+  __MYSQL_BACKUP_PASSWORD__=''
+  __MYSQL_BACKUP_DATABASE__=''
+  __MYSQL_BACKUP_HOST__=''
+  __MYSQL_BACKUP_PORT__=''
+  __MYSQL_BACKUP_HUMAN__=''
+  __MYSQL_BACKUP_OPTIONS__=''
+
+  # load dependencies
   load() {
     local var= value= file=
 
@@ -158,33 +101,18 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   load __LIB_EXEC__    "${SCRIPT_HELPER_DIRECTORY}/exec.lib.sh"
   load __LIB_RANDOM__  "${SCRIPT_HELPER_DIRECTORY}/random.lib.sh"
 
-  # Internal variables
-  # ---------------------------------------------------
-  # Do not write to those variables.
-  __MYSQL_USERNAME__=''
-  __MYSQL_PASSWORD__=''
-  __MYSQL_DATABASE__=''
-  __MYSQL_HOST__='localhost'
-  __MYSQL_PORT__='3306'
-  __MYSQL_HUMAN__='false'
-  __MYSQL_OPTIONS__=''
-
-  __MYSQL_OPTIONS_CHANGED__='false'
-  __MYSQL_NB_CONSUMMED_ARG__=0
-  __MYSQL_DUMP_FILE__="/tmp/mysqldump_$(RANDOM).sql"
-  __EXEC_OPTIONS__='' # options to pass to EXEC (see functions.lib.sh)
-
-  # backup variables. si private_* functions
-  __MYSQL_BACKUP_USERNAME__=''
-  __MYSQL_BACKUP_PASSWORD__=''
-  __MYSQL_BACKUP_DATABASE__=''
-  __MYSQL_BACKUP_HOST__=''
-  __MYSQL_BACKUP_PORT__=''
-  __MYSQL_HUMAN__=''
-  __MYSQL_BACKUP_OPTIONS__=''
-
   # PRIVATE METHODS ------------------------------------------------------------
 
+  # usage: private_PARSE_MYSQL_OPTIONS <options>
+  # desc: parse arguments passed in argument
+  # notes:
+  #   1/ __MYSQL_*__ variables can be changes
+  #   2/ __MYSQL_OPTIONS_CHANGED__ = 'true' is options changed the mysql configuration
+  #   3/ this method doesn't call private_BUILD_MYSQL_OPTIONS()
+  #   4/ __MYSQL_NB_CONSUMMED_ARG__ contains number of arguments consummed
+  # recommanded usage:
+  #   | private_PARSE_MYSQL_OPTIONS $@
+  #   | shift ${__MYSQL_NB_CONSUMMED_ARG__}
   private_PARSE_MYSQL_OPTIONS () {
     local inc=0 exec_with_log='false' exec_with_check='false'
 
@@ -226,6 +154,12 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     [ "${exec_with_check}" = 'true' ] && __EXEC_OPTIONS__="${__EXEC_OPTIONS__} --with-check "
   }
 
+  # usage: private_BUILD_MYSQL_OPTIONS
+  # desc: build the __MYSQL_OPTIONS__ variable which contain mysql commands
+  #       common options and will be passed to mysql commands
+  # notes:
+  #   1/ this method can changes __MYSQL_OPTIONS__
+  #   2/ this method doesn't changes __MYSQL_OPTIONS_CHANGED__ value
   private_BUILD_MYSQL_OPTIONS () {
     __MYSQL_OPTIONS__=''
     [ -n "${__MYSQL_USERNAME__}" ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -u'${__MYSQL_USERNAME__}'"
@@ -235,6 +169,8 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     [ -n "${__MYSQL_PORT__}"     ] && __MYSQL_OPTIONS__="${__MYSQL_OPTIONS__} -P '${__MYSQL_PORT__}'"
   }
 
+  # usage: private_BACKUP_MYSQL_CONF
+  # desc: backup global mysql configuration
   private_BACKUP_MYSQL_CONF () {
     __MYSQL_BACKUP_USERNAME__="${__MYSQL_USERNAME__}"
     __MYSQL_BACKUP_PASSWORD__="${__MYSQL_PASSWORD__}"
@@ -245,6 +181,8 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     __MYSQL_BACKUP_OPTIONS__="${__MYSQL_OPTIONS__}"
   }
 
+  # private_RESTORE_MYSQL_CONF
+  # desc: restaure global mysql configuration
   private_RESTORE_MYSQL_CONF () {
     __MYSQL_USERNAME__="${__MYSQL_BACKUP_USERNAME__}"
     __MYSQL_PASSWORD__="${__MYSQL_BACKUP_PASSWORD__}"
@@ -257,6 +195,11 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
 
   # PUBLIC METHODS -------------------------------------------------------------
 
+  # usage: MYSQL_SET_CONF [ <options> ]
+  #        MYSQL_SET_CONF <username> [ <password> [ <database> [ <host> [ <port> ] ] ] ]
+  # desc: Save global MySQL configuration, which allow to not repeat mysql command
+  #       options every time we call a MySQL function.
+  # note : username is mandatory, through options or arguments
   MYSQL_SET_CONF () {
     # reset all config variables
     __MYSQL_USERNAME__=''
@@ -288,6 +231,10 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   }
 
 
+  # usage: MYSQL_QUERY [ <options> ] "<query>"
+  # desc: execute a query on the MySQL instance/host.
+  # arguments: <options> = common MySQL functions options
+  #            "<query>" = a quoted MySQL query
   MYSQL_QUERY () {
     local return_value= query= mysql_exec_opt='-e'
 
@@ -312,6 +259,15 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     return ${return_value}
   }
 
+  # usage: MYSQL_DUMP [ <options> ] [ <dumpfile> [ <database> ] ]
+  # desc: call mysqldump on a MySQL instance/host.
+  # arguments: <options> = common MySQL functions options
+  #            <dumpfile> = path to the file in which database will be saved
+  #            <database> = database to backup/dump.
+  # notes:
+  #   1/ when <dumpfile> is egual to "-", a generated dumpfile path is used
+  #   2/ when <databae> is not specified, all database of the MySQL instance/host
+  #      are backup'ed/dumped
   MYSQL_DUMP () {
     local mysqldump_options= error_redir=
 
@@ -341,6 +297,17 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     __MYSQL_OPTIONS_CHANGED__='false'
   }
 
+  # usage: MYSQL_RESTORE [ <options> ] [ <dumpfile> [ <database> ] ]
+  # desc: call mysql with a dumpfile, to restaure one or severals databases
+  # arguments: <options> = common MySQL functions options
+  #            <dumpfile> = path to the file to load for database restaure
+  #            <database> = database to backup/dump.
+  # notes :
+  #   1/ When MYSQL_RESTORE is called without argument, the last dumpfile
+  #      created with MYSQL_DUMP is used to restaure all databases.
+  #   2/ When <dumpfile> is equal to "-", the last dumpfile created with
+  #      MYSQL_DUMP is used.
+  #   3/ when <database> is not specified, we don't use -D options
   MYSQL_RESTORE () {
     local dumpfile=
 
@@ -363,10 +330,20 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     __MYSQL_OPTIONS_CHANGED__='false'
   }
 
+  # usage: MYSQL_GET_BASES() [ <options> ]
+  # desc: get databases list of the mysql instance
+  # arguments: <options> = common MySQL functions options
   MYSQL_GET_BASES ()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
+ 
+  # usage: MYSQL_GET_TABLES [ <options> ]
+  # desc: get the table list of the current (or selected) database
+  # arguments: <options> = common MySQL functions options
   MYSQL_GET_TABLES () { MYSQL_QUERY $@ --bash 'SHOW TABLES';    }
 
-
+  # usage: MYSQL_GET_FIELDS [ <options> ] <table_name>
+  # desc: get the field list of a table
+  # arguments: <options> = common MySQL functions options
+  #            <table_name> = name of a table
   MYSQL_GET_FIELDS () {
     local table_name=
 
@@ -388,6 +365,11 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
         | tr $'\t'  ' ' | tr -s ' ' | cut -d' ' -f1
   }
 
+  # usage: MYSQL_GET_FIELD_TYPE [ <options> ] <table_name> <field_name>
+  # desc: Get the SQL type of a table field
+  # arguments: <options> = common MySQL functions options
+  #            <table_name> = name of a table
+  #            <field_name> = name of a field
   MYSQL_GET_FIELD_TYPE () {
     local table_name= field_name= do_simple='false'
 
@@ -423,4 +405,4 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
         | ( [ "${do_simple}" = "true" ] && sed -e 's/[(].*[)]$//' || cat )
   }
 
-fi # end of: if [ "${__LIB_MYSQL__}" = 'Loaded' ]; then
+fi # end of: if [ "${__LIB_MYSQL__}" != 'Loaded' ]; then

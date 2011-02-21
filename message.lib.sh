@@ -17,69 +17,42 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library for helping writing shell script for simples
-# operations.
+# This library purpose is to print and log messages (posix compatibility is
+# the real purpose)
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
 # __LIB_MESSAGE__ : Indicate that this lib is loaded
 # __MSG_INDENT__ : indentation for messages
-# Methods ====================================================================
-#
-# MESSAGE()
-#   usage: MESSAGE [<options>] "<message>"
-#   desc: This function is used to display messages on standard output
-#         and/or write messages into the output log file.
-#   note: Message are display with indentation if MSG_INDENT_* functions
-#         are called, or if the script call DOTHIS() and related functions
-#  options:
-#    --no-break : use 'echo -n' instead of 'echo' to display/write message
-#    --no-date : Don't add the date in message written into the output log file
-#    --no-print : Don't print message on standard output
-#    --no-log : Don't write message into output log file
-#
-#  aliases:
-#    MSG()     = MESSAGE
-#    LOG()     = MESSAGE --no-print
-#    NOTICE()  = MESSAGE "NOTICE: <message>"
-#    ERROR()   = MESSAGE "ERROR: <message>" + close DOTHIS if one
-#    WARNING() = MESSAGE "WARN: <message>"  + close DOTHIS if one
-#    BR()      = MESSAGE --no-log $'\n'
-#    DOTHIS()  = MESSAGE --no-break -- '- <message> ... '
-#    OK()      = MESSAGE --no-date -- "OK" + close DOTHIS if one
-#    KO()      = MESSAGE --no-date -- "KO" + close DOTHIS if one + FATAL "<message>"
-#
-# MSG_INDENT_INC()
-#   desc: increment indentation of MESSAGE() display by two spaces
-#
-# MSG_INDENT_DEC()
-#   desc: decrement indentation of MESSAGE() display by two spaces
-#
-# FATAL()
-#   usage: FATAL <error message>
-#   desc: prefix message with "FATAL:" and call MESSAGE().
-#         Then it call ROLLBACK() and exit(1).
-#   note: close DOTHIS if one
-#
-# ROLLBACK()
-#   desc: by default, it's done nothing. Its purpose is to be
-#         override by the parent script
-#
+# __IN_DOTHIS__ : used to know if we are in a DOTHIS - OK/KO block
 # ----------------------------------------------------------------------------
 
 # don't source several times this file
 if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   __LIB_MESSAGE__='Loaded'
-
-  # IMPORTANT: Don't set those variables directly in the parent script
   __MSG_INDENT__=''
-  __IN_DOTHIS__='false' # used to known if we are in a DOTHIS - OK/KO block
+  __IN_DOTHIS__='false'
 
   # Utility functions -------------------------------------
 
+  # usage: MSG_INDENT_INC
+  # desc: increment indentation of MESSAGE() display by two spaces
   MSG_INDENT_INC () { __MSG_INDENT__="${__MSG_INDENT__:-}  "; }
+
+  # usage: MSG_INDENT_DEC
+  # desc: decrement indentation of MESSAGE() display by two spaces
   MSG_INDENT_DEC () { __MSG_INDENT__="${__MSG_INDENT__%  }";  }
 
+  # usage: MESSAGE [<options>] "<message>"
+  # desc: This function is used to display messages on standard output
+  #       and/or write messages into the output log file.
+  # note: Message are display with indentation if MSG_INDENT_* functions
+  #       are called, or if the script call DOTHIS() and related functions
+  #  options:
+  #  --no-break : use 'echo -n' instead of 'echo' to display/write message
+  #  --no-date : Don't add the date in message written into the output log file
+  #  --no-print : Don't print message on standard output
+  #  --no-log : Don't write message into output log file
   MESSAGE () {
     local do_print='true' do_log='true' do_indent='true'
     local msg= date= echo_opt=
@@ -112,11 +85,24 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     fi
   }
 
+  # usage: MSG [<option>] <string>
+  # desc: alias of MESSAGE [<option>] <string>
   MSG ()    { MESSAGE $@; }
+
+  # usage: LOG [<option>] <string>
+  # desc: alias of MESSAGE --no-indent --no-print [<option>] <string>
   LOG ()    { MESSAGE --no-indent --no-print $@; }
+
+  # usage: NOTICE <string>
+  # desc: alias of MESSAGE --no-indent <string> prefixed by "NOTICE: "
   NOTICE () { MESSAGE --no-indent "${__MSG_INDENT__:-}NOTICE: $*"; }
+
+  # usage: BR
+  # desc: print a break return
   BR ()     { MESSAGE --no-log --no-break --no-indent  $'\n'; }
 
+  # usage: ERROR <string>
+  # desc: close the current DOTHIS if needed and print a message prefixed by "ERROR: "
   ERROR () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'Err';
@@ -125,6 +111,8 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     MESSAGE --no-indent "${__MSG_INDENT__:-}ERROR: $*"
   }
 
+  # usage: WARNING <string>
+  # desc: close the current DOTHIS if needed and print a message prefixed by "WARNING: "
   WARNING () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'Warn';
@@ -133,16 +121,22 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     MESSAGE --no-indent "${__MSG_INDENT__:-}WARNING: $*"
   }
 
+  # usage: DOTHIS <string>
+  # desc: print "- <string> ... "
   DOTHIS () {
     MESSAGE --no-break --no-indent -- "${__MSG_INDENT__:-}- $* ... "
     __IN_DOTHIS__='true'
   }
 
+  # usage: OK
+  # desc: close the current DOTHIS and print "OK"
   OK () {
     [ "${__IN_DOTHIS__:-}" = 'true' ] && MESSAGE --no-date --no-indent -- 'OK'
     __IN_DOTHIS__='false'
   }
 
+  # usage: KO <message>
+  # desc: close the current DOTHIS and print "KO" and call FATAL with <message>
   KO () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'KO';
@@ -151,9 +145,15 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     FATAL "$*"
   }
 
-  # do nothing. Can be override
+  # usage: ROLLBACK
+  # desc: by default, it's done nothing. Its purpose is to be
+  #       override by the parent script
   ROLLBACK () { echo >/dev/null; }
 
+  # usage: FATAL <error message>
+  # desc: prefix message with "FATAL:" and call MESSAGE().
+  #       Then it call ROLLBACK() and exit(1).
+  # note: close DOTHIS if needed
   FATAL () {
     if [ "${__IN_DOTHIS__:-}" = 'true' ]; then
       MESSAGE --no-date --no-indent -- 'Fatal';
@@ -167,4 +167,4 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   }
 
 
-fi # end of: if [ "${__LIB_MESSAGE__}" = 'Loaded' ]; then
+fi # end of: if [ "${__LIB_MESSAGE__}" != 'Loaded' ]; then

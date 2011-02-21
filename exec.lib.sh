@@ -17,8 +17,8 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library for helping writing shell script for simples
-# operations.
+# This library purpose is to execute command, check the result and log all
+# outputs
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
@@ -27,48 +27,15 @@
 # __ERROR_LOG_FILE__ : path to the error log file
 # __SYSTEM_NAME__ : the name of the system (Debian, Ubuntu, ...)
 # __SYSTEM_RELEASE_NAME__ : the code name of the release (Karmic, Lenny, ...)
-#
-# Methods ====================================================================
-#
-# SET_LOG_FILE()
-#   usage: SET_LOG_FILE <filename>
-#   desc: will create <filename>.output (output log file) and <filename>.error
-#         (error log file) files, which will be used in CMD()
-#
-# DISPLAY_LOG_FILES()
-#   desc: display log files set with SET_LOG_FILES()
-#
-# CHECK_ROOT()
-#   desc: check that the user is 'root' user
-#
-# EXEC()
-#   desc: execute a command.
-#         Can redirect output to output log file and redirect error output
-#         to error log file.
-#         Can call KO() on error.
-#   usage: EXEC [<options>] <command_to_run>
-#   options:
-#     --with-log : log outputs to LOGS files
-#     --with-check : Call KO() if the command return a non-'0' value
-#
-#   aliases:
-#     EXEC_WITH_CHECK()         = EXEC --with-check
-#     EXEC_WITH_LOG()           = EXEC --with-log
-#     EXEC_WITH_CHECK_AND_LOG() = EXEC --with-check --with-log
-#     CMD()                     = EXEC --with-check --with-log
-#
 # ----------------------------------------------------------------------------
 
 # don't source several times this file
 if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
   __LIB_EXEC__='Loaded'
-
-  # IMPORTANT: Don't set those variables directly in the parent script
   __OUTPUT_LOG_FILE__=''
   __ERROR_LOG_FILE__=''
   __SYSTEM_NAME__=''
   __SYSTEM_RELEASE_NAME__=''
-
 
   # we don't want to be dependant on message.lib.sh
   if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
@@ -77,7 +44,8 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
     KO      () { echo $*; exit 1; }
   fi
 
-
+  # get system information which is often need when
+  # executing command on it (portability checks)
   which lsb_release >/dev/null 2>/dev/null
   if [ $? -eq 0 ]; then
     __SYSTEM_NAME__=$( lsb_release -s -i )
@@ -88,21 +56,23 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
   fi
 
 
-  # Check for root privileges
+  # usage: CHECK_ROOT
+  # desc: check that the user is 'root' user
   CHECK_ROOT () {
     user_id=`id -u`
     [ "${user_id}" != "0" ] \
       && KO "You must execute $0 with root privileges"
   }
 
-
+  # usage: SET_LOG_FILE <filename>
+  # desc: will create <filename>.output (output log file) and <filename>.error
+  #       (error log file) files, which will be used in CMD()
   SET_LOG_FILE () {
     [ -z "$1"  ] && KO 'SET_OUTPUT_LOG_FILE is called without argument !'
     [ $# -gt 1 ] && KO 'SET_OUTPUT_LOG_FILE: too much arguments !'
 
     __OUTPUT_LOG_FILE__="$1.output"
     __ERROR_LOG_FILE__="$1.error"
-
 
     [ -f "${__OUTPUT_LOG_FILE__}" ] && EXEC_WITH_CHECK rm -f "${__OUTPUT_LOG_FILE__}"
     [ -f "${__ERROR_LOG_FILE__}"  ] && EXEC_WITH_CHECK rm -f "${__ERROR_LOG_FILE__}"
@@ -111,6 +81,8 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
   }
 
+  # usage: DISPLAY_LOG_FILES
+  # desc: display log files set with SET_LOG_FILES()
   DISPLAY_LOG_FILES () {
     if [ -n "${__OUTPUT_LOG_FILE__:-}" -a -n "${__ERROR_LOG_FILE__:-}" ]; then
       MESSAGE --no-log  'NOTICE: Here are where you can find log files'
@@ -119,6 +91,13 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
     fi
   }
 
+  # usage: EXEC [<options>] <command>
+  # desc: execute a command.
+  # usage: EXEC [<options>] <command_to_run>
+  # options: --with-log : log outputs to LOGS files
+  #          --with-check : Call KO() if the command return a non-'0' value
+  # note: Can redirect output to output log file and redirect error output to error log file.
+  # note: Can call KO() on error.
   EXEC () {
     local command= do_check='false' do_log='false' outputs= old_shell_opt= return_value=
 
@@ -160,11 +139,21 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
     return ${return_value}
   }
 
-  # aliases
+  # usage: EXEC_WITH_CHECK <command>
+  # desc: alias of EXEC --with-check -- <command>
   EXEC_WITH_CHECK ()         { EXEC --with-check -- "$*";            }
+
+  # usage: EXEC_WITH_LOG <command>
+  # desc: alias of EXEC --with-log -- <command>
   EXEC_WITH_LOG ()           { EXEC --with-log -- "$*";              }
+
+  # usage: EXEC_WITH_CHECK_AND_LOG <command>
+  # desc: alias of EXEC --with-check --with-log -- <command>
   EXEC_WITH_CHECK_AND_LOG () { EXEC --with-check --with-log -- "$*"; }
+
+  # usage: CMD <command>
+  # desc: alias of EXEC_WITH_CHECK_AND_LOG <command>
   CMD ()                     { EXEC_WITH_CHECK_AND_LOG $@;           }
 
 
-fi # end of: if [ "${__LIB_EXEC__}" = 'Loaded' ]; then
+fi # end of: if [ "${__LIB_EXEC__}" != 'Loaded' ]; then

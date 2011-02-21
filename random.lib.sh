@@ -17,24 +17,20 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a shell library for helping writing shell script for simples
-# operations.
+# This library give a RANDOM ability, has $RANDOM is a bash thing
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
 # __LIB_RANDOM__ : Indicate that this lib is loaded
-# Methods ====================================================================
-#
-# RANDOM()
-#   usage: RANDOM
-#   desc: Echo-return a random number
-#   note: don't use ${RANDOM} bashism things. use $(RANDOM) :-)
-#
 # ----------------------------------------------------------------------------
 
 # don't source several times this file
 if [ "${__LIB_RANDOM__:-}" != 'Loaded' ]; then
   __LIB_RANDOM__='Loaded'
 
+  # usage: RANDOM
+  # desc: Echo-return a random number
+  # note: don't use ${RANDOM} bashism things. use $(RANDOM) :-)
   RANDOM () { dd if=/dev/urandom count=1 2> /dev/null | cksum | cut -f1 -d" " ; }
+
 fi # end of: if [ "${__LIB_RANDOM__:-} != 'Loaded' ]; then

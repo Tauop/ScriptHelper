@@ -1,5 +1,5 @@
 #
-#Copyright (c) 2010-2011 Linagora
+# Copyright (c) 2010-2011 Linagora
 # http://github.com/Tauop/ScriptHelper
 #
 # ScriptHelper is free software, you can redistribute it and/or modify

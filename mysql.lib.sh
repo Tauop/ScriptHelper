@@ -1,5 +1,5 @@
 #
-#Copyright (c) 2010-2011 Linagora
+# Copyright (c) 2010-2011 Linagora
 # Patrick Guiran <pguiran@linagora.com>
 # http://github.com/Tauop/ScriptHelper
 #

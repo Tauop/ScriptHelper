@@ -27,36 +27,109 @@
 if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
   __LIB_MUTEX__='Loaded'
 
-  # usage: MUTEX_GET <resource>
+  # Load dependencies
+  load() {
+    local var= value= file=
+
+    var="$1"; file="$2"
+    value=$( eval "echo \"\${${var}:-}\"" )
+
+    [ -n "${value}" ] && return 1;
+    if [ -f "${file}" ]; then
+      . "${file}"
+    else
+      echo "ERROR: Unable to load ${file}"
+      exit 2
+    fi
+    return 0;
+  }
+
+  # Load configuration file
+  load SCRIPT_HELPER_DIRECTORY /etc/ScriptHelper.conf
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY:-}"
+  SCRIPT_HELPER_DIRECTORY="${SCRIPT_HELPER_DIRECTORY%%/}"
+
+  load __LIB_LOCK__ "${SCRIPT_HELPER_DIRECTORY}/lock.lib.sh"
+
+  # ----------------------------------------------------------------------------
+
+  # usage: private_MUTEX_REGISTER_TOKEN <resource> <token> <priority>
+  # desc: add a token with its priority into the mutex, and order the mutex file
+  # note: We don't move the first line of the mutex file (current running task)
+  private_MUTEX_REGISTER_TOKEN () {
+    local resource= mutex= token= priority= mutex_len= number=
+
+    [ $# -ne 3 ] && return 1;
+    resource="$1"; token="$2"; priority="$3"
+    mutex="${resource}.mutex"
+
+    # check if we have already registered for taking the resource
+    if [ -f "${mutex}" ]; then
+      result=$( grep "^[0-9]:${token}\$" < "${mutex}" 2>/dev/null | cut -d':' -f1 )
+      if [ -n "${result}" ]; then
+        [ ${priority} -eq ${result} ] && return 0;
+        # we have to update priority
+        MUTEX_RELEASE "${resource}" "${token}"
+      fi
+    fi
+
+    # critical section. not atomic :-(
+    WAIT_AND_LOCK "${mutex}"
+      # add us into the mutex
+      echo "${priority}:${token}" >> "${mutex}"
+
+      mutex_len=$( < "${mutex}" grep -v '^$' | wc -l | cut -d' ' -f1 )
+      if [ ${mutex_len} -gt 2 ]; then
+        tail -n $(( ${mutex_len} - 1 )) < "${mutex}" > "${mutex}.tmp"
+        head -n 1 < "${mutex}" > "${mutex}.res"
+        if [ -f "${mutex}.tmp" ]; then
+          for number in `seq 9 -1 0`; do
+            grep "^${number}:" < "${mutex}.tmp" >> "${mutex}.res"
+          done
+        fi
+        mv "${mutex}.res" "${mutex}"
+        [ -f "${mutex}.tmp" ] && rm -f "${mutex}.tmp"
+      fi
+    UNLOCK "${mutex}"
+    return 0;
+  }
+
+  # usage: MUTEX_GET <resource> [<priority>]
   # desc: Try to get the ressource
+  # arguments: <argument> is a file
+  #            <priority> is a number, between 0 and 9 (higher is better to get the mutex)
   MUTEX_GET () {
-    local resource= mutex= owner=
-    if [ $# -ne 1 ]; then
+    local resource= token= priority= mutex= holder= result=
+    if [ $# -ne 1 -a $# -ne 2 ]; then
       echo "ERROR: MUTEX_GET: no resource given"; return 1;
     fi
 
+    token=$$
     resource="$1"; mutex="${resource}.mutex"
+    [ $# -eq 2 ] && priority="$2" || priority=0
 
     if [ -z "${resource}" ]; then
       echo "ERROR: can't get an empty resource."; return 1;
     fi
-
-    if [ -f "${mutex}" ]; then
-      # check if we are already the owner of the resource
-      grep "^$$\$" < "${mutex}" >/dev/null 2>/dev/null
-      [ $? -eq 0 ] && return 0;
+    if ! test ${priority} -eq ${priority} 2>/dev/null ; then
+      echo "ERROR: priority must be a number"; return 1;
+    fi
+    if [ ${#priority} -ne 1 -o ${priority} -lt 0 -o ${priority} -gt 9 ]; then
+      echo "ERROR: priority must be between 0 and 9"; return 1;
     fi
 
-    # add us into the mutex
-    echo "$$" >> "${mutex}"
+    # register our token into the mutex.
+    private_MUTEX_REGISTER_TOKEN "${resource}" "${token}" "${priority}"
 
-    # wait until we are the owner of the mutex
-    while [ "${owner}" != "$$" ]; do
-      owner=$( head -n 1 < "${mutex}" )
-      ps -A | cut -d' ' -f1 | grep "^${owner}$" >/dev/null 2>/dev/null
+    # wait until we are the holder of the mutex
+    while [ "${holder}" != "$$" ]; do
+      holder=$( head -n 1 < "${mutex}" | cut -d':' -f2 )
+
+      # check that the resource holder is not dead
+      ps -A | grep "^ *${holder} *" >/dev/null 2>/dev/null
       if [ $? -ne 0 ]; then
-        MUTEX_RELEASE "${resource}" "${owner}"
-        continue; # get the next owner and don't sleep :-)
+        MUTEX_RELEASE "${resource}" "${holder}"
+        continue; # get the next holder and don't sleep :-)
       fi
       sleep 1 # don't burst the cpu !
     done
@@ -67,7 +140,7 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
   # usage: MUTEX_RELEASE <resource> [<token>]
   # desc: remove us (or the <token>) from the mutex pipeline
   MUTEX_RELEASE () {
-    local resource= mutex= token=
+    local resource= mutex= token= nb_line=
 
     if [ $# -ne 1 -a $# -ne 2 ]; then
       echo "ERROR: MUTEX_RELEASE: Bad arguments"; return 1;
@@ -76,9 +149,12 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
     resource="$1"; mutex="${resource}.mutex" ;
     [ $# -eq 2 ] && token="$2" || token="$$"
 
-    grep -v "^${token}$" < "${mutex}" > "${mutex}.tmp"
-    [ -f "${mutex}.tmp" ] && mv "${mutex}.tmp" "${mutex}"
-
+    WAIT_AND_LOCK "${mutex}"
+      grep -v "^[0-9]:${token}$" < "${mutex}" > "${mutex}.tmp"
+      nb_line=$( wc -l < "${mutex}.tmp" | cut -d' ' -f1 )
+      [ -f "${mutex}.tmp" ] && mv "${mutex}.tmp" "${mutex}"
+      [ "${nb_line}" = '0' ] && rm -f "${mutex}"
+    UNLOCK "${mutex}"
     return 0;
   }
 

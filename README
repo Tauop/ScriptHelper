@@ -23,7 +23,9 @@ I try to make one lib for each purpose :
  - ask.lib.sh     : usefull when you have to ask question to the user
  - cli.lib.sh     : create easily Command Line Interface for interactive scripts
  - conf.lib.sh    : deal with configuration file (where data are stored with key=value format)
+ - lock.lib.sh    : take a resource by locking it
  - mail.lib.sh    : to prepare and send mails
+ - mutex.lib.sh   : mutex for allocating resource
  - mysql.lib.sh   : to make mysql scripts
  - random.lib.sh  : random number generator
  - record.lib.sh  : record tty session

@@ -44,13 +44,10 @@ LOAD conf.lib.sh
 TEST_FILE="/tmp/test.$(RANDOM)"
 SET_LOG_FILE "${TEST_FILE}"
 
-TEST_ANSWER_FILE="/tmp/test_answer.$(RANDOM)"
-ASK_SET_ANSWER_LOG_FILE "${TEST_ANSWER_FILE}"
-
 # Utility functions ----------------------------------------------------------
 
 TEST_FAILED() {
-  rm -f "${TEST_FILE}" "${TEST_ANSWER_FILE}"
+  rm -f "${TEST_FILE}"
   echo '[ERROR] Test failed'
   exit 1
 }

@@ -298,7 +298,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   # note: this function add some "sugar" CLI command, like 'quit', 'exit',
   #       and deal with CLI context menu for command registered with CLI_REGISTER_COMMAND()
   CLI_RUN () {
-    CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command"; }
+    CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command: ${input}"; }
     CLI_ENTER_MENU () { __CLI_CONTEXT_MENU__="$*"; }
     CLI_QUIT='[ -z "${__CLI_CONTEXT_MENU__:-}" ] \&\& break || __CLI_CONTEXT_MENU__= '
 

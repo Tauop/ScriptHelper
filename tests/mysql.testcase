@@ -91,7 +91,7 @@ test_db2="${test_db}2"
 ROLLBACK() {
   MYSQL_QUERY "DROP DATABASE \`${test_db}\`"
   MYSQL_QUERY "DROP DATABASE \`${test_db2}\`"
-  rm -f "${TEST_FILE}" "${TEST_FILE2}"
+  find /tmp -maxdepth 1 -name "test.*" -exec rm -f {} \;
 }
 
 create_database="CREATE DATABASE ${test_db}"
@@ -152,7 +152,7 @@ DOTHIS "MYSQL_RESTORE"
   sed -i -e "s/${test_db}//g"  "${TEST_FILE}"  >/dev/null 2>/dev/null
   # delete dates
   sed -i -e "s/\(.*Dump completed on \).*$/\1/g" "${TEST_FILE2}" >/dev/null 2>/dev/null
-  sed -i -e "s/\(.*Dump completed on \).*$/\1/g"  "${TEST_FILE}"  >/dev/null 2>/dev/null
+  sed -i -e "s/\(.*Dump completed on \).*$/\1/g" "${TEST_FILE}"  >/dev/null 2>/dev/null
   compare_TEST_FILES
 OK
 
@@ -163,3 +163,4 @@ find /tmp -maxdepth 1 -name "test.*" -exec rm -f {} \;
 
 echo
 echo "*** All Tests OK ***"
+exit 0

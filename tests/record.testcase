@@ -49,7 +49,17 @@ sleep 1
 RECORD_PLAY >"${TEST_FILE2}"
 
 diff -au "${TEST_FILE}" "${TEST_FILE2}"
-[ $? -eq 0 ] && ( echo ; echo "*** All Tests finished ***" ) || ( echo ; echo "[ERROR] Test failed" )
+res=$?
 
 var=$( RECORD_GET_TIME_FILE ); [ -f "${var}" ] && rm -f "${var}"
 var=$( RECORD_GET_DATA_FILE ); [ -f "${var}" ] && rm -f "${var}"
+
+if [ ${res} -eq 0 ]; then
+  echo ; echo "*** All Tests finished ***"
+  exit 0;
+else
+  echo ; echo "[ERROR] Test failed"
+  exit 1
+fi
+
+

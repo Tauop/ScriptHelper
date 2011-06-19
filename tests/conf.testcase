@@ -296,3 +296,5 @@ find /tmp -maxdepth 1 \( -name "test.*" -o -name "conf.*" -o -name "test_answer.
 
 echo
 echo "*** All Tests OK ***"
+
+exit 0

@@ -82,6 +82,11 @@ fi
 [ -f "${TEST_FILE2}.mutex"     ] && res=1
 [ -f "${TEST_FILE2}.mutex.tmp" ] && res=1
  
-[ ${res} -eq 0 ] && ( echo ; echo "*** All Tests OK ***" ) || ( echo ; echo "TEST FAILED" )
-
 rm -f "${TEST_FILE}*" "${TEST_FILE2}*"
+if [ ${res} -eq 0 ]; then
+  echo ; echo "*** All Tests OK ***";
+  exit 0;
+else
+  echo ; echo "TEST FAILED"
+  exit 1;
+fi

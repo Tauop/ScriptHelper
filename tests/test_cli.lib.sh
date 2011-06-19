@@ -75,9 +75,9 @@ cli >  msg
 cli [msg]>  reply toto
 toto
 cli [msg]>  prout
-ERROR: Unknown CLI command
+ERROR: Unknown CLI command: prout
 cli [msg]>  ping cat pong lol
-ERROR: Unknown CLI command
+ERROR: Unknown CLI command: ping cat pong lol
 cli [msg]>  quit
 cli >  ping cat pong lol
 lol - cat
@@ -92,6 +92,6 @@ ASK_SET_AUTOANSWER_FILE "${input_file}"
 
 ( CLI_RUN > "${output_file}" )
 diff -au "${expected_output_file}" "${output_file}"
-[ $? -eq 0 ] && ( echo ; echo "*** All Tests OK ***" )
+[ $? -eq 0 ] && ( echo ; echo "*** All Tests OK ***" ) || ( echo ; echo "[ERROR] Test failed" )
 
 find /tmp -maxdepth 1 -name "cli_test.*" -exec rm -f {} \;

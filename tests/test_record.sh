@@ -35,24 +35,21 @@ LOAD() {
   fi
 }
 
-
 LOAD ./record.lib.sh
+LOAD ./random.lib.sh
+
+TEST_FILE="/tmp/test.$(RANDOM)"
+TEST_FILE2="${TEST_FILE}2"
 
 var='ls "/tmp"'
-RECORD "$var"
-
-echo "======================"
-echo "enregistrement terminé"
-echo "======================"
+RECORD "$var" >"${TEST_FILE}"
 
 sleep 1
 
-RECORD_PLAY
+RECORD_PLAY >"${TEST_FILE2}"
 
-var=$( RECORD_GET_TIME_FILE )
-[ -f "${var}" ] && rm -f "${var}"
+diff -au "${TEST_FILE}" "${TEST_FILE2}"
+[ $? -eq 0 ] && ( echo ; echo "*** All Tests finished ***" ) || ( echo ; echo "[ERROR] Test failed" )
 
-var=$( RECORD_GET_DATA_FILE )
-[ -f "${var}" ] && rm -f "${var}"
-
-echo "*** All Tests finished ***"
+var=$( RECORD_GET_TIME_FILE ); [ -f "${var}" ] && rm -f "${var}"
+var=$( RECORD_GET_DATA_FILE ); [ -f "${var}" ] && rm -f "${var}"

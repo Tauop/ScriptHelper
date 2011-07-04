@@ -1,0 +1,94 @@
+#!/bin/bash
+#
+# Copyright (c) 2010 Linagora
+# Patrick Guiran <pguiran@linagora.com>
+# http://github.com/Tauop/ScriptHelper
+#
+# ScriptHelper is free software, you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of
+# the License, or (at your option) any later version.
+#
+# ScriptHelper is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+# -f Disable pathname expansion.
+# -u Unset variables
+set -fu
+
+# Load library ---------------------------------------------------------------
+SCRIPT_HELPER_DIRECTORY='..'
+[ -r /etc/ScriptHelper.conf ] && . /etc/ScriptHelper.conf
+
+LOAD() {
+  if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
+    . "${SCRIPT_HELPER_DIRECTORY}/$1"
+  else
+    echo "[ERROR] Unable to load $1"
+    exit 1
+  fi
+}
+
+
+LOAD random.lib.sh
+LOAD message.lib.sh
+LOAD template.lib.sh
+
+TEST_FILE="/tmp/test.$(RANDOM)"
+TEST_FILE2="/tmp/test.$(RANDOM)"
+
+# Utility functions ----------------------------------------------------------
+TEST_FAILED () {
+  rm -f "${TEST_FILE}"
+  echo '[ERROR] Test failed'
+  exit 1
+}
+
+# don't use function.lib.sh functions !
+mDOTHIS() { echo -n "- $* ... "; }
+mOK()     { echo 'OK';           }
+
+
+# Make tests -----------------------------------------------------------------
+
+mDOTHIS "Create template file"
+  printf "%s\n" 'This is a template test file'                    >> "${TEST_FILE}"
+  printf "%s\n" 'this is the first variable : ${var1}'            >> "${TEST_FILE}"
+  printf "%s\n" 'this is the second variable : ${var2}'           >> "${TEST_FILE}"
+  printf "%s\n" 'this variable should not be replace: ${var3}'    >> "${TEST_FILE}"
+  printf "%s\n" '${var1} ${var2} ${var1} ${var2} ${var3} ${var1}' >> "${TEST_FILE}"
+  printf "%s\n" 'end'                                             >> "${TEST_FILE}"
+
+  printf "%s\n" 'This is a template test file'                                     >> "${TEST_FILE2}"
+  printf "%s\n" 'this is the first variable : tagada'                              >> "${TEST_FILE2}"
+  printf "%s\n" 'this is the second variable : youhou vous  hihi'                  >> "${TEST_FILE2}"
+  printf "%s\n" 'this variable should not be replace: ${var3}'                     >> "${TEST_FILE2}"
+  printf "%s\n" 'tagada youhou vous  hihi tagada youhou vous  hihi ${var3} tagada' >> "${TEST_FILE2}"
+  printf "%s\n" 'end'                                                              >> "${TEST_FILE2}"
+mOK
+
+var1="tagada"
+var22="youhou vous  hihi"
+
+mDOTHIS "TEMPLATE_PREPARE()"
+  TEMPLATE_PREPARE "${TEST_FILE}"
+  [ $? -ne 0 ] && TEST_FAILED
+  diff "${TEST_FILE}" "$( TEMPLATE_GET_FILE )" >/dev/null 2>/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
+mOK
+
+mDOTHIS "TEMPLATE_REPL_VAR()"
+  TEMPLATE_REPL_VAR var1
+  TEMPLATE_REPL_VAR var2 "${var22}"
+  diff "${TEST_FILE2}" "$( TEMPLATE_GET_FILE )" >/dev/null 2>/dev/null
+  [ $? -ne 0 ] && TEST_FAILED
+mOK
+
+find /tmp -maxdepth 1 -name "test.*" -exec rm -f {} \;
+exit 0

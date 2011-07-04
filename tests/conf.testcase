@@ -251,7 +251,7 @@ mDOTHIS 'Test CONF_DEL()'
   CONF_SAVE --conf-file "${test_conf_file}" tata "tout le monde"
   reset_LOG_FILES
   CONF_DEL --conf-file "${test_conf_file}" toto
-  [ $# -ne 0 ] && TEST_FAILED
+  [ $? -ne 0 ] && TEST_FAILED
   check_LOG_FILE "CONF_DEL: remove 'toto'"
   res=$( CONF_GET toto )
   [ -n "${res}" ] && TEST_FAILED

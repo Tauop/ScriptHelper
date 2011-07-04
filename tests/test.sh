@@ -51,13 +51,8 @@ if [ "${TEST_CASE}" != 'all' ]; then
     echo 'ERROR: unknown test-case'
     usage
   fi
-  mDOTHIS "Launch $1"
   # Load the test-case
-  if [ "${test}" = "ask" ]; then
-    ( . "${TEST_CASE}" ) && mOK || mKO
-  else
-    ( . "${TEST_CASE}" >/dev/null ) && mOK || mKO
-  fi
+  . "${TEST_CASE}"
 else
   for test in ${testcases}; do
     mDOTHIS "Launch ${test}"

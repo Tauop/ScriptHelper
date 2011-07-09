@@ -300,7 +300,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
       LOG "${question}  => ${answer//?/#}"
     else
       LOG "${question}  => ${answer}"
-      [ "${__USE_READLINE__}" ] && history -s -- "${answer}"
+      [ "${__USE_READLINE__}" = 'true' ] && history -s -- "${answer}"
     fi
 
     # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'

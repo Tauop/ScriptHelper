@@ -284,7 +284,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
         fi
 
         # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'
-        [ "${read_opt/-s/}" != "${read_opt}" -a "${no_print}" = 'false' ] && BR
+        [ \( "${no_echo}" = 'true' -o "${do_pass}" = 'true' \) -a "${no_print}" = 'false' ] && BR
 
         # display error
         # FIXME: Ugly. Don't use ERROR() alias, as it doesn't support --no-log options :/
@@ -304,7 +304,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     fi
 
     # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'
-    [ "${read_opt/-s/}" != "${read_opt}" -a "${no_print}" = 'false' ] && BR
+    [ \( "${no_echo}" = 'true' -o "${do_pass}" = 'true' \) -a "${no_print}" = 'false' ] && BR
 
     [ -n "${__ANSWER_LOG_FILE__}" ] &&  echo "${answer}" >> "${__ANSWER_LOG_FILE__}"
     answer=$( echo "${answer}" | sed -e 's/["]/\\"/g' )

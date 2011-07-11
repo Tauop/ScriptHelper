@@ -68,6 +68,11 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     [ $# -ne 1 ] && FATAL 'SET_CONF_FILE: bad arguments'
     __CONF_FILE__="$1"
 
+    if [ -z "${__CONF_FILE__}" ]; then
+      LOG "Configuration file reset"
+      return 0
+    fi
+
     file="${__CONF_FILE__##*/}"
     dir="${__CONF_FILE__%${file}}"
 

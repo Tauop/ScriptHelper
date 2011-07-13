@@ -83,7 +83,7 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
     if [ $# -eq 0 ]; then
       script -q -t 2>"${__RECORD_FILE__}.time" "${__RECORD_FILE__}.data"
     else
-      script -q -c "printf '%s\n' 'command: $*'; $*" -t 2>"${__RECORD_FILE__}.time" "${__RECORD_FILE__}.data"
+      script -q -c "$*" -t 2>"${__RECORD_FILE__}.time" "${__RECORD_FILE__}.data"
     fi
 
     # workaround to display all line recorded in *.data file !

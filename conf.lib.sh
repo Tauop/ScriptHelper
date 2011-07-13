@@ -199,8 +199,10 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   CONF_LOAD () {
     local file=${1:-${__CONF_FILE__}}
     [ ! -r "${file}" ] && FATAL "CONF_LOAD: Can't read from '${file}'"
-    . "${file}"
-    LOG "CONF_LOAD: ${file}"
+    if [ -n "${file}" ]; then
+      . "${file}"
+      LOG "CONF_LOAD: ${file}"
+    fi
   }
 
 fi # end of: if [ "${__LIB_CONF__}" != 'Loaded' ]; then

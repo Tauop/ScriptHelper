@@ -198,8 +198,8 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   # note: if called without argument, use the file set by CONF_SET_FILE
   CONF_LOAD () {
     local file=${1:-${__CONF_FILE__}}
-    [ ! -r "${file}" ] && FATAL "CONF_LOAD: Can't read from '${file}'"
     if [ -n "${file}" ]; then
+      [ ! -r "${file}" ] && FATAL "CONF_LOAD: Can't read from '${file}'"
       . "${file}"
       LOG "CONF_LOAD: ${file}"
     fi

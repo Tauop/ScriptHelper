@@ -80,13 +80,13 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf '%s' \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}\n"
       exit 2
     fi
     return 0;
@@ -289,7 +289,9 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     fi
 
     [ -z "${__MYSQL_DUMP_FILE__}" ] && FATAL "MYSQL_DUMP called with empty 'dumpfile' path"
-    EXEC_WITH_LOG echo -n '' ">'${__MYSQL_DUMP_FILE__}'"
+
+    rm -f "${__MYSQL_DUMP_FILE__}" >/dev/null && touch "${__MYSQL_DUMP_FILE__}" 2>/dev/null
+    [ $? -ne 0 ] && FATAL "Can't write into ${__MYSQL_DUMP_FILE__}."
 
     EXEC_WITH_CHECK mysqldump ${__MYSQL_OPTIONS__} ${mysqldump_options} ">${__MYSQL_DUMP_FILE__}" "${error_redir}"
 
@@ -351,7 +353,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
 
     # get the last argument
     if [ $# -gt 1 ]; then
-      arguments=$( IFS=' ' echo "$*" )
+      arguments=$( IFS=' ' printf '%s' "$*" )
       table_name="${arguments##* }"
       arguments=${arguments% $table_name}
     else
@@ -376,7 +378,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
     [ $# -eq 0 ] && FATAL "MYSQL_GET_FIELDS: wrong number of argument"
 
     # get the last argument
-    arguments=$( IFS=' ' echo "$*" )
+    arguments=$( IFS=' ' printf '%s' "$*" )
 
     if [ $# -gt 2 ]; then
       field_name="${arguments##* }"

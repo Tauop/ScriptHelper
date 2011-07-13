@@ -30,7 +30,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -44,13 +44,13 @@ TEST_FILE2="${TEST_FILE}2"
 
 touch "${TEST_FILE}"
 if [ ! -w "${TEST_FILE}" ]; then
-  echo "[ERROR] can't write to \"${TEST_FILE}\'"
+  printf '%s\n' "[ERROR] can't write to \"${TEST_FILE}\'"
   exit 2
 fi
 
 touch "${TEST_FILE2}"
 if [ ! -w "${TEST_FILE2}" ]; then
-  echo "[ERROR] can't write to \"${TEST_FILE2}\'"
+  printf '%s\n' "[ERROR] can't write to \"${TEST_FILE2}\'"
   exit 2
 fi
 
@@ -58,17 +58,13 @@ fi
 # Utility functions ----------------------------------------------------------
 
 TEST_FAILED() {
-  echo
-  echo '[ERROR] Test failed'
-  echo "param = $*"
-  echo
-  echo "test file = ${TEST_FILE}"
+  printf '\n[ERROR] Test failed\nparam=%s\n\ntest file = %s\n' "$*" "${TEST_FILE}"
   exit 1
 }
 
 check_TEST_FILE() {
   content=`cat ${TEST_FILE} | hexdump`
-  must_have=`echo -n "$*" | hexdump`
+  must_have=`printf '%s' "$*" | hexdump`
   [ "${content}" != "${must_have}" ] && TEST_FAILED "$*"
 }
 
@@ -91,13 +87,13 @@ check_ERROR_FILE() {
 }
 
 reset_LOG_FILES() {
-  [ -f "${__OUTPUT_LOG_FILE__}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__}"
-  [ -f "${__ERROR_LOG_FILE__}"  ] && echo -n '' > "${__ERROR_LOG_FILE__}"
+  [ -f "${__OUTPUT_LOG_FILE__}" ] && printf '' > "${__OUTPUT_LOG_FILE__}"
+  [ -f "${__ERROR_LOG_FILE__}"  ] && printf '' > "${__ERROR_LOG_FILE__}"
 }
 
 # don't use function.lib.sh functions !
-mDOTHIS() { echo -n "- $* ... "; reset_LOG_FILES; }
-mOK()     { echo 'OK';           reset_LOG_FILES; }
+mDOTHIS() { printf '%s' "- $* ... "; reset_LOG_FILES; }
+mOK()     { printf 'OK\n';           reset_LOG_FILES; }
 
 
 
@@ -142,7 +138,7 @@ mDOTHIS "EXEC() and CMD()"
   [ "$ret" = '' ] && TEST_FAILED
   reset_LOG_FILES
 
-  EXEC --with-log echo "hello world" ">&2"
+  EXEC --with-log printf "hello world\n" ">&2"
   content=`cat "${__ERROR_LOG_FILE__}"`
   [ "${content}" != "hello world" ] && TEST_FAILED
   reset_LOG_FILES
@@ -172,7 +168,7 @@ mDOTHIS "ROLLBACK()"
   if [ -r ../message.lib.sh ]; then
     . ../message.lib.sh
   else
-    echo "[ERROR] Unable to load message.lib.sh"
+    printf "[ERROR] Unable to load message.lib.sh\n"
     exit 1
   fi
 
@@ -189,6 +185,5 @@ mOK
 
 find /tmp -maxdepth 1 \( -name "test.*" -o -name "set_log_file.*" \) -exec rm -f {} \;
 
-echo
-echo "*** All Tests OK ***"
+printf '\n*** All Tests OK ***\n'
 exit 0

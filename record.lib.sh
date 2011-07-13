@@ -34,13 +34,13 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf '%s' \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}\n"
       exit 2
     fi
     return 0;
@@ -83,20 +83,20 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
     if [ $# -eq 0 ]; then
       script -q -t 2>"${__RECORD_FILE__}.time" "${__RECORD_FILE__}.data"
     else
-      script -q -c "echo 'command: $*'; $*" -t 2>"${__RECORD_FILE__}.time" "${__RECORD_FILE__}.data"
+      script -q -c "printf '%s\n' 'command: $*'; $*" -t 2>"${__RECORD_FILE__}.time" "${__RECORD_FILE__}.data"
     fi
 
     # workaround to display all line recorded in *.data file !
     # in fact, scriptreplay doesn't want to display 'exit', but it's create some mistakes.
-    echo '0.000000 1' >> "${__RECORD_FILE__}.time"
+    printf '0.000000 1\n' >> "${__RECORD_FILE__}.time"
   }
 
   # usage: RECORD_GET_TIME_FILE
   # desc: ECho-return the file path of recorded session (timestamp information)
-  RECORD_GET_TIME_FILE () { echo "${__RECORD_FILE__}.time"; }
+  RECORD_GET_TIME_FILE () { printf '%s' "${__RECORD_FILE__}.time"; }
   # usage: RECORD_GET_DATA_FILE
   # desc: Echo-return the file path of recorded session (data information)
-  RECORD_GET_DATA_FILE () { echo "${__RECORD_FILE__}.data"; }
+  RECORD_GET_DATA_FILE () { printf '%s' "${__RECORD_FILE__}.data"; }
 
   # usage: RECORD_REALTIME [<options>]
   # desc: alias of RECORD_TIME --real
@@ -127,7 +127,7 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
     record_file="${record_file}.time"
 
     if [ ! -f "${record_file}" ]; then
-      echo "ERROR: can't find ${record_file}.time"
+      printf "ERROR: can't find ${record_file}.time\n"
       return 1
     fi
 
@@ -135,19 +135,19 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
 
     total_time=0
     if [ "${real_time}" = 'true' ]; then
-      echo 'scale=6';
-      echo -n '(';
+      printf 'scale=6\n';
+      printf '(';
       < "${record_file}" cut -d' ' -f1 | tr $'\n' '+';
-      echo "0)/${speed_factor}"
+      printf '%s\n' "0)/${speed_factor}"
     else
-      echo 'scale=6';
-      echo -n '(';
+      printf 'scale=6\n';
+      printf '(';
       while read time nb_char; do
         [ "$( expr "${nb_char}" '<' '100' )" = '1' ] && time="0.${time#*.}"
         [ "$( expr "${time%.*}" '>' '1'   )" = '1' ] && time="1.${time#*.}"
-        echo -n "${time}+"
+        printf '%s' "${time}+"
       done < "${record_file}"
-      echo "0)/${speed_factor}"
+      printf '%s\n' "0)/${speed_factor}"
     fi | bc
 
     return 0;
@@ -173,7 +173,7 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
 
     [ -z "${record_file}" ] && record_file="${__RECORD_FILE__}"
     if [ ! -f "${record_file}.time" -o ! -f "${record_file}.data" ]; then
-      echo "ERROR: can't find ${record_file}.time or ${record_file}.data"
+      printf "ERROR: can't find ${record_file}.time or ${record_file}.data\n"
       return 1
     fi
 
@@ -184,7 +184,7 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
       while read time nb_char; do
         [ "$( expr "${nb_char}" '<' '100' )" = '1' ] && time="0.${time#*.}"
         [ "$( expr "${time%.*}" '>' '1'   )" = '1' ] && time="1.${time#*.}"
-        echo "${time} ${nb_char}"
+        printf '%s\n' "${time} ${nb_char}"
       done < "${record_file}.time" > "${time_file}"
     else
       time_file="${record_file}.time"

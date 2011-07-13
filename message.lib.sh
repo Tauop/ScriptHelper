@@ -49,20 +49,20 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   # note: Message are display with indentation if MSG_INDENT_* functions
   #       are called, or if the script call DOTHIS() and related functions
   #  options:
-  #  --no-break : use 'echo -n' instead of 'echo' to display/write message
+  #  --no-break : don't print a line break
   #  --no-date : Don't add the date in message written into the output log file
   #  --no-print : Don't print message on standard output
   #  --no-log : Don't write message into output log file
   MESSAGE () {
-    local do_print='true' do_log='true' do_indent='true'
-    local msg= date= echo_opt=
+    local do_print='true' do_log='true' do_indent='true' cbreak='\n'
+    local msg= date=
     date=$(date +"[%D %T]")
 
     # parse arguments
     while [ true ]; do
       [ $# -eq 0 ] && break
       case "$1" in
-        --no-break  ) shift; echo_opt='-n' ;;
+        --no-break  ) shift; cbreak=''          ;;
         --no-date   ) shift; date=''            ;;
         --no-print  ) shift; do_print='false'   ;;
         --no-log    ) shift; do_log='false'     ;;
@@ -77,11 +77,11 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
     [ "${do_indent}" = 'true' ] && msg="${__MSG_INDENT__:-}${msg}"
 
     # don't put the date on standard output (STDOUT)
-    [ "${do_print}" = 'true' ] && echo ${echo_opt} "${msg}"
+    [ "${do_print}" = 'true' ] && printf "%s${cbreak}" "${msg}"
 
     if [ "${do_log}" = 'true' -a -f "${__OUTPUT_LOG_FILE__:-}" ]; then
       [ -n "${date}" ] && msg="${date} ${msg}"
-      echo ${echo_opt} "${msg}" >> "${__OUTPUT_LOG_FILE__:-}"
+      printf "%s${cbreak}" "${msg}" >> "${__OUTPUT_LOG_FILE__:-}"
     fi
   }
 
@@ -148,7 +148,7 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
   # usage: ROLLBACK
   # desc: by default, it's done nothing. Its purpose is to be
   #       override by the parent script
-  ROLLBACK () { echo >/dev/null; }
+  ROLLBACK () { cat /dev/null >/dev/null; }
 
   # usage: FATAL <error message>
   # desc: prefix message with "FATAL:" and call MESSAGE().

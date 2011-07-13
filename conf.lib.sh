@@ -36,13 +36,13 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf '%s' \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}\n"
       exit 2
     fi
     return 0;
@@ -90,9 +90,9 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
   # desc: determine a good sed separator
   private_SED_SEPARATOR () {
     for s in '/' '@' ',' '|'; do
-      echo "$1" | grep "$s" >/dev/null
+      printf '%s' "$1" | grep "$s" >/dev/null
       if [ $? -ne 0 ]; then
-        echo "$s"; return 0;
+        printf '%s' "$s"; return 0;
       fi
     done
     return 1;
@@ -129,7 +129,7 @@ if [ "${__LIB_CONF__:-}" != 'Loaded' ]; then
       sed -e "s${sep}^\($s*${var}\)$s*=.*\$${sep}\1=\"${value}\"${sep}" < "${conf_file}" > "${tmp_file}"
       mv "${tmp_file}" "${conf_file}"
     else # append
-      echo "${var}=\"${value}\"" >> "${conf_file}"
+      printf '%s\n' "${var}=\"${value}\"" >> "${conf_file}"
     fi
 
     LOG "CONF_SAVE: ${var}=\"${value}\""

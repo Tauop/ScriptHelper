@@ -30,7 +30,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -46,31 +46,31 @@ TEST_FILE2="/tmp/test.$(RANDOM)"
 # Utility functions ----------------------------------------------------------
 TEST_FAILED () {
   rm -f "${TEST_FILE}"
-  echo '[ERROR] Test failed'
+  printf '[ERROR] Test failed\n'
   exit 1
 }
 
 # don't use function.lib.sh functions !
-mDOTHIS() { echo -n "- $* ... "; }
-mOK()     { echo 'OK';           }
+mDOTHIS() { printf '%s' "- $* ... "; }
+mOK()     { printf '%s\n' 'OK';      }
 
 
 # Make tests -----------------------------------------------------------------
 
 mDOTHIS "Create template file"
-  printf "%s\n" 'This is a template test file'                    >> "${TEST_FILE}"
-  printf "%s\n" 'this is the first variable : ${var1}'            >> "${TEST_FILE}"
-  printf "%s\n" 'this is the second variable : ${var2}'           >> "${TEST_FILE}"
-  printf "%s\n" 'this variable should not be replace: ${var3}'    >> "${TEST_FILE}"
-  printf "%s\n" '${var1} ${var2} ${var1} ${var2} ${var3} ${var1}' >> "${TEST_FILE}"
-  printf "%s\n" 'end'                                             >> "${TEST_FILE}"
+  printf '%s\n' 'This is a template test file'                    >> "${TEST_FILE}"
+  printf '%s\n' 'this is the first variable : ${var1}'            >> "${TEST_FILE}"
+  printf '%s\n' 'this is the second variable : ${var2}'           >> "${TEST_FILE}"
+  printf '%s\n' 'this variable should not be replace: ${var3}'    >> "${TEST_FILE}"
+  printf '%s\n' '${var1} ${var2} ${var1} ${var2} ${var3} ${var1}' >> "${TEST_FILE}"
+  printf '%s\n' 'end'                                             >> "${TEST_FILE}"
 
-  printf "%s\n" 'This is a template test file'                                     >> "${TEST_FILE2}"
-  printf "%s\n" 'this is the first variable : tagada'                              >> "${TEST_FILE2}"
-  printf "%s\n" 'this is the second variable : youhou vous  hihi'                  >> "${TEST_FILE2}"
-  printf "%s\n" 'this variable should not be replace: ${var3}'                     >> "${TEST_FILE2}"
-  printf "%s\n" 'tagada youhou vous  hihi tagada youhou vous  hihi ${var3} tagada' >> "${TEST_FILE2}"
-  printf "%s\n" 'end'                                                              >> "${TEST_FILE2}"
+  printf '%s\n' 'This is a template test file'                                     >> "${TEST_FILE2}"
+  printf '%s\n' 'this is the first variable : tagada'                              >> "${TEST_FILE2}"
+  printf '%s\n' 'this is the second variable : youhou vous  hihi'                  >> "${TEST_FILE2}"
+  printf '%s\n' 'this variable should not be replace: ${var3}'                     >> "${TEST_FILE2}"
+  printf '%s\n' 'tagada youhou vous  hihi tagada youhou vous  hihi ${var3} tagada' >> "${TEST_FILE2}"
+  printf '%s\n' 'end'                                                              >> "${TEST_FILE2}"
 mOK
 
 var1="tagada"

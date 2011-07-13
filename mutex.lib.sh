@@ -32,13 +32,13 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf '%s' \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}\n"
       exit 2
     fi
     return 0;
@@ -76,7 +76,7 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
     # critical section. not atomic :-(
     WAIT_AND_LOCK "${mutex}"
       # add us into the mutex
-      echo "${priority}:${token}" >> "${mutex}"
+      printf '%s\n' "${priority}:${token}" >> "${mutex}"
 
       mutex_len=$( < "${mutex}" grep -v '^$' | wc -l | cut -d' ' -f1 )
       if [ ${mutex_len} -gt 2 ]; then
@@ -101,7 +101,7 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
   MUTEX_GET () {
     local resource= token= priority= mutex= holder= result=
     if [ $# -ne 1 -a $# -ne 2 ]; then
-      echo "ERROR: MUTEX_GET: no resource given"; return 1;
+      printf "ERROR: MUTEX_GET: no resource given\n"; return 1;
     fi
 
     token=$$
@@ -109,13 +109,13 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
     [ $# -eq 2 ] && priority="$2" || priority=0
 
     if [ -z "${resource}" ]; then
-      echo "ERROR: can't get an empty resource."; return 1;
+      printf "ERROR: can't get an empty resource.\n"; return 1;
     fi
     if ! test ${priority} -eq ${priority} 2>/dev/null ; then
-      echo "ERROR: priority must be a number"; return 1;
+      printf "ERROR: priority must be a number\n"; return 1;
     fi
     if [ ${#priority} -ne 1 -o ${priority} -lt 0 -o ${priority} -gt 9 ]; then
-      echo "ERROR: priority must be between 0 and 9"; return 1;
+      printf "ERROR: priority must be between 0 and 9\n"; return 1;
     fi
 
     # register our token into the mutex.
@@ -143,7 +143,7 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
     local resource= mutex= token= nb_line=
 
     if [ $# -ne 1 -a $# -ne 2 ]; then
-      echo "ERROR: MUTEX_RELEASE: Bad arguments"; return 1;
+      printf "ERROR: MUTEX_RELEASE: Bad arguments\n"; return 1;
     fi
 
     resource="$1"; mutex="${resource}.mutex" ;

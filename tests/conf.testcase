@@ -29,7 +29,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -48,7 +48,7 @@ SET_LOG_FILE "${TEST_FILE}"
 
 TEST_FAILED() {
   rm -f "${TEST_FILE}"
-  echo '[ERROR] Test failed'
+  printf '[ERROR] Test failed\n'
   exit 1
 }
 
@@ -57,21 +57,21 @@ check_LOG_FILE() {
   if [ -n "${__OUTPUT_LOG_FILE__:-}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__OUTPUT_LOG_FILE__:-}" | cut -d ']' -f2- | sed -e 's/^ //' | tr $'\n' ':'`
-    content2=`echo "$*" | tr $'\n' ':'`
+    content2=`printf '%s\n' "$*" | tr $'\n' ':'`
     [ "${content}" != "${content2}" ] && TEST_FAILED
     reset_LOG_FILES
   fi
 }
 
 reset_LOG_FILES() {
-  echo -n '' > "${TEST_FILE}"
-  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__:-}"
-  [ -f "${__ERROR_LOG_FILE__:-}"  ] && echo -n '' > "${__ERROR_LOG_FILE__:-}"
+  printf '' > "${TEST_FILE}"
+  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && printf '' > "${__OUTPUT_LOG_FILE__:-}"
+  [ -f "${__ERROR_LOG_FILE__:-}"  ] && printf '' > "${__ERROR_LOG_FILE__:-}"
 }
 
 # don't use function.lib.sh functions !
-mDOTHIS() { echo -n "- $* ... "; reset_LOG_FILES; }
-mOK()     { echo 'OK';           reset_LOG_FILES; }
+mDOTHIS() { printf '%s' "- $* ... "; reset_LOG_FILES; }
+mOK()     { printf 'OK\n';           reset_LOG_FILES; }
 
 reset_LOG_FILES
 
@@ -94,7 +94,7 @@ mOK
 
 # --------------------------------------------------------------------------
 mDOTHIS 'Test CONF_LOAD()'
-  echo 'TEST=true' >> "${test_conf_file}"
+  printf 'TEST=true\n' >> "${test_conf_file}"
   CONF_LOAD
   [ $? -ne 0 ] && TEST_FAILED
   check_LOG_FILE "CONF_LOAD: ${test_conf_file}"
@@ -111,7 +111,7 @@ mDOTHIS 'Test CONF_LOAD()'
 
   # --------------------------------------------------------------------------
   test_conf_file="/tmp/conf.$(RANDOM)"
-  echo 'TEST=false' >> "${test_conf_file}"
+  printf 'TEST=false\n' >> "${test_conf_file}"
   CONF_SET_FILE "${test_conf_file}"
   CONF_LOAD "${test_conf_file}"
   [ $? -ne 0 ] && TEST_FAILED
@@ -163,7 +163,7 @@ mDOTHIS 'Test CONF_SAVE()'
 
   # --------------------------------------------------------------------------
   TOTO=
-  echo '  TOTO="patrick"' > "${test_conf_file}"
+  printf '  TOTO="patrick"\n' > "${test_conf_file}"
   CONF_LOAD
   reset_LOG_FILES
   [ "${TOTO}" != 'patrick' ] && TEST_FAILED
@@ -225,7 +225,7 @@ mOK
 
 # --------------------------------------------------------------------------
 mDOTHIS 'Test CONF_DEL()'
-  echo -n '' > "${test_conf_file}"
+  printf '' > "${test_conf_file}"
   CONF_SAVE --conf-file "${test_conf_file}" long_setence "coucou tout le monde"
   reset_LOG_FILES
 
@@ -235,7 +235,7 @@ mDOTHIS 'Test CONF_DEL()'
   reset_LOG_FILES
 
   # --------------------------------------------------------------------------
-  echo -n '' > "${test_conf_file}"
+  printf '' > "${test_conf_file}"
   CONF_SAVE long_setence "coucou tout le monde"
   CONF_SAVE again "coucou tout le monde"
   reset_LOG_FILES
@@ -246,7 +246,7 @@ mDOTHIS 'Test CONF_DEL()'
   reset_LOG_FILES
 
   # --------------------------------------------------------------------------
-  echo -n '' > "${test_conf_file}"
+  printf '' > "${test_conf_file}"
   CONF_SAVE --conf-file "${test_conf_file}" toto "coucou"
   CONF_SAVE --conf-file "${test_conf_file}" tata "tout le monde"
   reset_LOG_FILES
@@ -264,7 +264,7 @@ mDOTHIS 'Test CONF_DEL()'
   reset_LOG_FILES
 
   # --------------------------------------------------------------------------
-  echo -n '' > "${test_conf_file}"
+  printf '' > "${test_conf_file}"
   CONF_SAVE --conf-file "${test_conf_file}" toto "coucou"
   chmod a-w "${test_conf_file}"
   reset_LOG_FILES
@@ -294,7 +294,6 @@ mOK
 
 find /tmp -maxdepth 1 \( -name "test.*" -o -name "conf.*" -o -name "test_answer.*" \) -exec rm -f {} \;
 
-echo
-echo "*** All Tests OK ***"
+printf '\n*** All Tests OK ***\n'
 
 exit 0

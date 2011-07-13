@@ -29,7 +29,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -45,24 +45,24 @@ TEST_FILE2="/tmp/test.$(RANDOM)"
 # Make tests -----------------------------------------------------------------
 
 for i in `seq 1 6`; do
-  echo $i >> "${TEST_FILE2}"
+  printf '%s\n' "$i" >> "${TEST_FILE2}"
 done
 
 pids=
 
 bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; sleep 8  ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!" ; sleep 1
-bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 9 ; echo '1' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
+bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 9 ; printf '1\n' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!" ; sleep 1
-bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 0 ; echo '5' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
+bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 0 ; printf '5\n' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!" ; sleep 1
-bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}'   ; echo '6' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
+bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}'   ; printf '6\n' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!" ; sleep 1
-bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; echo '2' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
+bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; printf '2\n' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!" ; sleep 1
-bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; echo '3' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
+bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; printf '3\n' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!" ; sleep 1
-bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; echo '4' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
+bash -c "SCRIPT_HELPER_DIRECTORY=.. source ../mutex.lib.sh; MUTEX_GET '${TEST_FILE}' 5 ; printf '4\n' >> '${TEST_FILE}' ; MUTEX_RELEASE '${TEST_FILE}'" &
 pids="${pids} $!"
 
 wait ${pids}
@@ -70,11 +70,11 @@ wait ${pids}
 res=0
 diff -au "${TEST_FILE}" "${TEST_FILE2}" >/dev/null || res=1
 if [ "${res}" = '1' ]; then
-  echo "<<<<<<<<<<<<"
+  printf '<<<<<<<<<<<<'
   cat "${TEST_FILE2}"
-  echo "============"
+  printf '============'
   cat "${TEST_FILE}"
-  echo ">>>>>>>>>>>>"
+  printf '>>>>>>>>>>>>'
 fi
 
 [ -f "${TEST_FILE}.mutex"      ] && res=1
@@ -84,9 +84,9 @@ fi
  
 rm -f "${TEST_FILE}*" "${TEST_FILE2}*"
 if [ ${res} -eq 0 ]; then
-  echo ; echo "*** All Tests OK ***";
+  printf '\n%s\n' '*** All Tests OK ***';
   exit 0;
 else
-  echo ; echo "TEST FAILED"
+  printf '\n%s\n' 'TEST FAILED'
   exit 1;
 fi

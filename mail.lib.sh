@@ -35,13 +35,13 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf '%s' \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}\n"
       exit 2
     fi
     return 0;
@@ -83,7 +83,7 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
   # usage: MAIL_GET_FILE
   # desc: return the content of __MAIL_FILE__, ie the current mail file used
   MAIL_GET_FILE () {
-    echo "${__MAIL_FILE__}";
+    printf '%s' "${__MAIL_FILE__}";
     return 0;
   }
 
@@ -117,7 +117,7 @@ if [ "${__LIB_MAIL__:-}" != 'Loaded' ]; then
     [ -z "${mail_file}" ] && FATAL "MAIL_APPEND: no mail file was setup"
     [ -w "${mail_file}" ] || FATAL "MAIL_APPEND: can't write to mail file"
 
-    echo "$*" >> "${mail_file}"
+    printf '%s\n' "$*" >> "${mail_file}"
     LOG "MAIL_APPEND[${mail_file}]> $*"
     return 0;
   }

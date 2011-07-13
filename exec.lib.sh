@@ -39,9 +39,9 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
   # we don't want to be dependant on message.lib.sh
   if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
-    MESSAGE () { echo $*;         }
-    NOTICE  () { echo $*;         }
-    KO      () { echo $*; exit 1; }
+    MESSAGE () { printf '%s\n' "$*";         }
+    NOTICE  () { printf '%s\n' "$*";         }
+    KO      () { printf '%s\n' "$*"; exit 1; }
   fi
 
   # get system information which is often need when

@@ -30,7 +30,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 2
   fi
 }
@@ -55,10 +55,10 @@ var=$( RECORD_GET_TIME_FILE ); [ -f "${var}" ] && rm -f "${var}"
 var=$( RECORD_GET_DATA_FILE ); [ -f "${var}" ] && rm -f "${var}"
 
 if [ ${res} -eq 0 ]; then
-  echo ; echo "*** All Tests finished ***"
+  printf '\n%s\n' '*** All Tests finished ***'
   exit 0;
 else
-  echo ; echo "[ERROR] Test failed"
+  printf '\n%s\n' '[ERROR] Test failed'
   exit 1
 fi
 

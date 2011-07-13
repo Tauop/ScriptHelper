@@ -26,14 +26,14 @@ testcases=$( find "${SCRIPT_HELPER_DIRECTORY}/tests/" -type f -iname "*.testcase
              | sed -e 's/^\(.*\)[.]testcase$/\1/' )
 
 usage () {
-  testcases=$( echo -n "${testcases}" | tr $'\n' ',' | sed -e 's/,/, /g' )
-  echo "Usage: $0 <test-case>"
-  echo "    <test-case> : ${testcases}" | fold -s
+  testcases=$( printf '%s' "${testcases}" | tr $'\n' ',' | sed -e 's/,/, /g' )
+  printf '%s\n' "Usage: $0 <test-case>"
+  printf '%s\n' "    <test-case> : ${testcases}" | fold -s
   exit 1
 }
 
 if [ $# -ne 1 ]; then
- echo 'ERROR: Bad arguments'
+  printf 'ERROR: Bad arguments\n'
   usage
 fi
 
@@ -41,14 +41,14 @@ TEST_CASE="$1"
 TEST_CASE_DIR="${SCRIPT_HELPER_DIRECTORY}/tests"
 
 # don't use function.lib.sh functions !
-mDOTHIS() { echo -n "- $* ... "; }
-mOK()     { echo 'OK';           }
-mKO()     { echo 'KO';           }
+mDOTHIS() { printf '%s' "- $* ... "; }
+mOK()     { printf '%s\n' 'OK';      }
+mKO()     { printf '%s\n' 'KO';      }
 
 if [ "${TEST_CASE}" != 'all' ]; then
   TEST_CASE="${TEST_CASE_DIR}/${TEST_CASE}.testcase"
   if [ ! -r "${TEST_CASE}" ]; then
-    echo 'ERROR: unknown test-case'
+    printf 'ERROR: unknown test-case\n'
     usage
   fi
   # Load the test-case
@@ -65,6 +65,5 @@ else
   done
 fi
 
-echo
-echo "*** All tests done ***"
-echo
+
+printf '\n%s\n' '*** All tests done ***'

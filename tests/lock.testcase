@@ -29,7 +29,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -39,7 +39,7 @@ LOAD lock.lib.sh
 
 # Utility functions ----------------------------------------------------------
 
-TEST_FAILED () { echo "TEST FAILED"; rm -f "${TEST_FILE}" ; exit 1 ; }
+TEST_FAILED () { printf "TEST FAILED\n"; rm -f "${TEST_FILE}" ; exit 1 ; }
 FORK () {
   local code="$*"
   bash -c "SCRIPT_HELPER_DIRECTORY=${SCRIPT_HELPER_DIRECTORY}
@@ -101,5 +101,5 @@ wait ${pid}           || TEST_FAILED
 UNLOCK "${TEST_FILE}" || TEST_FAILED
 
 rm -f "${TEST_FILE}"
-echo "*** All Tests OK ***"
+printf '*** All Tests OK ***\n'
 exit 0

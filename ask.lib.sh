@@ -45,13 +45,13 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf \"%s\" \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}"
       exit 2
     fi
     return 0;
@@ -186,7 +186,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
   #                      answer is not valid. default: "Invalid answer."
   # note: format options are ignored if a __AUTOANSWER_FILE__ was set
   ASK () {
-    local question= variable= default= error=
+    local question= variable= default= error= cbreak='\n'
     local answer= read_opt='' check='' allow_empty= message_opt=
     local do_break='false' do_pass='false' no_print='false' no_echo='false'
 
@@ -261,22 +261,20 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
           [ "${allow_empty}" = 'true' ] && break;
         else
           # delete useless space
-          answer=$( echo "${answer}" | sed -e 's/^ *//;s/ *$//;' )
+          answer=$( printf "%s" "${answer}" | sed -e 's/^ *//;s/ *$//;' )
 
           # check user response
           case "${check}" in
             "yesno" )
-                  answer=$( echo "${answer}" | tr '[:lower:]' '[:upper:]' )
-                  if [ "${answer}" = 'Y'   \
-                    -o "${answer}" = 'YES' \
-                    -o "${answer}" = 'N'   \
-                    -o "${answer}" = 'NO' ]; then
-                    answer=${answer:0:1} # keep the first char
-                    break;
-                  fi
+                  answer=$( printf "%s" "${answer}" | tr '[:lower:]' '[:upper:]' )
+                  case "${answer}" in
+                    'Y'|'YES') answer='Y'; break;;
+                    'N'|'NO')  answer='N'; break ;;
+                    *) ;;
+                  esac
               ;; # enf of "yesno"
             "number" )
-                  echo "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+                  printf "%s" "${answer}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
                   [ $? -eq 0 ] && break;
                 ;; # end of "number"
             * ) break  ;;
@@ -297,7 +295,7 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     fi
 
     if [ "${do_pass}" = 'true' ]; then
-      LOG "${question}  => ${answer//?/#}"
+      LOG "${question}  => $( echo "${answer}" | sed -e 's/./#/g' )"
     else
       LOG "${question}  => ${answer}"
       [ "${__USE_READLINE__}" = 'true' ] && history -s -- "${answer}"
@@ -306,8 +304,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
     # NOTE: with --pass, no \n is printed out to the STDOUT, due to '-s' option of 'read'
     [ \( "${no_echo}" = 'true' -o "${do_pass}" = 'true' \) -a "${no_print}" = 'false' ] && BR
 
-    [ -n "${__ANSWER_LOG_FILE__}" ] &&  echo "${answer}" >> "${__ANSWER_LOG_FILE__}"
-    answer=$( echo "${answer}" | sed -e 's/["]/\\"/g' )
+    [ -n "${__ANSWER_LOG_FILE__}" ] && printf "%s\n" "${answer}" >> "${__ANSWER_LOG_FILE__}"
+    answer=$( printf "%s" "${answer}" | sed -e 's/["]/\\"/g' )
     eval "${variable}=\"${answer}\"";
   }
 

@@ -30,7 +30,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -141,7 +141,7 @@ DOTHIS "MYSQL_DUMP"
   MYSQL_DUMP "${TEST_FILE}" "${test_db}"
   mysqldump -u${mysql_username} -p${mysql_password} --no-create-db --opt --max_allowed_packet=67108864 --routines "${test_db}" >"${TEST_FILE2}"
   compare_TEST_FILES
-  echo -n '' > "${TEST_FILE2}"
+  printf '' > "${TEST_FILE2}"
 OK
 
 DOTHIS "MYSQL_RESTORE"
@@ -161,6 +161,5 @@ MYSQL_QUERY "DROP DATABASE ${test_db2}"
 
 find /tmp -maxdepth 1 -name "test.*" -exec rm -f {} \;
 
-echo
-echo "*** All Tests OK ***"
+printf '\n%s\n' "*** All Tests OK ***"
 exit 0

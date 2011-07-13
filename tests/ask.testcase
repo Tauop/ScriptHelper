@@ -30,7 +30,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 2
   fi
 }
@@ -50,7 +50,7 @@ ASK_SET_ANSWER_LOG_FILE "${TEST_ANSWER_FILE}"
 
 TEST_FAILED() {
   rm -f "${TEST_FILE}" "${TEST_ANSWER_FILE}"
-  echo '[ERROR] Test failed'
+  printf '[ERROR] Test failed'
   exit 1
 }
 
@@ -64,16 +64,16 @@ check_LOG_FILE() {
   if [ -n "${__OUTPUT_LOG_FILE__:-}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__OUTPUT_LOG_FILE__:-}" | cut -d ']' -f2- | sed -e 's/^ //' | tr $'\n' ':'`
-    content2=`echo "$*" | tr $'\n' ':'`
+    content2=`printf '%s\n' "$*" | tr $'\n' ':'`
     [ "${content}" != "${content2}" ] && TEST_FAILED
     reset_FILES
   fi
 }
 
 reset_FILES() {
-  echo -n '' > "${TEST_FILE}"
-  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__:-}"
-  [ -f "${__ERROR_LOG_FILE__:-}"  ] && echo -n '' > "${__ERROR_LOG_FILE__:-}"
+  printf '' > "${TEST_FILE}"
+  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && printf '' > "${__OUTPUT_LOG_FILE__:-}"
+  [ -f "${__ERROR_LOG_FILE__:-}"  ] && printf '' > "${__ERROR_LOG_FILE__:-}"
 }
 
 
@@ -135,7 +135,7 @@ while [ "$loop_count" != "2" ]; do
   MSG_INDENT_DEC
 
   check_LOG_FILE "Number: => ${result}"
-  echo "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+  printf '%s' "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
   [ $? -ne 0 ] && TEST_FAILED
 
 
@@ -148,7 +148,7 @@ while [ "$loop_count" != "2" ]; do
   MSG_INDENT_DEC
 
   check_LOG_FILE "Number [9]: => ${result}"
-  echo "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
+  printf '%s' "${result}" | grep '^[0-9]*$' >/dev/null 2>/dev/null
   [ $? -ne 0 ] && TEST_FAILED
 
 

@@ -55,13 +55,13 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     local var= value= file=
 
     var="$1"; file="$2"
-    value=$( eval "echo \"\${${var}:-}\"" )
+    value=$( eval "printf \"%s\" \"\${${var}:-}\"" )
 
     [ -n "${value}" ] && return 1;
     if [ -f "${file}" ]; then
       . "${file}"
     else
-      echo "ERROR: Unable to load ${file}"
+      printf "ERROR: Unable to load ${file}"
       exit 2
     fi
     return 0;
@@ -80,7 +80,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   # desc: replace all <var> and [var] pattern into '?'
   private_PURIFY_CLI_COMMAND () {
     local result= word= first_char= last_char=
-    echo "$1" | tr ' ' $'\n' \
+    printf "%s\n" "$1" | tr ' ' $'\n' \
       | ( while read word; do
             [ -z "${word}" ] && continue
             first_char="${word%"${word#?}"}";
@@ -93,7 +93,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
             fi
             result="${result} ${word}"
           done
-          echo -n "${result# }"
+          printf "%s" "${result# }"
         )
     return 0
   }
@@ -118,7 +118,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     [ "${type}" = 'command' ] && help="$4" || help="$3"
     if [ "${type}" = 'menu' ]; then
       cli_command=$( private_PURIFY_CLI_COMMAND "${cli_command}" )
-      cli_command=$( echo "${cli_command}" | sed -e 's/?//g;s/ */ /g;' )
+      cli_command=$( printf "%s" "${cli_command}" | sed -e 's/?//g;s/ */ /g;' )
     fi
     printf "%s\t%s\t%s" "${type}" "${cli_command}" "${help}"
     return 0;
@@ -145,7 +145,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     [ $# -ne 1 ] && ERROR "private_CLI_SAVE_HELP: invalid arguments"
     [ "${__CLI_BUILD_HELP__}" = 'false' ] && return;
     grep "$1" < "${__CLI_HELP_FILE__}" >/dev/null 2>/dev/null
-    [ $? -ne 0 ] && echo "$1" >> "${__CLI_HELP_FILE__}"
+    [ $? -ne 0 ] && printf "%s\n" "$1" >> "${__CLI_HELP_FILE__}"
     return 0
   }
 
@@ -186,9 +186,9 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   # desc: determine a good sed separator
   private_SED_SEPARATOR () {
     for s in '/' '@' ',' '|'; do
-      echo "$1" | grep "$s" >/dev/null
+      printf '%s\n' "$1" | grep "$s" >/dev/null
       if [ $? -ne 0 ]; then
-        echo "$s"; return 0;
+        printf '%s\n' "$s"; return 0;
       fi
     done
     return 1;
@@ -200,17 +200,17 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   private_BUILD_SED_COMMAND () {
     local command= word=
     command=$( private_PURIFY_CLI_COMMAND "$1" )
-    echo -n "^"
-    echo "${command}" | tr ' ' $'\n' \
+    printf '^'
+    printf '%s\n' "${command}" | tr ' ' $'\n' \
       | while read word; do
           [ -z "${word}" ] && continue
           if [ "${word}" = '?' ]; then
-            echo -n ' *\([^ ]*\)'
+            printf ' *\([^ ]*\)'
             continue
           fi
-          echo -n " *${word}"
+          printf ' *%s' "${word}"
         done
-    echo " *$"
+    printf ' *$'
   }
 
   #   usage: CLI_REGISTER_COMMAND "<cli_command>" <function>
@@ -250,7 +250,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     sep=$( private_SED_SEPARATOR "${cli_cmd}" )
     cli_cmd=$( private_BUILD_SED_COMMAND "${cli_cmd}" )
-    func=$( echo "${func}" | sed -e "s/\([\\][0-9]\)/'\1'/g" )
+    func=$( printf '%s' "${func}" | sed -e "s/\([\\][0-9]\)/'\1'/g" )
 
     # update the code
     eval "$code=\"\${${code}} s${sep}${cli_cmd}${sep}${func}${sep}p; t;\""
@@ -279,8 +279,8 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     local cmd=
     [ $# -eq 0 ] && return;
 
-    cmd=$( echo "$*" | sed -n -e "${__CLI_KCODE__}" )
-    [ -z "${cmd}" ] && cmd=$( echo "$*" | sed -n -e "${__CLI_CODE__}" )
+    cmd=$( printf '%s' "$*" | sed -n -e "${__CLI_KCODE__}" )
+    [ -z "${cmd}" ] && cmd=$( printf '%s' "$*" | sed -n -e "${__CLI_CODE__}" )
 
     if [ -n "${cmd}" ]; then
       eval "${cmd}"
@@ -316,9 +316,9 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     while [ true ]; do
       ASK --allow-empty input "${__CLI_PROMPT__} ${__CLI_CONTEXT_MENU__:+[${__CLI_CONTEXT_MENU__}]}>"
       [ -z "${input}" ] && continue
-      cmd=$( echo "${input}" | sed -n -e "${kcode}" )
+      cmd=$( printf '%s' "${input}" | sed -n -e "${kcode}" )
       [ -z "${cmd}" ] && \
-        cmd=$( echo "${__CLI_CONTEXT_MENU__} ${input}" | sed -n -e "${code}" )
+        cmd=$( printf '%s' "${__CLI_CONTEXT_MENU__} ${input}" | sed -n -e "${code}" )
       eval "${cmd}"
     done
 

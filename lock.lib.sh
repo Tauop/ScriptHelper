@@ -18,7 +18,7 @@
 #
 # README ---------------------------------------------------------------------
 # This is a bash library helping to exclusive lock a resource
-# Important : this library is really simple and doesn't echo any error message
+# Important : this library is really simple and doesn't print any error message
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
 # __LIB_LOCK__ : 'Loaded' when the lib is 'source'd

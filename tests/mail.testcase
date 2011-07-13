@@ -30,7 +30,7 @@ LOAD() {
   if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
     . "${SCRIPT_HELPER_DIRECTORY}/$1"
   else
-    echo "[ERROR] Unable to load $1"
+    printf '%s\n' "[ERROR] Unable to load $1"
     exit 1
   fi
 }
@@ -48,7 +48,7 @@ SET_LOG_FILE "${TEST_FILE}"
 
 TEST_FAILED() {
   rm -f "${TEST_FILE}"
-  echo '[ERROR] Test failed'
+  printf '[ERROR] Test failed\n'
   exit 1
 }
 
@@ -57,22 +57,22 @@ check_LOG_FILE() {
   if [ -n "${__OUTPUT_LOG_FILE__:-}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__OUTPUT_LOG_FILE__:-}" | cut -d ']' -f2- | sed -e 's/^ //' | tr $'\n' ':'`
-    content2=`echo "$*" | tr $'\n' ':'`
+    content2=`printf '%s\n' "$*" | tr $'\n' ':'`
     [ "${content}" != "${content2}" ] && TEST_FAILED
     reset_LOG_FILES
   fi
 }
 
 reset_LOG_FILES() {
-  echo -n '' > "${TEST_FILE}"
-  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && echo -n '' > "${__OUTPUT_LOG_FILE__:-}"
-  [ -f "${__ERROR_LOG_FILE__:-}"  ] && echo -n '' > "${__ERROR_LOG_FILE__:-}"
+  printf '' > "${TEST_FILE}"
+  [ -f "${__OUTPUT_LOG_FILE__:-}" ] && printf '' > "${__OUTPUT_LOG_FILE__:-}"
+  [ -f "${__ERROR_LOG_FILE__:-}"  ] && printf '' > "${__ERROR_LOG_FILE__:-}"
 }
 
 
 # don't use function.lib.sh functions !
-mDOTHIS() { echo -n "- $* ... "; }
-mOK()     { echo 'OK';           }
+mDOTHIS() { printf '%s' "- $* ... "; }
+mOK()     { printf 'OK\n';           }
 
 
 # Make tests -----------------------------------------------------------------
@@ -131,8 +131,8 @@ mOK
 # -------------------------------------------------------------
 mDOTHIS "MAIL_APPEND()"
   rm -f "${MAIL_FILE}" "${MAIL_FILE2}"
-  echo "first test line" >> "${MAIL_FILE2}"
-  echo "second test line" >> "${MAIL_FILE2}"
+  printf "first test line\n"  >> "${MAIL_FILE2}"
+  printf "second test line\n" >> "${MAIL_FILE2}"
 
   MAIL_CREATE "${MAIL_FILE}"
   reset_LOG_FILES

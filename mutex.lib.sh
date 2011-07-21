@@ -127,7 +127,7 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
       [ "${holder}" = "$$" ] && break;
 
       # check that the resource holder is not dead
-      ps -A | grep "^ *${holder} *" >/dev/null 2>/dev/null
+      ps -p "${holder}" >/dev/null 2>/dev/null
       if [ $? -ne 0 ]; then
         MUTEX_RELEASE "${resource}" "${holder}"
         continue; # get the next holder and don't sleep :-)

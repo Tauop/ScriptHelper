@@ -122,8 +122,9 @@ if [ "${__LIB_MUTEX__:-}" != 'Loaded' ]; then
     private_MUTEX_REGISTER_TOKEN "${resource}" "${token}" "${priority}"
 
     # wait until we are the holder of the mutex
-    while [ "${holder}" != "$$" ]; do
+    while [ true ]; do
       holder=$( head -n 1 < "${mutex}" | cut -d':' -f2 )
+      [ "${holder}" = "$$" ] && break;
 
       # check that the resource holder is not dead
       ps -A | grep "^ *${holder} *" >/dev/null 2>/dev/null

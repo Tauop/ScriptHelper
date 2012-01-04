@@ -248,7 +248,8 @@ if [ "${__LIB_ASK__:-}" != 'Loaded' ]; then
       if [ "${no_print}" = 'false' ]; then
         question="${__MSG_INDENT__}${question}"
         [ "${do_break}" = 'true'  ] && question=${question}$'\n'${__MSG_INDENT__}
-        read_opt="${read_opt} -p '${question}' "
+        question=$( echo "${question}" | sed -e 's/\\/\\\\/g;s/\"/\\\"/g' )
+        read_opt="${read_opt} -p \"${question}\" "
       fi
 
       while eval "read ${read_opt} answer"; do

@@ -17,17 +17,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # README ---------------------------------------------------------------------
-# This is a bash library purpose is to give ability to ask question, which
-# checking answer, in the simpliest way
+# This is a bash library purpose is to give some utilities to print date in
+# easy readable fomrat
 #
 # Global variables ===========================================================
 # IMPORTANT: Please to write to those variables
-# __LIB_ASK__ : 'Loaded' when the lib is 'source'd
-# __ANSWER_LOG_FILE__ : filepath of the file in which user's answer, get with
-#                       ASK(), will be recorded.
-# __AUTOANSWER_FILE__ : filepath of the file from which answer will be taken
-# __AUTOANSWER_FP__ : file pointer, which determine the last line number of
-#                     the file __AUTOANSWER_FILE__ which has been read
+# __LIB_DATE__ : 'Loaded' when the lib is 'source'd
 # ----------------------------------------------------------------------------
 
 # don't load several times this file

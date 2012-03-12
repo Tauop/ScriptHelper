@@ -22,8 +22,8 @@
 SCRIPT_HELPER_DIRECTORY='..'
 [ -r /etc/ScriptHelper.conf ] && . /etc/ScriptHelper.conf
 
-testcases=$( find "${SCRIPT_HELPER_DIRECTORY}/tests/" -type f -iname "*.testcase" -printf "%P\n" \
-             | sed -e 's/^\(.*\)[.]testcase$/\1/' )
+testcases=$( find "${SCRIPT_HELPER_DIRECTORY}/tests/" -type f -iname "*.testcase" \
+             | sed -e 's@^.*/\([^/]*\)[.]testcase$@\1@' )
 
 usage () {
   testcases=$( printf '%s' "${testcases}" | tr $'\n' ',' | sed -e 's/,/, /g' )

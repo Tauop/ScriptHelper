@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+# Copyright (c) 2010 Linagora
+# Patrick Guiran <pguiran@linagora.com>
+# http://github.com/Tauop/ScriptHelper
+#
+# ScriptHelper is free software, you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as
+# published by the Free Software Foundation; either version 2 of
+# the License, or (at your option) any later version.
+#
+# ScriptHelper is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU Lesser General Public License
+# along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#
+
+# -f Disable pathname expansion.
+# -u Unset variables
+set -fu
+
+# Load library ---------------------------------------------------------------
+SCRIPT_HELPER_DIRECTORY='..'
+[ -r /etc/ScriptHelper.conf ] && . /etc/ScriptHelper.conf
+
+LOAD() {
+  if [ -r "${SCRIPT_HELPER_DIRECTORY}/$1" ]; then
+    . "${SCRIPT_HELPER_DIRECTORY}/$1"
+  else
+    printf '%s\n' "[ERROR] Unable to load $1"
+    exit 2
+  fi
+}
+
+LOAD random.lib.sh
+LOAD date.lib.sh
+
+# Utility functions ----------------------------------------------------------
+
+TEST_FAILED() {
+  printf '[ERROR] Test failed\n'
+  exit 1
+}
+
+# Tests ----------------------------------------------------------------------
+
+DATE_CMD=
+date --date "1 day ago" 2>/dev/null >/dev/null
+if [ $? -eq 0 ]; then
+  date_14M_ago="date --date '14 minutes 10 seconds ago' +%s"
+  date_1H_ago="date --date '1 hour 10 seconds ago' +%s"
+  date_3d_ago="date --date '3 days 10 seconds ago' +%s"
+  date_1w_ago="date --date '9 days 10 seconds ago' +%s"
+  date_3w_ago="date --date '25 days 10 seconds ago' +%s"
+  date_4m_ago="date --date '4 months 10 seconds ago' +%s"
+  date_1y_ago="date --date '14 monts 10 seconds ago' +%s"
+  date_2y_ago="date --date '2 years 10 days ago' +%s"
+else
+  date_14M_ago="date -v-14M -v-10S +%s"
+  date_1H_ago="date -v-1H -v-10S +%s"
+  date_3d_ago="date -v-3d -v-10S +%s"
+  date_1w_ago="date -v-9d -v-10S +%s"
+  date_3w_ago="date -v-25d -v-10S +%s"
+  date_4m_ago="date -v-4m -v-10S +%s"
+  date_1y_ago="date -v-14m -v-10S +%s"
+  date_2y_ago="date -v-2y -v-10d +%s"
+fi
+
+date_14M_ago_res="14 minutes ago"
+date_1H_ago_res="1 hour ago"
+date_3d_ago_res="3 days ago"
+date_1w_ago_res="1 week ago"
+date_3w_ago_res="3 weeks ago"
+date_4m_ago_res="4 months ago"
+date_1y_ago_res="1 year ago"
+date_2y_ago_res="2 years ago"
+
+test_cases=
+test_cases="${test_cases} date_14M_ago"
+test_cases="${test_cases} date_1H_ago"
+test_cases="${test_cases} date_3d_ago"
+test_cases="${test_cases} date_1w_ago"
+test_cases="${test_cases} date_3w_ago"
+test_cases="${test_cases} date_4m_ago"
+test_cases="${test_cases} date_1y_ago"
+test_cases="${test_cases} date_2y_ago"
+
+for test in $test_cases; do
+  test_cmd=$( eval "echo \"\$${test}\"" )
+  test_date=$( eval "$test_cmd" )
+  result_date=$( DATE_AGO "${test_date}" )
+  var=$( eval "echo \$${test}_res")
+  [ "${result_date}" != "${var}" ] && TEST_FAILED
+done
+
+# rapid check for DATE_PRETTY()
+timestamp=$( eval "${date_14M_ago}" )
+test_date=$( DATE_STRING "${timestamp}" "+%H:%M" )
+result_date=$( DATE_PRETTY "${timestamp}" )
+[ "${test_date}" != "${result_date}" ] && TEST_FAILED
+
+timestamp=$( eval "${date_3d_ago}" )
+test_date=$( DATE_STRING "${timestamp}" "+%e %b %H:%M" )
+result_date=$( DATE_PRETTY "${timestamp}" )
+[ "${test_date}" != "${result_date}" ] && TEST_FAILED
+
+timestamp=$( eval "${date_2y_ago}" )
+test_date=$( DATE_STRING "${timestamp}" "+%d/%m/%y %H:%M" )
+result_date=$( DATE_PRETTY "${timestamp}" )
+[ "${test_date}" != "${result_date}" ] && TEST_FAILED
+
+printf '*** All Tests OK ***\n'
+exit 0

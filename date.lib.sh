@@ -66,7 +66,7 @@ if [ "${__LIB_DATE__:-}" != 'Loaded' ]; then
     date_from="$1"
     [ $# -eq 2 ] && format="$2"
 
-    result=$( date -d "${date_from}" "${format}" 2>/dev/null )
+    result=$( date -d "1970-01-01 UTC + ${date_from} seconds" "${format}" 2>/dev/null )
     if [ $? -ne 0 ]; then
       result=$( date -r "${date_from}" "${format}" 2>/dev/null )
       [ $? -ne 0 ] && result="${date_from}"

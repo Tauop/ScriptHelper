@@ -51,8 +51,10 @@ RECORD_PLAY >"${TEST_FILE2}"
 diff -au "${TEST_FILE}" "${TEST_FILE2}"
 res=$?
 
+# clean
 var=$( RECORD_GET_TIME_FILE ); [ -f "${var}" ] && rm -f "${var}"
 var=$( RECORD_GET_DATA_FILE ); [ -f "${var}" ] && rm -f "${var}"
+rm -f "${TEST_FILE}" "${TEST_FILE2}"
 
 if [ ${res} -eq 0 ]; then
   printf '\n%s\n' '*** All Tests finished ***'

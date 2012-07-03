@@ -192,7 +192,7 @@ if [ "${__LIB_RECORD__:-}" != 'Loaded' ]; then
 
     scriptreplay "${time_file}" "${record_file}.data" "${speed_factor}"
 
-    [ -z "${time_file}" -a -f "${time_file}" ] && rm -f "${time_file}"
+    [ -n "${time_file}" -a -f "${time_file}" ] && rm -f "${time_file}"
     return 0
   }
 

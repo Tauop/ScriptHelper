@@ -104,8 +104,12 @@ if [ "${__LIB_DATE__:-}" != 'Loaded' ]; then
     done
 
     [ $compute -ne 1 ] && what="${what}s"
-          
-    [ "$in_past" = "true" ] && format="%s %s ago" || "in %s %s"
+
+    if [ "$in_past" = "true" ]; then
+      format="%s %s ago"
+    else
+      format="in %s %s"
+    fi
     printf "$format" "$compute" "$what"
   }
 

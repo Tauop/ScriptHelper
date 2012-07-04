@@ -18,37 +18,34 @@
 # README ---------------------------------------------------------------------
 # This lib helps to build a Command Line Interface.
 #
+# You can use cli-help library, as this library rely on private_CLI_SAVE_HELP()
+# to add help content when CLI command are registered
+#
 # Global variables ===========================================================
 # __LIB_CLI__ : 'Loaded' when the lib is 'source'd
-# __CLI_CODE__ : Sed directives which are built with CLI_REGISTER_COMMAND() and
-#                CLI_REGISTER_MENU() and run with CLI_RUN_COMMAND() and CLI_RUN()
-# __CLI_KCODE__ : Sed directives which are built with CLI_REGISTER_KCOMMAND()
-#                and interpret with CLI_RUN() to set context
+# __CLI_BUILD__ : Do we have to build the code cache files __CLI_CODE_FILE__
+#                 and __CLI_KCODE_FILE__ (default: false)
+# __CLI_CODE_FILE__ : Sed directives which are built with CLI_REGISTER_COMMAND() and
+#                     CLI_REGISTER_MENU() and run with CLI_RUN_COMMAND() and CLI_RUN()
+# __CLI_KCODE_FILE__ : Sed directives which are built with CLI_REGISTER_KCOMMAND()
+#                      and interpret with CLI_RUN() to set context
 # __CLI_PROMPT__ : Prompt of the interactive CLI (run with CLI_RUN())
 # __CLI_CONTEXT_MENU__ : Use to store the current context of command
-# __CLI_BUILD_HELP__ : 'true' if we want to generate help automaticaly.
-#                       default: false
-# __CLI_HELP_FILE__ : Filepath of the cache file for help content
-# __CLI_GET_HELP__ : the function to used to get help content.
-#                    (can be set with CLI_REGISTER_HELP)
-# __CLI_DISPLAY_HELP__ : the function to use to display help sections.
-#                        (can be set with CLI_REGISTER_HELP)
-# __CLI_DISPLAY_HELP_FOR__ : the function to use to display help content.
-#                            (can be set with CLI_REGISTER_HELP)
+#
+# __CLI_BUILD_HELP__ is not defined in this library, but in the cli-help library.
+# We rely on it to know if we have to add help content, and to know if cli-help
+# is loaded.
 # ----------------------------------------------------------------------------
 
 if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   __LIB_CLI__='Loaded';
-  __CLI_CODE__=
-  __CLI_KCODE__=
+
   __CLI_PROMPT__=
   __CLI_CONTEXT_MENU__=
 
-  __CLI_BUILD_HELP__='false'
-  __CLI_HELP_FILE__=
-  __CLI_GET_HELP__='private_CLI_DEFAULT_GET_HELP'
-  __CLI_DISPLAY_HELP__='private_CLI_DEFAULT_DISPLAY_HELP'
-  __CLI_DISPLAY_HELP_FOR__='private_CLI_DEFAULT_DISPLAY_HELP_FOR'
+  __CLI_BUILD__='false'
+  __CLI_CODE_FILE__="/tmp/scripthelper.cli.code"
+  __CLI_KCODE_FILE__="/tmp/scripthelper.cli.kcode"
 
   # load dependencies
   load() {
@@ -76,28 +73,6 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   load __LIB_ASK__     "${SCRIPT_HELPER_DIRECTORY}/ask.lib.sh"
   load __LIB_RANDOM__  "${SCRIPT_HELPER_DIRECTORY}/random.lib.sh"
 
-  # usage: private_PURIFY_COMMAND <cli-command>
-  # desc: replace all <var> and [var] pattern into '?'
-  private_PURIFY_CLI_COMMAND () {
-    local result= word= first_char= last_char=
-    printf "%s\n" "$1" | tr ' ' $'\n' \
-      | ( while read word; do
-            [ -z "${word}" ] && continue
-            first_char="${word%"${word#?}"}";
-            if [ "${first_char}" = '<' -o "${first_char}" = '[' ]; then
-              last_char="${word#"${word%?}"}"
-              if [ "${last_char}"  = '>' -o "${last_char}"  = ']' ]; then
-                result="${result} ?"
-                continue;
-              fi
-            fi
-            result="${result} ${word}"
-          done
-          printf "%s" "${result# }"
-        )
-    return 0
-  }
-
   # usage: CLI_SET_PROMPT "<string>"
   # desc: set the CLI prompt
   CLI_SET_PROMPT () { __CLI_PROMPT__="$1"; }
@@ -107,82 +82,33 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   CLI_USE_READLINE () { ASK_ENABLE_READLINE $@; }
 
   # --------------------------------------------------------------------------
-  # HELP generation related methods in this section
+  # usage: CLI_REGISTER_CODE_CACHE <file>
+  # desc: setup the code cache files
+  CLI_REGISTER_CODE_CACHE () {
+    [ $# -ne 1 ] && ERROR "CLI_REGISTER_CODE_CACHE: invalid argument"
 
-  # usage: private_CLI_DEFAULT_GET_HELP 'command' <cli-command> <bash-call> <help>
-  # usage: private_CLI_DEFAULT_GET_HELP 'menu'<cli-menu> <help>
-  # desc: Try to get help content for a registered command or menu
-  # note: use to fill the cahe file of help content
-  private_CLI_DEFAULT_GET_HELP() {
-    local type="$1" cli_command="$2" help=
-    [ "${type}" = 'command' ] && help="$4" || help="$3"
-    if [ "${type}" = 'menu' ]; then
-      cli_command=$( private_PURIFY_CLI_COMMAND "${cli_command}" )
-      cli_command=$( printf "%s" "${cli_command}" | sed -e 's/?//g;s/ */ /g;' )
-    fi
-    printf "%s\t%s\t%s" "${type}" "${cli_command}" "${help}"
-    return 0;
-  }
+    __CLI_CODE_FILE__="$1.code"
+    __CLI_KCODE_FILE__="$1.kcode"
 
-  # usage: private_CLI_DEFAULT_DISPLAY_HELP
-  # desc: display help section, which correspond to registered menus
-  private_CLI_DEFAULT_DISPLAY_HELP () {
-    grep $'^menu\t' < "${__CLI_HELP_FILE__}" \
-      | cut -d $'\t' -f 2-
-  }
-
-  # usage: private_CLI_DEFAULT_DISPLAY_HELP_FOR <pattern>
-  # desc: display help content for command which matches to <pattern>
-  private_CLI_DEFAULT_DISPLAY_HELP_FOR () {
-    grep $'^command' < "${__CLI_HELP_FILE__}" \
-      | cut -d $'\t' -f 2-                    \
-      | grep "^$* "
-  }
-
-  # usage: private_CLI_SAVE_HELP <help-content>
-  # desc: save <help-content> into cache file, if not presents
-  private_CLI_SAVE_HELP () {
-    [ $# -ne 1 ] && ERROR "private_CLI_SAVE_HELP: invalid arguments"
-    [ "${__CLI_BUILD_HELP__}" = 'false' ] && return;
-    grep "$1" < "${__CLI_HELP_FILE__}" >/dev/null 2>/dev/null
-    [ $? -ne 0 ] && printf "%s\n" "$1" >> "${__CLI_HELP_FILE__}"
-    return 0
-  }
-
-  # usage: CLI_REGISTER_HELP <file> [<get_help_func> [ <display_help_func> [ <display_help_for_func> ] ] ]
-  # desc: register a function to call to get help information for a CLI command, and the
-  #       cache file where to save help information.
-  # note: if <get_help_func> is not given, use private_CLI_DEFAULT_GET_HELP
-  # note: if <display_help_func> is not given, use private_CLI_DEFAULT_DISPLAY_HELP
-  # note: if <display_help_for_func> is not given, use private_CLI_DEFAULT_DISPLAY_HELP_FOR
-  # note: <get_help_func> is called in two different ways. Here are the usage :
-  #       - <get_help_func> 'command' <cli_command> <sh_function> <help>
-  #       - <get_help_func> 'menu' <cli_command> <help>
-  # note: last argument given to <get_help_func> can be an empty string
-  # note: <display_help_func> is called when 'help' CLI command is run
-  # note: <display_help_for_func> is called when 'help ?' CLI command is run, ie
-  #       'help' CLI command with arguments
-  CLI_REGISTER_HELP () {
-    [ $# -lt 1 -o $# -gt 4 ] && ERROR "CLI_REGISTER_HELP: invalid arguments"
-    [ -z "$1" ] && ERROR "CLI_REGISTER_HELP: arguments are empty"
-
-    __CLI_HELP_FILE__="$1"
-    [ $# -gt 1 ] && __CLI_GET_HELP__="$2"
-    [ $# -gt 2 ] && __CLI_DISPLAY_HELP__="$3"
-    [ $# -gt 3 ] && __CLI_DISPLAY_HELP_FOR__="$4"
-
-    if [ ! -f "${__CLI_HELP_FILE__}" ]; then
-      touch "${__CLI_HELP_FILE__}" || ERROR "CLI_REGISTER_HELP: can't create help file"
-      __CLI_BUILD_HELP__='true'
+    if [ ! -f "${__CLI_CODE_FILE__}" ]; then
+      touch "${__CLI_CODE_FILE__}"  || ERROR "CLI_REGISTER_CODE_CACHE: can't create help file"
+      touch "${__CLI_KCODE_FILE__}" || ERROR "CLI_REGISTER_CODE_CACHE: can't create help file"
+      __CLI_BUILD__='true'
     else
-      __CLI_BUILD_HELP__='false'
+      __CLI_BUILD__='false'
     fi
     return 0;
+  }
+
+  CLI_CLEAR_CODE_CACHE () {
+    rm -f "${__CLI_CODE_FILE__}"
+    rm -f "${__CLI_KCODE_FILE__}"
+    __CLI_BUILD__='true'
   }
 
   # --------------------------------------------------------------------------
 
-  # usage: private_SED_SEPARATOR <string> 
+  # usage: private_SED_SEPARATOR <string>
   # desc: determine a good sed separator
   private_SED_SEPARATOR () {
     for s in '/' '@' ',' '|'; do
@@ -194,23 +120,110 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     return 1;
   }
 
+  # usage: private_GET_FIRST_AND_LAST_CHAR <string>
+  # desc: return the first and the last character. concatened in a string
+  private_GET_FIRST_AND_LAST_CHAR () {
+    local word="$1"
+    if [ ${#word} -gt 0 ]; then
+      printf '%c%c' "${word%"${word#?}"}" "${word#"${word%?}"}"
+    else
+      printf ''
+    fi
+  }
+
+  # usage: private_EAT_FIRST_AND_LAST_CHAR <string>
+  # desc: return the <string> removing the first and last character
+  private_EAT_FIRST_AND_LAST_CHAR () {
+    local str="${1#?}"; str="${str%?}";
+    printf '%s' "${str}";
+  }
+
+  # usage: private_GET_CHAR <string>
+  # desc: return the first character
+  private_GET_FIRST_CHAR () {
+    local word="$1"
+    if [ ${#word} -gt 0 ]; then
+      printf '%c' "${word%"${word#?}"}" #"
+    else
+      printf ''
+    fi
+  }
+
+  # usage: private_GET_NEXT_TOKEN <cli-command>
+  # desc: Get the next token in the <cli-command>
+  private_GET_NEXT_TOKEN () {
+    local cmd="$1" first= srch= pos= offset=
+    first=$( private_GET_FIRST_CHAR "${cmd}" )
+    case "${first}" in
+      ' ') srch=' *[^ ]'   ; offset=1 ;;
+      '[') srch='[^]]*[]]' ; offset=0 ;;
+      '<') srch='[^>]*[>]' ; offset=0 ;;
+      '"') srch='[^"]*["]' ; offset=0 ;;
+      *)   srch='[^ ]* '   ; offset=1 ;;
+    esac
+
+    pos=$( expr "${cmd}" : "${srch}" )
+    if [ $pos -gt 1 ]; then
+      printf '%s' "${cmd}" | cut -c -$(( ${pos} - ${offset} ))
+    else
+      printf '%s' "${first}"
+    fi
+  }
+
+  # usage: private_TOKEN_TO_SED <token>
+  # desc: return a sed pattern toward the given <token>
+  # note: Doesn't work for nested [...]
+  private_TOKEN_TO_SED () {
+    local token="$1" englobe_char= result=
+
+    if [ -n "${token}" ]; then
+      englobe_char=$( private_GET_FIRST_AND_LAST_CHAR "${token}" )
+      case "${englobe_char}" in
+        '""' ) # TODO: usefull ?
+          token=$( private_EAT_FIRST_AND_LAST_CHAR "${token}" )
+          englobe_char=$( private_GET_FIRST_AND_LAST_CHAR "${token}" )
+          if [ "${englobe_char}" = '<>' ]; then
+            result="\"\([^\"]*\)\""
+          else
+            result="\"${token}\""
+          fi
+          ;;
+        '[]' )
+          # FIXME : error when [<protocol>://]<host>[:<port>]
+          token=$( private_EAT_FIRST_AND_LAST_CHAR "${token}" )
+          result=$( private_BUILD_SED_SUB_COMMAND "${token}" )
+          result="\(${result}\)\{0,1\}"
+          ;;
+        '<>' ) result="\([^ ]*\)" ;;
+        '  ' ) result=" *"        ;;
+        *    ) result="${token}"  ;;
+      esac
+    fi
+    printf '%s' "${result}"
+  }
+
+  # usage: private_EAT_TOKEN <cli-command> <token>
+  # desc: return the <cli-command> without the <token>
+  private_EAT_TOKEN() { printf '%s' "${1}" | cut -c "$(( ${#2} + 1 ))-" ; }
+
+  # usage: private_BUILD_SED_SUB_COMMAND <simple-cli-command>
+  # desc: build a sed pattern for parsing CLI sub-command. Usefull for reccursive call
+  private_BUILD_SED_SUB_COMMAND () {
+    local cmd="$1" token=
+    while [ ${#cmd} -ne 0 ]; do
+      token=$( private_GET_NEXT_TOKEN "${cmd}" )
+      private_TOKEN_TO_SED "${token}"
+      cmd=$( private_EAT_TOKEN "${cmd}" "${token}" )
+    done
+  }
+
   # usage: private_BUILD_SED_COMMAND <simple-cli-command>
   # desc: build a sed pattern for parsing CLI command
   # note: <simple-cli-command> is the first argument of CLI_REGISTER_COMMAND methods-like
   private_BUILD_SED_COMMAND () {
-    local command= word=
-    command=$( private_PURIFY_CLI_COMMAND "$1" )
     printf '^'
-    printf '%s\n' "${command}" | tr ' ' $'\n' \
-      | while read word; do
-          [ -z "${word}" ] && continue
-          if [ "${word}" = '?' ]; then
-            printf ' *\([^ ]*\)'
-            continue
-          fi
-          printf ' *%s' "${word}"
-        done
-    printf ' *$'
+    private_BUILD_SED_SUB_COMMAND " $1 "
+    printf '$'
   }
 
   #   usage: CLI_REGISTER_COMMAND "<cli_command>" <function>
@@ -218,8 +231,11 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   #   note: commands, registered with this method, will take care of the CLI context
   CLI_REGISTER_COMMAND () {
     [ $# -ne 2 -a $# -ne 3 ] && ERROR "CLI_REGISTER_COMMAND: invalid arguments"
-    private_CLI_COMPIL "$1" "$2" "__CLI_CODE__"
-    if [ "${__CLI_BUILD_HELP__}" = 'true' ]; then
+    [ "${__CLI_BUILD__}" = 'false' ] && return
+
+    private_CLI_COMPIL "$1" "$2" >> "${__CLI_CODE_FILE__}"
+
+    if [ "${__CLI_BUILD_HELP__:-}" = 'true' ]; then
       private_CLI_SAVE_HELP "$( eval "${__CLI_GET_HELP__} 'command' '$1' '$2' '${3:-}'" )"
     fi
   }
@@ -229,18 +245,19 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   #       and don't take care of the CLI context
   CLI_REGISTER_KCOMMAND() {
     [ $# -ne 2 -a $# -ne 3 ] && ERROR "CLI_REGISTER_KCOMMAND: invalid arguments"
-    private_CLI_COMPIL "$1" "$2" "__CLI_KCODE__"
-    if [ "${__CLI_BUILD_HELP__}" = 'true' ]; then
+    [ "${__CLI_BUILD__}" = 'false' ] && return
+
+    private_CLI_COMPIL "$1" "$2" >> "${__CLI_KCODE_FILE__}"
+
+    if [ "${__CLI_BUILD_HELP__:-}" = 'true' ]; then
       private_CLI_SAVE_HELP "$( eval "${__CLI_GET_HELP__} 'command' '$1' '$2' '${3:-}'" )"
     fi
   }
 
-  # usage: private_CLI_COMPIL <cli-command> <bash-func> <type-of-code>
+  # usage: private_CLI_COMPIL <cli-command> <bash-func>
   # desc: compil a <cli-command> and <bash-func> into sed command for parsing.
-  # note: <type-of-code> is equal to '__CLI_CODE__' for contextual command, and
-  #       it's equal to '__CLI_KCODE__' for commands which don't care of the context
   private_CLI_COMPIL() {
-    local cli_cmd="$1" func="$2" code="$3" sep=
+    local cli_cmd="$1" func="$2" sep=
 
     # delete trailing space
     cli_cmd="${cli_cmd%% }"; cli_cmd="${cli_cmd## }"
@@ -252,8 +269,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     cli_cmd=$( private_BUILD_SED_COMMAND "${cli_cmd}" )
     func=$( printf '%s' "${func}" | sed -e "s/\([\\][0-9]\)/'\1'/g" )
 
-    # update the code
-    eval "$code=\"\${${code}} s${sep}${cli_cmd}${sep}${func}${sep}p; t;\""
+    printf '%s\n' "s${sep}${cli_cmd}${sep}${func}${sep}p; t"
   }
 
   # usage: CLI_REGISTER_MENU "<cli_menu>"
@@ -261,13 +277,14 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   CLI_REGISTER_MENU () {
     local cli_menu= sep=
     [ $# -ne 1 -a $# -ne 2 ] && ERROR "CLI_REGISTER_MENU: invalid arguments"
-    cli_menu="$1"
+    [ "${__CLI_BUILD__}" = 'false' ] && return
 
+    cli_menu="$1"
     sep=$( private_SED_SEPARATOR "${cli_menu}" )
     cli_menu=$( private_BUILD_SED_COMMAND "${cli_menu}" )
 
-    __CLI_CODE__="${__CLI_CODE__} s${sep}\(${cli_menu}\)${sep}CLI_ENTER_MENU \1${sep}p; t;"
-    if [ "${__CLI_BUILD_HELP__}" = 'true' ]; then
+    printf '%s\n' "s${sep}\(${cli_menu}\)${sep}CLI_ENTER_MENU \1${sep}p; t" >> "${__CLI_CODE_FILE__}"
+    if [ "${__CLI_BUILD_HELP__:-}" = 'true' ]; then
       private_CLI_SAVE_HELP "$( eval "${__CLI_GET_HELP__} 'menu' '$1' '${2:-}' ")"
     fi
   }
@@ -279,8 +296,8 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     local cmd=
     [ $# -eq 0 ] && return;
 
-    cmd=$( printf '%s' "$*" | sed -n -e "${__CLI_KCODE__}" )
-    [ -z "${cmd}" ] && cmd=$( printf '%s' "$*" | sed -n -e "${__CLI_CODE__}" )
+    cmd=$( printf '%s' "$*" | sed -n -f "${__CLI_KCODE_FILE__}" )
+    [ -z "${cmd}" ] && cmd=$( printf '%s' "$*" | sed -n -f "${__CLI_CODE_FILE__}" )
 
     if [ -n "${cmd}" ]; then
       eval "${cmd}"
@@ -304,21 +321,24 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     local kcode= code= input= cmd=
 
-    code="${__CLI_CODE__} ; a \ CLI_UNKNOWN_COMMAND;"
+    # Add specials command to code and kcode, if we run the CLI and have just build the code cache files
+    if [ "${__CLI_BUILD__}" = 'true' ]; then
+      printf 'a \\\n CLI_UNKNOWN_COMMAND;\n' >> "${__CLI_CODE_FILE__}"
 
-    # internal CLI special commands
-    kcode="${__CLI_KCODE__}"
-    kcode="${kcode} s/^ *help *$/${__CLI_DISPLAY_HELP__}/p; t;"
-    kcode="${kcode} s/^ *help *\(.*\)$/${__CLI_DISPLAY_HELP_FOR__} \1/p; t;"
-    kcode="${kcode} s/^ *quit *$/${CLI_QUIT}/p; t;"
-    kcode="${kcode} s/^ *exit *$/break/p; t;"
+      # internal CLI special commands
+      printf '%s\n' "s/^ *help *$/${__CLI_DISPLAY_HELP__}/p; t"              >> "${__CLI_KCODE_FILE__}"
+      printf '%s\n' "s/^ *help *\(.*\)$/${__CLI_DISPLAY_HELP_FOR__} \1/p; t" >> "${__CLI_KCODE_FILE__}"
+      printf '%s\n' "s/^ *quit *$/${CLI_QUIT}/p; t"                          >> "${__CLI_KCODE_FILE__}"
+      printf '%s\n' "s/^ *exit *$/break/p; t"                                >> "${__CLI_KCODE_FILE__}"
+    fi
 
     while [ true ]; do
       ASK --allow-empty input "${__CLI_PROMPT__} ${__CLI_CONTEXT_MENU__:+[${__CLI_CONTEXT_MENU__}]}>"
       [ -z "${input}" ] && continue
-      cmd=$( printf '%s' "${input}" | sed -n -e "${kcode}" )
+
+      cmd=$( printf '%s' "${input}" | sed -n -f "${__CLI_KCODE_FILE__}" )
       [ -z "${cmd}" ] && \
-        cmd=$( printf '%s' "${__CLI_CONTEXT_MENU__} ${input}" | sed -n -e "${code}" )
+        cmd=$( printf '%s' "${__CLI_CONTEXT_MENU__} ${input}" | sed -n -f "${__CLI_CODE_FILE__}" )
       eval "${cmd}"
     done
 

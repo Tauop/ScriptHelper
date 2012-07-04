@@ -50,14 +50,23 @@ TEST_FAILED() {
 DATE_CMD=
 date --date "1 day ago" 2>/dev/null >/dev/null
 if [ $? -eq 0 ]; then
-  date_14M_ago="date --date '14 minutes 10 seconds ago' +%s"
-  date_1H_ago="date --date '1 hour 10 seconds ago' +%s"
-  date_3d_ago="date --date '3 days 10 seconds ago' +%s"
-  date_1w_ago="date --date '9 days 10 seconds ago' +%s"
-  date_3w_ago="date --date '25 days 10 seconds ago' +%s"
-  date_4m_ago="date --date '4 months 10 seconds ago' +%s"
-  date_1y_ago="date --date '14 monts 10 seconds ago' +%s"
-  date_2y_ago="date --date '2 years 10 days ago' +%s"
+  date_14M_ago="date --date '-14 minutes -10 seconds' +%s"
+  date_1H_ago="date --date '-1 hour -10 seconds' +%s"
+  date_3d_ago="date --date '-3 days -10 seconds' +%s"
+  date_1w_ago="date --date '-9 days -10 seconds' +%s"
+  date_3w_ago="date --date '-25 days -10 seconds' +%s"
+  date_4m_ago="date --date '-4 months -10 seconds' +%s"
+  date_1y_ago="date --date '-14 months -10 seconds' +%s"
+  date_2y_ago="date --date '-2 years -10 days' +%s"
+
+  date_in_14M="date --date '14 minutes 10 seconds' +%s"
+  date_in_1H="date --date '1 hour 10 seconds' +%s"
+  date_in_3d="date --date '3 days 10 seconds' +%s"
+  date_in_1w="date --date '9 days 10 seconds' +%s"
+  date_in_3w="date --date '25 days 10 seconds' +%s"
+  date_in_4m="date --date '4 months 10 seconds' +%s"
+  date_in_1y="date --date '14 months 10 seconds' +%s"
+  date_in_2y="date --date '2 years 10 days' +%s"
 else
   date_14M_ago="date -v-14M -v-10S +%s"
   date_1H_ago="date -v-1H -v-10S +%s"
@@ -67,6 +76,15 @@ else
   date_4m_ago="date -v-4m -v-10S +%s"
   date_1y_ago="date -v-14m -v-10S +%s"
   date_2y_ago="date -v-2y -v-10d +%s"
+
+  date_14M_ago="date -v14M -v10S +%s"
+  date_1H_ago="date -v1H -v10S +%s"
+  date_3d_ago="date -v3d -v10S +%s"
+  date_1w_ago="date -v9d -v10S +%s"
+  date_3w_ago="date -v25d -v10S +%s"
+  date_4m_ago="date -v4m -v10S +%s"
+  date_1y_ago="date -v14m -v10S +%s"
+  date_2y_ago="date -v2y -v10d +%s"
 fi
 
 date_14M_ago_res="14 minutes ago"
@@ -78,6 +96,15 @@ date_4m_ago_res="4 months ago"
 date_1y_ago_res="1 year ago"
 date_2y_ago_res="2 years ago"
 
+date_in_14M_res="in 14 minutes"
+date_in_1H_res="in 1 hour"
+date_in_3d_res="in 3 days"
+date_in_1w_res="in 1 week"
+date_in_3w_res="in 3 weeks"
+date_in_4m_res="in 4 months"
+date_in_1y_res="in 1 year"
+date_in_2y_res="in 2 years"
+
 test_cases=
 test_cases="${test_cases} date_14M_ago"
 test_cases="${test_cases} date_1H_ago"
@@ -87,6 +114,15 @@ test_cases="${test_cases} date_3w_ago"
 test_cases="${test_cases} date_4m_ago"
 test_cases="${test_cases} date_1y_ago"
 test_cases="${test_cases} date_2y_ago"
+
+test_cases="${test_cases} date_in_14M"
+test_cases="${test_cases} date_in_1H"
+test_cases="${test_cases} date_in_3d"
+test_cases="${test_cases} date_in_1w"
+test_cases="${test_cases} date_in_3w"
+test_cases="${test_cases} date_in_4m"
+test_cases="${test_cases} date_in_1y"
+test_cases="${test_cases} date_in_2y"
 
 for test in $test_cases; do
   test_cmd=$( eval "echo \"\$${test}\"" )

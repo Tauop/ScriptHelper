@@ -22,6 +22,9 @@
 # -u Unset variables
 set -fu
 
+which mysql >/dev/null 2>/dev/null
+[ $? -ne 0 ] && exit 1
+
 # Load library ---------------------------------------------------------------
 SCRIPT_HELPER_DIRECTORY='..'
 [ -r /etc/ScriptHelper.conf ] && . /etc/ScriptHelper.conf

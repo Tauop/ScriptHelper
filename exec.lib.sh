@@ -114,7 +114,15 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
     done
 
     # build the command
-    command=$*
+    while [ $# -ne 0 ]; do
+      if [ "$1" != "${1% *}" ]; then
+        command="${command:+${command} }'$( printf "%s" "$1" | sed "s/'/\'\\\'\'/g" )'"
+      else
+        command="${command:+${command} }$1"
+      fi
+      shift
+    done
+
     if [ "${do_log}" = 'true' ]; then
       [ -n "${__OUTPUT_LOG_FILE__:-}" ] && outputs="${outputs} >>\"${__OUTPUT_LOG_FILE__:-}\" "
       [ -n "${__ERROR_LOG_FILE__:-}"  ] && outputs="${outputs} 2>>\"${__ERROR_LOG_FILE__:-}\" "
@@ -125,7 +133,7 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
     # exec the command
     if [ "${do_check}" = 'true' ]; then
-      eval "(${command}) ${outputs} || ( r=\$?; F() { KO '$*'; return \$1; }; F \$r; )"
+      eval "(${command}) ${outputs} || ( r=\$?; F() { KO '${command}'; return \$1; }; F \$r; )"
       return_value=$?
     else
       # execute the command
@@ -141,15 +149,15 @@ if [ "${__LIB_EXEC__:-}" != 'Loaded' ]; then
 
   # usage: EXEC_WITH_CHECK <command>
   # desc: alias of EXEC --with-check -- <command>
-  EXEC_WITH_CHECK ()         { EXEC --with-check -- "$*";            }
+  EXEC_WITH_CHECK ()         { EXEC --with-check -- $@;            }
 
   # usage: EXEC_WITH_LOG <command>
   # desc: alias of EXEC --with-log -- <command>
-  EXEC_WITH_LOG ()           { EXEC --with-log -- "$*";              }
+  EXEC_WITH_LOG ()           { EXEC --with-log -- $@;              }
 
   # usage: EXEC_WITH_CHECK_AND_LOG <command>
   # desc: alias of EXEC --with-check --with-log -- <command>
-  EXEC_WITH_CHECK_AND_LOG () { EXEC --with-check --with-log -- "$*"; }
+  EXEC_WITH_CHECK_AND_LOG () { EXEC --with-check --with-log -- $@; }
 
   # usage: CMD <command>
   # desc: alias of EXEC_WITH_CHECK_AND_LOG <command>

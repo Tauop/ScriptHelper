@@ -336,7 +336,7 @@ if [ "${__LIB_MYSQL__:-}" != 'Loaded' ]; then
   # desc: get databases list of the mysql instance
   # arguments: <options> = common MySQL functions options
   MYSQL_GET_BASES ()  { MYSQL_QUERY $@ --bash 'SHOW DATABASES'; }
- 
+
   # usage: MYSQL_GET_TABLES [ <options> ]
   # desc: get the table list of the current (or selected) database
   # arguments: <options> = common MySQL functions options

@@ -58,7 +58,7 @@ if [ "${__LIB_DATE__:-}" != 'Loaded' ]; then
   #usage: DATE_STRING <timestamp> [<format>]
   DATE_STRING () {
     local date_from= format='+%a %e %b %Y %H:%M:%S %Z' result=
-    
+
     if [ $# -ne 1 -a $# -ne 2 ]; then
       WARNING "DATE_STRING() called without argument"; return 1;
     fi
@@ -93,7 +93,7 @@ if [ "${__LIB_DATE__:-}" != 'Loaded' ]; then
       in_past="false"
       compute=$(( -compute ))
     fi
-    
+
     for w in "year" "month" "week" "day" "hour" "minute" "second"; do
       eval "div=\$one_$w"
       if [ $compute -ge $div ]; then
@@ -102,7 +102,7 @@ if [ "${__LIB_DATE__:-}" != 'Loaded' ]; then
         break;
       fi
     done
-    
+
     [ $compute -ne 1 ] && what="${what}s"
           
     [ "$in_past" = "true" ] && format="%s %s ago" || "in %s %s"
@@ -125,10 +125,10 @@ if [ "${__LIB_DATE__:-}" != 'Loaded' ]; then
     date_from="$1"
     year_now=$( date +%Y )
     year_from=$( DATE_STRING "${date_from}" "+%Y" )
-    
+
     compute=$(( date_now - date_from ))
     [ $compute -lt 0 ] && compute=$(( -compute ))
-    
+
     if [ $compute -lt $one_day ]; then
       DATE_STRING "${date_from}" "+%H:%M"
     else

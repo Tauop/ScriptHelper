@@ -81,7 +81,7 @@ fi
 [ -f "${TEST_FILE}.mutex.tmp"  ] && res=1
 [ -f "${TEST_FILE2}.mutex"     ] && res=1
 [ -f "${TEST_FILE2}.mutex.tmp" ] && res=1
- 
+
 rm -f "${TEST_FILE}*" "${TEST_FILE2}*"
 if [ ${res} -eq 0 ]; then
   printf '\n%s\n' '*** All Tests OK ***';

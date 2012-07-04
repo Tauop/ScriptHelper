@@ -58,14 +58,14 @@ fi
 # Utility functions ----------------------------------------------------------
 
 TEST_FAILED() {
-  printf '\n[ERROR] Test failed\nparam=%s\n\ntest file = %s\n' "$*" "${TEST_FILE}"
+  printf '\n[ERROR] Test failed'
   exit 1
 }
 
 check_TEST_FILE() {
   content=`cat ${TEST_FILE} | hexdump`
   must_have=`printf '%s' "$*" | hexdump`
-  [ "${content}" != "${must_have}" ] && TEST_FAILED "$*"
+  [ "${content}" != "${must_have}" ] && TEST_FAILED
 }
 
 check_LOG_FILE() {
@@ -73,7 +73,7 @@ check_LOG_FILE() {
   if [ -n "${__OUTPUT_LOG_FILE__}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__OUTPUT_LOG_FILE__}" | cut -d ']' -f2- | sed -e 's/^ //'`
-    [ "${content}" != "$*" ] && TEST_FAILED "$*"
+    [ "${content}" != "$*" ] && TEST_FAILED
   fi
 }
 
@@ -82,7 +82,7 @@ check_ERROR_FILE() {
   if [ -n "${__ERROR_LOG_FILE__}" ]; then
     # delete the date, at the beginning of each line
     content=`cat "${__ERROR_LOG_FILE__}" | cut -d ']' -f2- | sed -e 's/^ //'`
-    [ "${content}" != "$*" ] && TEST_FAILED "$*"
+    [ "${content}" != "$*" ] && TEST_FAILED
   fi
 }
 

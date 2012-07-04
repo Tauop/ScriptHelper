@@ -38,16 +38,17 @@ LOAD() {
 LOAD message.lib.sh
 LOAD ask.lib.sh
 LOAD cli.lib.sh
+LOAD cli-help.lib.sh
 LOAD random.lib.sh
 
-help_file="/tmp/cli_test.help.$(RANDOM)"
-CLI_REGISTER_HELP "${help_file}"
+CLI_REGISTER_CODE_CACHE "/tmp/cli_test.code.$(RANDOM)"
+CLI_REGISTER_HELP "/tmp/cli_test.help.$(RANDOM)"
 
 CLI_SET_PROMPT "cli"
 CLI_REGISTER_MENU    "msg" 'help message'
-CLI_REGISTER_COMMAND "msg hello"   "printf 'hello\n'"
-CLI_REGISTER_COMMAND "msg reply <what>" "printf '\1\n'"
-CLI_REGISTER_COMMAND "ping ? pong <target>[:<optional>]" "PING_PONG \2 \1" "Like to play ping-pong"
+CLI_REGISTER_COMMAND "msg hello"   "printf 'hello\\\n'"
+CLI_REGISTER_COMMAND "msg reply <what>" "printf '\1\\\n'"
+CLI_REGISTER_COMMAND "ping <from> pong <target>[:<optional>]" "PING_PONG \2 \1" "Like to play ping-pong"
 
 PING_PONG() { printf '%s\n' "$1 - $2"; }
 
@@ -63,6 +64,7 @@ prout
 ping cat pong lol
 quit
 ping cat pong lol
+ping cat pong lol:80
 msg reply lol
 help ping
 quit
@@ -81,10 +83,12 @@ ERROR: Unknown CLI command: ping cat pong lol
 cli [msg]>  quit
 cli >  ping cat pong lol
 lol - cat
+cli >  ping cat pong lol:80
+lol:80 - cat
 cli >  msg reply lol
 lol
 cli >  help ping
-ping ? pong <target>[:<optional>]	Like to play ping-pong
+ping <from> pong <target>[:<optional>]	Like to play ping-pong
 cli >  quit
 EOF
 

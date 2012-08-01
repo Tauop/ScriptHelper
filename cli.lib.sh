@@ -100,9 +100,16 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
     return 0;
   }
 
+  # usage: CLI_CLEAR_CODE_CACHE [<file>]
+  # desc: Clear the code and kcode cache
   CLI_CLEAR_CODE_CACHE () {
-    rm -f "${__CLI_CODE_FILE__}"
-    rm -f "${__CLI_KCODE_FILE__}"
+    if [ $# -eq 1 ]; then
+      [ -f "$1.code"  ] && rm -f "$1.code"
+      [ -f "$1.kcode" ] && rm -f "$1.kcode"
+    else
+      [ -f "${__CLI_CODE_FILE__}"  ] && rm -f "${__CLI_CODE_FILE__}"
+      [ -f "${__CLI_KCODE_FILE__}" ] && rm -f "${__CLI_KCODE_FILE__}"
+    fi
     __CLI_BUILD__='true'
   }
 
@@ -267,7 +274,7 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
 
     sep=$( private_SED_SEPARATOR "${cli_cmd}" )
     cli_cmd=$( private_BUILD_SED_COMMAND "${cli_cmd}" )
-    func=$( printf '%s' "${func}" | sed -e "s/\([\\][0-9]\)/'\1'/g" )
+    func=$( printf '%s' "${func}" | sed -e "s/ \([\\][^ ]*\)/ '\1'/g" )
 
     printf '%s\n' "s${sep}${cli_cmd}${sep}${func}${sep}p; t"
   }
@@ -315,14 +322,20 @@ if [ "${__LIB_CLI__:-}" != 'Loaded' ]; then
   # note: this function add some "sugar" CLI command, like 'quit', 'exit',
   #       and deal with CLI context menu for command registered with CLI_REGISTER_COMMAND()
   CLI_RUN () {
+    local kcode= code= input= cmd=
+
+    if [ ! -f "${__CLI_CODE_FILE__}" ]; then
+      ERROR "Code cache file missing. Seems CLI_REGISTER_COMMAND() was never called to add CLI commands"
+      return 1;
+    fi
+
     CLI_UNKNOWN_COMMAND () { ERROR "Unknown CLI command: ${input}"; }
     CLI_ENTER_MENU () { __CLI_CONTEXT_MENU__="$*"; }
     CLI_QUIT='[ -z "${__CLI_CONTEXT_MENU__:-}" ] \&\& break || __CLI_CONTEXT_MENU__= '
 
-    local kcode= code= input= cmd=
-
-    # Add specials command to code and kcode, if we run the CLI and have just build the code cache files
-    if [ "${__CLI_BUILD__}" = 'true' ]; then
+    # Add specials command to code and kcode, if not present
+    grep 'CLI_UNKNOWN_COMMAND' < "${__CLI_CODE_FILE__}" >/dev/null 2>/dev/null
+    if [ $? -ne 0 ]; then
       printf 'a \\\n CLI_UNKNOWN_COMMAND;\n' >> "${__CLI_CODE_FILE__}"
 
       # internal CLI special commands

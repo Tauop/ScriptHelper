@@ -100,6 +100,16 @@ if [ "${__LIB_CLI_HELP__:-}" != 'Loaded' ]; then
     return 0;
   }
 
+  # usage: CLI_CLEAR_HELP_CACHE [<file>]
+  # desc: Clear the cli help cache
+  CLI_CLEAR_HELP_CACHE () {
+    if [ $# -eq 1 ]; then
+      [ -f "$1" ] && rm -f "$1"
+    else
+      [ -f "${__CLI_HELP_FILE__}" ] && rm -f "${__CLI_HELP_FILE__}"
+    fi
+  }
+
   # usage: private_CLI_SAVE_HELP <help-content>
   # desc: save <help-content> into cache file, if not presents
   private_CLI_SAVE_HELP () {
@@ -114,7 +124,7 @@ if [ "${__LIB_CLI_HELP__:-}" != 'Loaded' ]; then
   # --------------------------------------------------------------------------
 
   # usage: private_CLI_DEFAULT_GET_HELP 'command' <cli-command> <bash-call> <help>
-  # usage: private_CLI_DEFAULT_GET_HELP 'menu'<cli-menu> <help>
+  # usage: private_CLI_DEFAULT_GET_HELP 'menu' <cli-menu> <help>
   # desc: Try to get help content for a registered command or menu
   # note: use to fill the cahe file of help content
   private_CLI_DEFAULT_GET_HELP() {

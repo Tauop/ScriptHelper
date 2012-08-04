@@ -99,7 +99,7 @@ if [ "${__LIB_MESSAGE__:-}" != 'Loaded' ]; then
 
   # usage: BR
   # desc: print a break return
-  BR ()     { MESSAGE --no-log --no-break --no-indent  $'\n'; }
+  BR ()     { MESSAGE --no-log ''; }
 
   # usage: ERROR <string>
   # desc: close the current DOTHIS if needed and print a message prefixed by "ERROR: "
